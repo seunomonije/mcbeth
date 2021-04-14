@@ -1,0 +1,18 @@
+OASISFormat: 0.4
+Name:        mclang
+Version:     0.1
+Synopsis:    Measurement Calculus Language
+Authors:     Robert Soulé
+License:     Apache-2.0
+Plugins:     META (0.4), StdFiles (0.4), DevFiles (0.4)
+
+
+Executable mclang
+  Install:    False
+  Build$:     flag(is_native)
+  Path:       src
+  BuildTools: ocamlbuild
+  CompiledObject: native
+  MainIs:     main.ml
+  BuildDepends:
+    core
