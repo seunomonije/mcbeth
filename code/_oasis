@@ -15,4 +15,5 @@ Executable mclang
   CompiledObject: native
   MainIs:     main.ml
   BuildDepends:
-    core
+    core,
+    threads

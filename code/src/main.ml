@@ -1,3 +1,3 @@
-open Core.Std
+open Base
 
 let () = print_endline "Hello world!"
