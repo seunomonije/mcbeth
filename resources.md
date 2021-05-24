@@ -10,3 +10,15 @@ GitHub repo here: [https://github.com/esumii/min-caml](https://github.com/esumii
 Calling C in OCaml: [https://ocaml.org/learn/tutorials/calling_c_libraries.html](https://ocaml.org/learn/tutorials/calling_c_libraries.html)
 
 Armadillo lin-alg package [http://arma.sourceforge.net/](http://arma.sourceforge.net/)
+
+We are using [Menhir](http://gallium.inria.fr/~fpottier/menhir/manual.html#sec3) to parse our grammar files to OCaml source code.
+
+------
+
+### Writing a compiler in Rust
+
+#### As of 5/23/21, we decided to pivot to Rust. Rust offers great preformance, type safety, and is an up and coming language. It also features some great linear algebra packages.
+
+[This tutorial on developing PLs in Rust is very helpful](https://arzg.github.io/lang/1/)
+
+For linear algebra, we will be using [ndarray](https://github.com/rust-ndarray/ndarray)
