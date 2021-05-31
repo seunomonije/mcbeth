@@ -2,3 +2,13 @@
 hello_cargo/
 target/
 Cargo.lock
+
+# OCaml binaries
+*.cmo
+*.cmi
+
+# Old implementation
+mclang-old/
+
+# General
+*.DS_Store
