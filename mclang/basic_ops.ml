@@ -21,4 +21,4 @@ let print_expr e =
   print_endline (to_string e);;
 
 
-print_expr (ZCorrect ((Value "1")));;
+print_expr (XCorrect ((Value "1")));;

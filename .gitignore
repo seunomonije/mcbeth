@@ -3,9 +3,9 @@ hello_cargo/
 target/
 Cargo.lock
 
-# OCaml binaries
-*.cmo
-*.cmi
+# Dune generated files and directories
+dune-project
+_build/
 
 # Old implementation
 mclang-old/
