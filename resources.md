@@ -15,9 +15,7 @@ We are using [Menhir](http://gallium.inria.fr/~fpottier/menhir/manual.html#sec3)
 
 ------
 
-### Writing a compiler in Rust
-
-#### As of 5/23/21, we decided to pivot to Rust. Rust offers great preformance, type safety, and is an up and coming language. It also features some great linear algebra packages.
+### Rust information
 
 [This tutorial on developing PLs in Rust is very helpful](https://arzg.github.io/lang/1/)
 
