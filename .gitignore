@@ -6,9 +6,13 @@ Cargo.lock
 # Dune generated files and directories
 dune-project
 _build/
+.merlin
 
 # Old implementation
 mclang-old/
 
 # General
 *.DS_Store
+
+# Personal Notes
+notes
