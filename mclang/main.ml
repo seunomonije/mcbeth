@@ -38,18 +38,6 @@ type prog = prep list * cmd list
  **********************************************************************************)
 
 (*
- *  Checks whether a program is well formed, i.e., whether it satisfies
- *  the following conditions:
- *    (D0) No command depends on an outcome not yet measured.
- *    (D1) No command acts on a qubit already measured.
- *    (D2) No command acts on a qubit not yet prepared, unless it is an input qubit.
- *    (D3) A qubit i is measured if and only if i is not an output.
- *)(*
-let well_formed (p : prog) : bool = (
-  
-);;*)
-
-(*
  *  Converts numbers to a strings
  *)
 let to_string = Int.to_string;;
@@ -98,15 +86,108 @@ let print_prog ((preps, cmds) : prog) = (
 );;
 
 
+(*
+ *  Checks whether a program is well formed, i.e., whether it satisfies
+ *  the following conditions:
+ *    From the paper:
+ *      (D0) No command depends on an outcome not yet measured.
+ *      (D1) No command acts on a qubit already measured.
+ *      (D2) No command acts on a qubit not yet prepared, unless it is an input qubit.
+ *      (D3) A qubit i is measured if and only if i is not an output.
+ *    Additioinal contraints per the current implementation:
+ *      (D5) The "qubit integers" must start at 0 and not skip an integer.
+ *
+ *  Returns 0 on failure.
+ *  On success, returns the number of qubits used in the program.
+ *)
+let well_formed ((preps, cmds) : prog) : int = (
+  match (preps, cmds) with
+  | _ -> 1
+);;
+
+
+(*
+ *  Initializes global matrix stored in memory given the number of qubits to be simulated.
+ *  Returns true on success; false on failure.
+ *)
+ let init_matrix (x : int) : bool = (
+   if (x > 0) then (
+     true
+   ) else false
+ );;
+
+
 (**********************************************************************************
  *                                                                                *
  *                              Evaluation Functions                              *
  *                                                                                *
  **********************************************************************************)
-(*
+
 (* Randomized *)
-let eval ((preps, cmds) : prog) : bool list = (
-  
+(*
+(*
+ *  Performs appropriate operations to initialize qubits.
+ *  Matrix stored in memory changed as a side-effect.
+ *)
+let rec eval_prep (p : prep) : unit = (
+  match p with
+  | Init (qubit, base_angle) -> (
+    (* Initalizes a qubit with angle base_angle *)
+    
+  )
+  | Init0 (qubit) -> (
+
+  )
+  | Init1 (qubit) -> (
+
+  )
+  | InitPlus (qubit) -> (
+
+  )
+  | InitMinus (qubit) -> (
+
+  )
+  | InitNonInput (qubits) -> (
+    List.iter (fun x -> eval_prep(InitPlus(x))) qubits 
+  )
+);;
+
+(*
+ *  Performs appropriate operations to execute command.
+ *  Matrix stored in memory changed as a side-effect.
+ *)
+let eval_cmd (c : cmd) : unit = (
+  match c with 
+  | Entangle (left, right) -> (
+
+  )
+  | Measure (qubit, angle, parity1, parity2) -> (
+
+  )
+  | XCorrect (qubit, signal) -> (
+
+  )
+  | ZCorrect (qubit, signal) -> (
+
+  )
+);;
+
+(* 
+ *  Runs a program, evaluating the quantum measurements using random functions.
+ *  First eval checks if the function is well formed. It then initializes the
+ *  global matrix used to store state information. After, it runs the program
+ *  and returns the result extracted from the state matrix.
+ *)
+let eval ((preps, cmds) as p : prog) : bool list = (
+  let
+    qubit_num = well_formed(p)
+  in (
+    if init_matrix(qubit_num) then (
+      List.iter eval_prep preps;
+      List.iter eval_cmd cmds;
+      [] (* Will pull bool list from vector stored in memory *)
+    ) else []
+  )
 );;
 *)
 
