@@ -1,14 +1,35 @@
-type qubit = 
-  | Meas of qubit
-  | Entangle of qubit * qubit
-  | XCorrect of qubit
-  | ZCorrect of qubit
-  | Value of string
+(*
+ *  Measurement Calculus Programming Language
+ *
+ *  Date: May 2021
+ *  Authors: Aidan Evans and Seun Omonije
+ *)
 
-let rec to_string e = 
-  match e with 
-  | Meas (value) ->
-     "M[" ^ to_string value ^ "]"
+
+(**********************************************************************************
+ *                                                                                *
+ *                              Data Type Declarations                            *
+ *                                                                                *
+ **********************************************************************************)
+
+type qubit = int
+
+type prep = 
+  | Init of qubit * float
+  | Init0 of qubit
+  | Init1 of qubit
+  | InitPlus of qubit
+  | InitMinus of qubit
+  | InitNonInput of qubit list
+
+type cmd =
+  | Entangle of qubit * qubit
+  | Measure of qubit * float * int * int
+  | XCorrect of qubit * int
+  | ZCorrect of qubit * int
+
+type prog = prep list * cmd list
+
   | Entangle (left, right) ->
     "E[" ^ to_string left ^ ", " ^ to_string right ^ "]"
   | XCorrect (value) ->
