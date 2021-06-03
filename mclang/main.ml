@@ -101,17 +101,17 @@ let print_err (cmd, msg) = (
  *  Utility used for `well_formed` below.
  *)
 let check_prep (comp_space_tbl, in_tbl) p = (
-  let insertInit q = (
+  let insert q = (
     H.add comp_space_tbl q ();
     H.add in_tbl q ()
   ) 
   in (
     match p with
-    | Init (qubit, _)   -> insertInit(qubit)
-    | Init0 (qubit)     -> insertInit(qubit)
-    | Init1 (qubit)     -> insertInit(qubit)
-    | InitPlus (qubit)  -> insertInit(qubit)
-    | InitMinus (qubit) -> insertInit(qubit)
+    | Init (qubit, _)   -> insert qubit
+    | Init0 (qubit)     -> insert qubit
+    | Init1 (qubit)     -> insert qubit
+    | InitPlus (qubit)  -> insert qubit
+    | InitMinus (qubit) -> insert qubit
     | InitNonInput (qubits) -> (
       List.iter (fun x -> H.add comp_space_tbl x ()) qubits
     )
@@ -127,7 +127,7 @@ let check_cmd (err, comp_space_tbl, in_tbl, out_tbl) c = (
   | Entangle (left, right) -> (
 
   )
-  | Measure (qubit, angle, parity1, parity2) -> (
+  | Measure (qubit, angle, signals1, signals2) -> (
 
   )
   | XCorrect (qubit, signals) -> (
@@ -144,6 +144,8 @@ let check_cmd (err, comp_space_tbl, in_tbl, out_tbl) c = (
  *  D2 (see below) is violated if any command acts on an unprepared, non-input qubit.
  *  `input_or_prepared_tbl` contains all prepared or input qubits; thus, an error
  *  has occured if a command acts on a qubit not in `input_or_prepared_tbl`.
+ *
+ *  Returns nothing. May have side-effects on `err`.
  *)
 let check_D2 (err, input_or_prepared_tbl) c = (
   let check q msg = (
@@ -161,12 +163,39 @@ let check_D2 (err, input_or_prepared_tbl) c = (
   )
 );;
 
+(*
+ *  Utility used for `well_formed` below.
+ *
+ *  D1 (see below) is violated if any command acts on a measured qubit.
+ *  Constructs a table containing measured qubits in the process.
+ *
+ *  Returns nothing. May have side-effects on `err`.
+ *)
+let check_D1 (err, meas_tbl) c = (
+  let check q msg = (
+    if (H.mem meas_tbl q) then (
+      err := true;
+      print_err (c, "Invalid use of an already measured qubit " ^ to_string q)
+    )
+  ) 
+  let insert q = (
+    H.add meas_tbl q
+  )
+  in (
+    match c with 
+    | Entangle (left, right)    -> (check left; check right)
+    | Measure (qubit, _, _, _)  -> (insert qubit)
+    | XCorrect (qubit, _)       -> (check qubit)
+    | ZCorrect (qubit, _)       -> (check qubit)
+  )
+);;
+
 
 (*
  *  Checks whether a program is well formed, i.e., whether it satisfies
  *  the following conditions:
  *    From the paper:
- *      (D0) No command depends on an outcome not yet measured.
+ *      (D0) No command depends on an outcome not yet measured. (check signal qubits)
  *      (D1) No command acts on a qubit already measured.
  *      (D2) No command acts on a qubit not yet prepared, unless it is an input qubit.
  *      (D3) A qubit i is measured if and only if i is not an output.
@@ -181,11 +210,13 @@ let well_formed ((preps, cmds) : prog) : int = (
   let err = ref false in
   let comp_space_tbl = H.create 12 in
   let in_tbl = H.create 12 in
-  let out_tbl = H.create 12 in (
+  let out_tbl = H.create 12 in 
+  let meas_tbl = H.create 12 in (
     List.iter (check_prep (comp_space_tbl, in_tbl)) preps;
     (* At this point in the computation, comp_space_tbl contains all qubits used  *
      * and in_tbl contains all input qubits                                       *)
     List.iter (check_D2 (err, comp_space_tbl)) cmds;
+    List.iter (check_D1 (err, meas_tbl)) cmds;
 
   );
   if (!err) then 0 else H.length comp_space_tbl
