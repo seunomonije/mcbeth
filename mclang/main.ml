@@ -88,6 +88,13 @@ let print_prog ((preps, cmds) : prog) = (
   List.iter (fun x -> print_endline(cmd_to_string(x))) cmds
 );;
 
+(*
+ *  Prints an error messgae to stdout noting the command and violation.
+ *)
+let print_err (cmd, msg) = (
+  print_endline ("Error: " ^ cmd_to_string cmd ^ " : " ^ msg ^ ".")
+);;
+
 
 (*
  *  Checks whether a program is well formed, i.e., whether it satisfies
@@ -97,8 +104,9 @@ let print_prog ((preps, cmds) : prog) = (
  *      (D1) No command acts on a qubit already measured.
  *      (D2) No command acts on a qubit not yet prepared, unless it is an input qubit.
  *      (D3) A qubit i is measured if and only if i is not an output.
+ *           Equivalently, a qubit i is an output iff i is not measured. 
  *    Additioinal contraints per the current implementation:
- *      (D5) The "qubit integers" must start at 0 and not skip an integer.
+ *      (D5) The "qubit integers" must start at 0 and increase without skipping an integer.
  *
  *  Returns 0 on failure.
  *  On success, returns the number of qubits used in the program.
@@ -151,6 +159,7 @@ let rec eval_prep (p : prep) : unit = (
 
   )
   | InitNonInput (qubits) -> (
+    (* Non-input qubits are all initialized to |+> *)
     List.iter (fun x -> eval_prep(InitPlus(x))) qubits 
   )
 );;
