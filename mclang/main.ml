@@ -5,6 +5,7 @@
  *  Authors: Aidan Evans and Seun Omonije
  *)
 
+module H = Hashtbl;;
 
 (**********************************************************************************
  *                                                                                *
@@ -95,6 +96,27 @@ let print_err (cmd, msg) = (
   print_endline ("Error: " ^ cmd_to_string cmd ^ " : " ^ msg ^ ".")
 );;
 
+
+(*
+ *  Utility used for `well_formed` below.
+ *)
+let check_prep (comp_space_tbl, in_tbl) p = (
+  let insertInit q = (
+    H.add comp_space_tbl q ();
+    H.add in_tbl q ()
+  ) 
+  in (
+    match p with
+    | Init (qubit, _)   -> insertInit(qubit)
+    | Init0 (qubit)     -> insertInit(qubit)
+    | Init1 (qubit)     -> insertInit(qubit)
+    | InitPlus (qubit)  -> insertInit(qubit)
+    | InitMinus (qubit) -> insertInit(qubit)
+    | InitNonInput (qubits) -> (
+      List.iter (fun x -> H.add comp_space_tbl x ()) qubits
+    )
+  )
+);;
 
 (*
  *  Checks whether a program is well formed, i.e., whether it satisfies
