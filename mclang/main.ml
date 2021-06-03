@@ -99,6 +99,11 @@ let print_err (cmd, msg) = (
 
 (*
  *  Utility used for `well_formed` below.
+ *
+ *  Constructs tables for containing the input qubits 
+ *  and another table containg all qubits in the computational space.
+ *
+ *  Returns nothing.
  *)
 let check_prep (comp_space_tbl, in_tbl) p = (
   let insert q = (
@@ -148,7 +153,7 @@ let check_cmd (err, comp_space_tbl, in_tbl, out_tbl) c = (
  *  Returns nothing. May have side-effects on `err`.
  *)
 let check_D2 (err, input_or_prepared_tbl) c = (
-  let check q msg = (
+  let check q = (
     if not (H.mem input_or_prepared_tbl q) then (
       err := true;
       print_err (c, "Invalid use of unprepared, non-input qubit " ^ to_string q)
@@ -172,12 +177,12 @@ let check_D2 (err, input_or_prepared_tbl) c = (
  *  Returns nothing. May have side-effects on `err`.
  *)
 let check_D1 (err, meas_tbl) c = (
-  let check q msg = (
+  let check q = (
     if (H.mem meas_tbl q) then (
       err := true;
       print_err (c, "Invalid use of an already measured qubit " ^ to_string q)
     )
-  ) 
+  ) in
   let insert q = (
     H.add meas_tbl q
   )
@@ -187,6 +192,32 @@ let check_D1 (err, meas_tbl) c = (
     | Measure (qubit, _, _, _)  -> (insert qubit)
     | XCorrect (qubit, _)       -> (check qubit)
     | ZCorrect (qubit, _)       -> (check qubit)
+  )
+);;
+
+(*
+ *  Utility used for `well_formed` below.
+ *
+ *  D0 (see below) is violated if any command depends on the outcome of an unmeasured qubit.
+ *
+ *  Returns nothing. May have side-effects on `err`.
+ *)
+let check_D0 (err, meas_tbl) c = (
+  let check q = (
+    if not (H.mem meas_tbl q) then (
+      err := true;
+      print_err (c, "Command depends on the outcome of unmeasured qubit " ^ to_string q)
+    )
+  ) 
+  in (
+    match c with 
+    | Entangle (_, _) -> ()
+    | Measure (_, _, signals1, signals2)  -> (
+      List.iter check signal1;
+      List.iter check signals2
+    )
+    | XCorrect (_, signals) -> (List.iter check signals)
+    | ZCorrect (_, signals) -> (List.iter check signals)
   )
 );;
 
@@ -217,7 +248,8 @@ let well_formed ((preps, cmds) : prog) : int = (
      * and in_tbl contains all input qubits                                       *)
     List.iter (check_D2 (err, comp_space_tbl)) cmds;
     List.iter (check_D1 (err, meas_tbl)) cmds;
-
+    List.iter (check_D0 (err, meas_tbl)) cmds;
+    List.iter
   );
   if (!err) then 0 else H.length comp_space_tbl
 );;
