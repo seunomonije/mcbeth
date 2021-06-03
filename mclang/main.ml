@@ -221,6 +221,28 @@ let check_D0 (err, meas_tbl) c = (
   )
 );;
 
+(*
+ *  Utility used for `well_formed` below.
+ *
+ *  Constructs a table containing the output qubits by appealing to D3
+ *
+ *  Returns nothing.
+ *)
+let construct_output (out_tbl, meas_tbl) c = (
+  let handler q = (
+    if not (H.mem meas_tbl q) then (
+      H.add out_tbl q
+    )
+  )
+  in (
+    match c with 
+    | Entangle (left, right)    -> (handler left; handler right)
+    | Measure (qubit, _, _, _)  -> ()
+    | XCorrect (qubit, _)       -> (handler qubit)
+    | ZCorrect (qubit, _)       -> (handler qubit)
+  )
+);;
+
 
 (*
  *  Checks whether a program is well formed, i.e., whether it satisfies
@@ -249,7 +271,7 @@ let well_formed ((preps, cmds) : prog) : int = (
     List.iter (check_D2 (err, comp_space_tbl)) cmds;
     List.iter (check_D1 (err, meas_tbl)) cmds;
     List.iter (check_D0 (err, meas_tbl)) cmds;
-    List.iter
+    List.iter (construct_output (out_tbl, meas_tbl)) cmds
   );
   if (!err) then 0 else H.length comp_space_tbl
 );;
