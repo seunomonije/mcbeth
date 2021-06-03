@@ -73,12 +73,12 @@ let cmd_to_string c = (
   | Measure (qubit, angle, parity1, parity2) ->
     "M[" ^ String.concat ", " [to_string qubit; 
                               float_to_string angle; 
-                              "[" ^ String.concat ", " List.map to_string parity1 ^ "]"; 
-                              "[" ^ String.concat ", " List.map to_string parity2 ^ "]"] ^ "]"
+                              "[" ^ String.concat ", " (List.map to_string parity1) ^ "]"; 
+                              "[" ^ String.concat ", " (List.map to_string parity2) ^ "]"] ^ "]"
   | XCorrect (qubit, signals) ->
-    "X[" ^ to_string qubit ^ ", [" ^ String.concat ", " List.map to_string signals ^ "]]"
+    "X[" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "]]"
   | ZCorrect (qubit, signals) ->
-    "Z[" ^ to_string qubit ^ ", [" ^ String.concat ", " List.map to_string signals ^ "]]"
+    "Z[" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "]]"
 );;
 
 (*
@@ -130,26 +130,6 @@ let check_prep (comp_space_tbl, in_tbl) p = (
 
 (*
  *  Utility used for `well_formed` below.
- *)
-let check_cmd (err, comp_space_tbl, in_tbl, out_tbl) c = (
-  match c with 
-  | Entangle (left, right) -> (
-
-  )
-  | Measure (qubit, angle, signals1, signals2) -> (
-
-  )
-  | XCorrect (qubit, signals) -> (
-
-  )
-  | ZCorrect (qubit, signals) -> (
-
-  )
-);;
-
-
-(*
- *  Utility used for `well_formed` below.
  *
  *  D2 (see below) is violated if any command acts on an unprepared, non-input qubit.
  *  `input_or_prepared_tbl` contains all prepared or input qubits; thus, an error
@@ -189,7 +169,7 @@ let check_D1 (err, meas_tbl) c = (
     )
   ) in
   let insert q = (
-    H.add meas_tbl q
+    H.add meas_tbl q ()
   )
   in (
     match c with 
@@ -218,7 +198,7 @@ let check_D0 (err, meas_tbl) c = (
     match c with 
     | Entangle (_, _) -> ()
     | Measure (_, _, signals1, signals2)  -> (
-      List.iter check signal1;
+      List.iter check signals1;
       List.iter check signals2
     )
     | XCorrect (_, signals) -> (List.iter check signals)
@@ -240,9 +220,10 @@ let check_D4 (err, comp_space_tbl) = (
   let check ms k = if not (H.mem comp_space_tbl k) then k::ms else ms in
   let missing = List.fold_left check [] correct_keys in (
     if (List.length missing > 0) then (
-      exit := true;
+      err := true;
       print_err (None, "Invalid Program : expected qubits to be integers 0 through " 
-                        ^ (l-1) ^ "; missing " ^ String.concat ", " (to_string missing))
+                        ^ (to_string (l-1)) ^ "; missing " 
+                        ^ (String.concat ", " (List.map to_string missing)))
     ) 
   )
 );;
@@ -258,13 +239,13 @@ let check_D4 (err, comp_space_tbl) = (
 let construct_output (out_tbl, meas_tbl) c = (
   let handler q = (
     if not (H.mem meas_tbl q) then (
-      H.add out_tbl q
+      H.add out_tbl q ()
     )
   )
   in (
     match c with 
     | Entangle (left, right)    -> (handler left; handler right)
-    | Measure (qubit, _, _, _)  -> ()
+    | Measure (_, _, _, _)  -> ()
     | XCorrect (qubit, _)       -> (handler qubit)
     | ZCorrect (qubit, _)       -> (handler qubit)
   )
@@ -290,7 +271,7 @@ let well_formed ((preps, cmds) : prog) : int = (
   let err = ref false in
   let comp_space_tbl = H.create 12 in
   let in_tbl = H.create 12 in
-  let out_tbl = H.create 12 in 
+  (* let out_tbl = H.create 12 in *) 
   let meas_tbl = H.create 12 in (
     List.iter (check_prep (comp_space_tbl, in_tbl)) preps;
     (* At this point in the computation, comp_space_tbl contains all qubits used  *
@@ -298,7 +279,7 @@ let well_formed ((preps, cmds) : prog) : int = (
     List.iter (check_D2 (err, comp_space_tbl)) cmds;
     List.iter (check_D1 (err, meas_tbl)) cmds;
     List.iter (check_D0 (err, meas_tbl)) cmds;
-    check_D4 (err, comp_space_tbl);
+    check_D4 (err, comp_space_tbl)
     (* List.iter (construct_output (out_tbl, meas_tbl)) cmds (* not needed for well_formed *) *)
   );
   if (!err) then 0 else H.length comp_space_tbl
@@ -391,5 +372,6 @@ let eval ((preps, cmds) as p : prog) : bool list = (
 );;
 *)
 
-print_prog ([Init(1, 0.375324); InitNonInput([2; 3])], [Entangle(1, 2)]);;
+let p = ([Init(1, 0.375324); InitNonInput([2; 3])], [Entangle(1, 2)]);;
 
+print_prog p;;
