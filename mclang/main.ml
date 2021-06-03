@@ -119,6 +119,30 @@ let check_prep (comp_space_tbl, in_tbl) p = (
 );;
 
 (*
+ *  Utility used for `well_formed` below.
+ *
+ *  D2 (see below) is violated if any command acts on an unprepared, non-input qubit.
+ *  `input_or_prepared_tbl` contains all prepared or input qubits; thus, an error
+ *  has occured if a command acts on a qubit not in `input_or_prepared_tbl`.
+ *)
+let check_D2 (err, input_or_prepared_tbl) c = (
+  let check q msg = (
+    if not (H.mem input_or_prepared_tbl q) then (
+      err := true;
+      print_err (c, "Invalid use of unprepared, non-input qubit " ^ to_string q)
+    )
+  ) 
+  in (
+    match c with 
+    | Entangle (left, right)    -> (check left; check right)
+    | Measure (qubit, _, _, _)  -> (check qubit)
+    | XCorrect (qubit, _)       -> (check qubit)
+    | ZCorrect (qubit, _)       -> (check qubit)
+  )
+);;
+
+
+(*
  *  Checks whether a program is well formed, i.e., whether it satisfies
  *  the following conditions:
  *    From the paper:
@@ -134,8 +158,17 @@ let check_prep (comp_space_tbl, in_tbl) p = (
  *  On success, returns the number of qubits used in the program.
  *)
 let well_formed ((preps, cmds) : prog) : int = (
-  match (preps, cmds) with
-  | _ -> 1
+  let err = ref false in
+  let comp_space_tbl = H.create 12 in
+  let in_tbl = H.create 12 in
+  let out_tbl = H.create 12 in (
+    List.iter (check_prep (comp_space_tbl, in_tbl)) preps;
+    (* At this point in the computation, comp_space_tbl contains all qubits used  *
+     * and in_tbl contains all input qubits                                       *)
+    List.iter (check_D2 (err, comp_space_tbl)) cmds;
+
+  );
+  if (!err) then 0 else H.length comp_space_tbl
 );;
 
 
