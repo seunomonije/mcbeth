@@ -118,6 +118,26 @@ let check_prep (comp_space_tbl, in_tbl) p = (
   )
 );;
 
+
+(*
+ *  Utility used for `well_formed` below.
+ *)
+let check_cmd (err, comp_space_tbl, in_tbl, out_tbl) c = (
+  match c with 
+  | Entangle (left, right) -> (
+
+  )
+  | Measure (qubit, angle, parity1, parity2) -> (
+
+  )
+  | XCorrect (qubit, signals) -> (
+
+  )
+  | ZCorrect (qubit, signals) -> (
+
+  )
+);;
+
 (*
  *  Utility used for `well_formed` below.
  *
