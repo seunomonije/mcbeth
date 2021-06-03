@@ -24,9 +24,9 @@ type prep =
 
 type cmd =
   | Entangle of qubit * qubit
-  | Measure of qubit * float * int * int
-  | XCorrect of qubit * int
-  | ZCorrect of qubit * int
+  | Measure of qubit * float * qubit list * qubit list
+  | XCorrect of qubit * qubit list
+  | ZCorrect of qubit * qubit list
 
 type prog = prep list * cmd list
 
@@ -70,11 +70,14 @@ let cmd_to_string c = (
   | Entangle (left, right) ->
     "E[" ^ to_string left ^ ", " ^ to_string right ^ "]"
   | Measure (qubit, angle, parity1, parity2) ->
-    "M[" ^ String.concat ", " [to_string qubit; float_to_string angle; to_string parity1; to_string parity2] ^ "]"
-  | XCorrect (qubit, signal) ->
-    "X[" ^ to_string qubit ^ ", " ^ to_string signal ^ "]"
-  | ZCorrect (qubit, signal) ->
-    "Z[" ^ to_string qubit ^ ", " ^ to_string signal ^ "]"
+    "M[" ^ String.concat ", " [to_string qubit; 
+                              float_to_string angle; 
+                              "[" ^ String.concat ", " List.map to_string parity1 ^ "]"; 
+                              "[" ^ String.concat ", " List.map to_string parity2 ^ "]"] ^ "]"
+  | XCorrect (qubit, signals) ->
+    "X[" ^ to_string qubit ^ ", [" ^ String.concat ", " List.map to_string signals ^ "]]"
+  | ZCorrect (qubit, signals) ->
+    "Z[" ^ to_string qubit ^ ", [" ^ String.concat ", " List.map to_string signals ^ "]]"
 );;
 
 (*
@@ -164,10 +167,10 @@ let eval_cmd (c : cmd) : unit = (
   | Measure (qubit, angle, parity1, parity2) -> (
 
   )
-  | XCorrect (qubit, signal) -> (
+  | XCorrect (qubit, signals) -> (
 
   )
-  | ZCorrect (qubit, signal) -> (
+  | ZCorrect (qubit, signals) -> (
 
   )
 );;
