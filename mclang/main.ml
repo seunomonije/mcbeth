@@ -93,7 +93,11 @@ let print_prog ((preps, cmds) : prog) = (
  *  Prints an error messgae to stdout noting the command and violation.
  *)
 let print_err (cmd, msg) = (
-  print_endline ("Error: " ^ cmd_to_string cmd ^ " : " ^ msg ^ ".")
+  if (Option.is_none cmd) then (
+    print_endline ("Error: " ^ msg ^ ".")
+  ) else (
+    print_endline ("Error: " ^ cmd_to_string (Option.get cmd) ^ " : " ^ msg ^ ".")
+  )
 );;
 
 
@@ -143,6 +147,7 @@ let check_cmd (err, comp_space_tbl, in_tbl, out_tbl) c = (
   )
 );;
 
+
 (*
  *  Utility used for `well_formed` below.
  *
@@ -156,7 +161,7 @@ let check_D2 (err, input_or_prepared_tbl) c = (
   let check q = (
     if not (H.mem input_or_prepared_tbl q) then (
       err := true;
-      print_err (c, "Invalid use of unprepared, non-input qubit " ^ to_string q)
+      print_err (Some c, "Invalid use of unprepared, non-input qubit " ^ to_string q)
     )
   ) 
   in (
@@ -180,7 +185,7 @@ let check_D1 (err, meas_tbl) c = (
   let check q = (
     if (H.mem meas_tbl q) then (
       err := true;
-      print_err (c, "Invalid use of an already measured qubit " ^ to_string q)
+      print_err (Some c, "Invalid use of an already measured qubit " ^ to_string q)
     )
   ) in
   let insert q = (
@@ -206,7 +211,7 @@ let check_D0 (err, meas_tbl) c = (
   let check q = (
     if not (H.mem meas_tbl q) then (
       err := true;
-      print_err (c, "Command depends on the outcome of unmeasured qubit " ^ to_string q)
+      print_err (Some c, "Command depends on the outcome of unmeasured qubit " ^ to_string q)
     )
   ) 
   in (
@@ -220,6 +225,28 @@ let check_D0 (err, meas_tbl) c = (
     | ZCorrect (_, signals) -> (List.iter check signals)
   )
 );;
+
+(*
+ *  Utility used for `well_formed` below.
+ *
+ *  D4 (see below) is violated if the set of qubit integers does not equal the set of
+ *  all integers between 0 and n-1 where n is the number of qubits used.
+ *
+ *  Returns nothing. May have side-effects on `err`.
+ *)
+let check_D4 (err, comp_space_tbl) = (
+  let l = H.length comp_space_tbl in
+  let correct_keys = List.init l (fun x -> x) in
+  let check ms k = if not (H.mem comp_space_tbl k) then k::ms else ms in
+  let missing = List.fold_left check [] correct_keys in (
+    if (List.length missing > 0) then (
+      exit := true;
+      print_err (None, "Invalid Program : expected qubits to be integers 0 through " 
+                        ^ (l-1) ^ "; missing " ^ String.concat ", " (to_string missing))
+    ) 
+  )
+);;
+
 
 (*
  *  Utility used for `well_formed` below.
@@ -271,7 +298,8 @@ let well_formed ((preps, cmds) : prog) : int = (
     List.iter (check_D2 (err, comp_space_tbl)) cmds;
     List.iter (check_D1 (err, meas_tbl)) cmds;
     List.iter (check_D0 (err, meas_tbl)) cmds;
-    List.iter (construct_output (out_tbl, meas_tbl)) cmds
+    check_D4 (err, comp_space_tbl);
+    (* List.iter (construct_output (out_tbl, meas_tbl)) cmds (* not needed for well_formed *) *)
   );
   if (!err) then 0 else H.length comp_space_tbl
 );;
