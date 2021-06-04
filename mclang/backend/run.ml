@@ -7,6 +7,10 @@
 
 
 open Types;;
+open Lacaml.Z;;
+
+open Format;;     (* for testing/debugging *)
+open Lacaml.Io;;  (* for testing/debugging *)
 
 module H = Hashtbl;;
 
@@ -349,3 +353,16 @@ let eval ((preps, cmds) as p : prog) : bool list = (
   )
 );;
 *)
+
+let foobar() = (
+  print_endline("-- foobar test --");
+  let open Cenv in
+  let a =
+    Mat.of_array
+      [|
+        [| c 2. 0.; c 3. 1.5 |];
+        [| c 1. 2.; c (-.5.) 0. |];
+      |] 
+  in
+  printf "a = @[%a@]@\n@\n" pp_cmat a
+)
