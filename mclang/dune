@@ -1,2 +1,14 @@
-(executable
- (name main))
+
+(library
+  (name mcl)
+  (modules)
+  (libraries 
+    (re_export backend)
+  )
+)
+
+(executable 
+  (name main)
+  (modules main)
+  (libraries mcl)
+)
