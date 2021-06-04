@@ -14,6 +14,11 @@ open Lacaml.Io;;  (* for testing/debugging *)
 
 module H = Hashtbl;;
 
+
+(* Global State Matrix *)
+let states = ref Mat.empty;;
+
+
 (**********************************************************************************
   *                                                                               *
   *                               Utility Functions                               *
@@ -271,13 +276,14 @@ let well_formed ((preps, cmds) : prog) : int = (
 (**
   *  Initializes global matrix stored in memory given the number of qubits to be simulated.
   *  Returns true on success; false on failure.
-  *)(*
+  *)
 let init_matrix (x : int) : bool = (
   if (x > 0) then (
+    states := Mat.create 2 x;  (* TODO: Double check numbers *)
     true
   ) else false
 );;
-*)
+
 
 (**********************************************************************************
   *                                                                               *
@@ -285,8 +291,10 @@ let init_matrix (x : int) : bool = (
   *                                                                               *
   *********************************************************************************)
 
+(* <- Remove this one
+
+(* TODO: *)
 (* Randomized *)
-(*
 (**
   *  Performs appropriate operations to initialize qubits.
   *  Matrix stored in memory changed as a side-effect.
@@ -348,11 +356,12 @@ let eval ((preps, cmds) as p : prog) : bool list = (
     if init_matrix(qubit_num) then (
       List.iter eval_prep preps;
       List.iter eval_cmd cmds;
-      [] (* Will pull bool list from vector stored in memory *)
+      [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
     ) else []
   )
 );;
-*)
+
+Remove this one -> *)
 
 let foobar() = (
   print_endline("-- foobar test --");
@@ -364,5 +373,8 @@ let foobar() = (
         [| c 1. 2.; c (-.5.) 0. |];
       |] 
   in
-  printf "a = @[%a@]@\n@\n" pp_cmat a
+  if init_matrix 4 then (
+    printf "a = @[%a@]@\n@\n" pp_cmat a;
+    printf "a = @[%a@]@\n@\n" pp_cmat (!states);
+  ) else ()
 )
