@@ -7,6 +7,15 @@
   )
 )
 
+(library
+  (name linalg)
+  (modules)
+  (libraries 
+    (re_export lacaml)
+    (re_export cenv)
+  )
+)
+
 (executable 
   (name main)
   (modules main)

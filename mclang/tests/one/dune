@@ -2,5 +2,5 @@
 
 (tests
   (names one)
-  (libraries mcl lacaml)
+  (libraries mcl linalg)
 )

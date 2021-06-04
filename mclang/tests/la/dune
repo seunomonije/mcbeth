@@ -1,6 +1,6 @@
 ;; Linear Algebra Tests
 
 (tests
-  (names basic)
-  (libraries mcl lacaml)
+  (names basic complex cenv1)
+  (libraries mcl linalg)
 )
