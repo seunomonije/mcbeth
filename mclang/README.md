@@ -2,7 +2,7 @@
 
 ## Tables of Contents
 
-1. [Installation]()
+1. [Installation](#installation)
 2. [File Organization]()
 3. [Development and Testing]()
 
