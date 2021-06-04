@@ -1,0 +1,3 @@
+[submodule "mclang/lib/lacaml"]
+	path = mclang/lib/lacaml
+	url = https://github.com/mmottl/lacaml
