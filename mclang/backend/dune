@@ -3,5 +3,5 @@
   (name backend)
   (modules_without_implementation types)
   (modules types run presets)
-  (libraries lacaml)
+  (libraries linalg)
 )
