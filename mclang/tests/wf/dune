@@ -1,6 +1,6 @@
 ;; Well-Formed Tests
 
 (tests
-  (names test well_formed qnumbers)
+  (names test errors qnumbers)
   (libraries mcl linalg)
 )
