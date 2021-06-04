@@ -1,0 +1,6 @@
+;; Well-Formed Tests
+
+(tests
+  (names test well_formed)
+  (libraries mcl)
+)

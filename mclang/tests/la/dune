@@ -1,0 +1,6 @@
+;; Linear Algebra Tests
+
+(tests
+  (names basic)
+  (libraries mcl)
+)
