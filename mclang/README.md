@@ -3,7 +3,7 @@
 ## Tables of Contents
 
 1. [Installation](/mclang#installation)
-2. [File Organization]()
+2. [File Organization](#file-organization)
 3. [Development and Testing]()
 
 ## Installation
