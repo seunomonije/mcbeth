@@ -122,11 +122,11 @@ The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](h
 - Multiplication (`x * y`)
 - Division (`x / y`)
 
-The Cenv library is refered to as `cenv` in dune files -- [dune file link](/mclang/lib/complexenv/dune).
-
 ##### New Operators
 
 - Exponentiation (`x ** y`; "x to the power of y")
+
+The Cenv library is refered to as `cenv` in dune files -- [dune file link](/mclang/lib/complexenv/dune).
 
 #### Created Dune Libraries
 
