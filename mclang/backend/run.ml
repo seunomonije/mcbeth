@@ -15,11 +15,6 @@ open Lacaml.Io;;  (* for testing/debugging *)
 module H = Hashtbl;;
 
 
-(* Global State Matrix *)
-let init_states = ref Mat.empty;;
-(* let state_vec = ref Vec.empty;; *)
-
-
 (**********************************************************************************
   *                                                                               *
   *                               Utility Functions                               *
@@ -317,22 +312,20 @@ let update_angle angle signals_s signals_t = (
   *                                                                               *
   *********************************************************************************)
 
-(* <- Remove this one
-
 (* TODO: *)
 (* Randomized *)
 (**
   *  Performs appropriate operations to initialize qubits.
   *  Matrix stored in memory changed as a side-effect.
   *)
-let rec eval_prep (p : prep) : unit = (
+let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
   match p with
   | Init (qubit, base_angle) -> (
     (* Initalizes a qubit with angle base_angle *)
     
   )
   | Init0 (qubit) -> (
-
+    (* states[qubit] = column vector of [1, 0] *)
   )
   | Init1 (qubit) -> (
 
@@ -345,9 +338,15 @@ let rec eval_prep (p : prep) : unit = (
   )
   | InitNonInput (qubits) -> (
     (* Non-input qubits are all initialized to |+> *)
-    List.iter (fun x -> eval_prep(InitPlus(x))) qubits 
+    List.iter (fun x -> (eval_prep states (InitPlus(x)))) qubits
   )
 );;
+
+let eval_preps qubit_num preps = (
+  let states = Array.make qubit_num (Vec.create 2) in
+  List.iter (fun p -> eval_prep states p) preps;
+  (* Compute state vectors based on the states in `states` *)
+)
 
 (**
   *  Performs appropriate operations to execute command.
@@ -380,14 +379,13 @@ let eval ((preps, cmds) as p : prog) : bool list = (
     qubit_num = well_formed(p)
   in (
     if init_matrix(qubit_num) then (
-      List.iter eval_prep preps;
+      let state_vec = eval_preps qubit_num preps in
       List.iter eval_cmd cmds;
       [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
     ) else []
   )
 );;
 
-Remove this one -> *)
 
 let foobar() = (
   print_endline("-- foobar test --");
