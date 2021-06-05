@@ -318,7 +318,7 @@ let update_angle angle signals_s signals_t = (
   *  Performs appropriate operations to initialize qubits.
   *  Matrix stored in memory changed as a side-effect.
   *)
-let rec eval_prep (states : vec array) (p : prep) : unit = (
+let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
   match p with
   | Init (qubit, base_angle) -> (
     (* Initalizes a qubit with angle base_angle *)
@@ -344,7 +344,7 @@ let rec eval_prep (states : vec array) (p : prep) : unit = (
 
 let eval_preps qubit_num preps = (
   let init_vec_arr = Array.make qubit_num (Vec.create 2) in
-  let states : vec array = List.fold_left eval_prep init_vec_arr preps in
+  let states : Vec.vec array = List.fold_left eval_prep init_vec_arr preps in
   (* Compute state vectors based on the states in `states` *)
 )
 
