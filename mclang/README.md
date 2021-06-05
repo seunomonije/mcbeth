@@ -206,6 +206,8 @@ The following test case subsets are currently in the [tests](/mclang/tests) dire
 - [wf](/mclang/tests/wf): test cases for the `well_formed` function in [backend/run.ml](/mclang/backend/run.ml)
 - [one](/mclang/tests/one): a single test case, [one.ml](/mclang/tests/one/one.ml), used for running quick tests
 
+TODO: add test cases within each subset
+
 ## Programming in MCL
 
 ### MCL Libraries
