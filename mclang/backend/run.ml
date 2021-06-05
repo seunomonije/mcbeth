@@ -294,12 +294,12 @@ let init_matrix (x : int) : bool = (
   *
   * Returns the signal.
   *)
-let calc_signal qs = (
+(* let calc_signal qs = (
   let helper q = (
-    (* return outcome s_q ; 0 or 1 *)
+    (* return outcome s_q ; 0 or 1 *) q
   ) in
   (List.fold_left (fun s q -> s + helper q) 0 qs) mod 2
-)
+) *)
 
 (**********************************************************************************
   *                                                                               *

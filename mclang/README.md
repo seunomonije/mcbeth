@@ -32,6 +32,7 @@
 
 ### Quick Start
 
+#### Linux 
 The following commands worked to install all needed dependencies on Ubuntu 20.04:
 
 ```
@@ -42,6 +43,25 @@ opam install dune
 opam install dune-configurator
 sudo apt-get install libblas-dev liblapack-dev
 ```
+
+### MacOS
+It's recommended to use package manager [Homebrew](https://brew.sh/) to download dependencies that aren't reliant on Opam.
+Translating the quick start above, this looks like:
+
+```
+brew install opam
+opam init
+eval $(opam config env)
+opam install dune
+opam install dune-configurator
+brew install openblas lapack
+```
+
+Note that MacOS com pree install with the [vecLib framework](https://developer.apple.com/documentation/accelerate/veclib) which
+already contains both BLAS and LAPACK. You can point this project to those pre-existing installations, or download a fresh
+set. 
+
+When cloning the repository, be sure to pull in all submodules with it by running `git submodule update --init --recursive`. 
 
 More detail is available in the following sections.
 
