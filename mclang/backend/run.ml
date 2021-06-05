@@ -348,7 +348,7 @@ let eval_cmd (c : cmd) : unit = (
   | Entangle (left, right) -> (
 
   )
-  | Measure (qubit, angle, parity1, parity2) -> (
+  | Measure (qubit, angle, signals_s, signals_t) -> (
 
   )
   | XCorrect (qubit, signals) -> (
