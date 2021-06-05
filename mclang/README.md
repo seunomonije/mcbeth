@@ -7,6 +7,7 @@
    2. [Opam](#opam)
    3. [Dune](#dune)
    4. [Lacaml](#lacaml)
+   5. [Troubleshooting](#troubleshooting)
 2. [Project Structure](#project-structure)
    1. [File Organization](#file-organization)
    2. [Libraries](#libraries)
@@ -69,6 +70,10 @@ First, the Lacaml library requires the [dune-configurator library](https://opam.
 Second, the Lacaml library requires the BLAS and LAPACK libraries. Install them both by running `sudo apt-get install libblas-dev liblapack-dev`.
 
 Learn more about Lacaml at https://mmottl.github.io/lacaml/ and https://github.com/mmottl/lacaml.
+
+### Troubleshooting
+
+TODO
 
 ## Project Structure
 
@@ -134,7 +139,7 @@ To ease development, two libraries are currently defined in the [main dune file]
 
 ##### mcl
 
-The `mcl` library groups all of the parts of MCL into one dune library so all of MCL can be included in a build by just adding `mcl` to a dune stanza's `libraries` field. Currently, `mcl` just includes [the backend](/mclang/backend). MCL libraries, i.e., "the parts of MCL," are further discussed in the [MCL Libraries](#mcl-libraries) section.
+The `mcl` library groups all of the parts of MCL into one dune library so all of MCL can be included in a build by just adding `mcl` to a dune stanza's `libraries` field. Currently, `mcl` just includes [the backend](#backend). MCL libraries, i.e., "the parts of MCL," are further discussed in the [MCL Libraries](#mcl-libraries) section.
 
 ##### linalg
 
@@ -175,7 +180,7 @@ The `names` field lists each test that should be included. In this example, the 
 
 The `libraries` field lists all libraries that running these tests depends on. In this example, these tests need the "mcl" and "linalg" libraries.
 
-Say we wish to add "new_test" to some set of tests.
+Say we wish to add the test "new_test" to some set of tests.
 
 If "new_test" is being added to an already created subset of tests, then paste the "new_test.ml" file in the desired subdirectory of [tests](/mclang/tests) and then add "new_test" to that subdirectory's dune file's `names` field. For example, the `names` field of the above example file would now be:
 
@@ -190,6 +195,8 @@ If "new_test" is the first test in a new subset of tests, then create a new subd
 ```
 
 #### Available Test Cases
+
+TODO
 
 ## Programming in MCL
 
@@ -209,12 +216,22 @@ The MCL Backend library is responsible for processing and running MCL programs; 
 
 ###### Types
 
+TODO
+
 ###### Run
+
+TODO
 
 ###### Presets
 
+TODO
+
 ### Writing Programs
 
+TODO
+
 ### Compiling Programs
+
+TODO
 
 We can build with `dune build [file_name.exe]` and then run with `dune exec file_name.exe`.
