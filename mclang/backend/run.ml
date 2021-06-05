@@ -16,7 +16,8 @@ module H = Hashtbl;;
 
 
 (* Global State Matrix *)
-let states = ref Mat.empty;;
+let init_states = ref Mat.empty;;
+(* let state_vec = ref Vec.empty;; *)
 
 
 (**********************************************************************************
@@ -277,11 +278,8 @@ let well_formed ((preps, cmds) : prog) : int = (
   * Initializes global matrix stored in memory given the number of qubits to be simulated.
   * Returns true on success; false on failure.
   *)
-let init_matrix (x : int) : bool = (
-  if (x > 0) then (
-    states := Mat.create 2 x;  (* TODO: Double check numbers *)
-    true
-  ) else false
+let init_matrix (x : int) (y : int) : bool = (
+  Mat.create x y
 );;
 
 (**
@@ -296,10 +294,22 @@ let init_matrix (x : int) : bool = (
   *)
 (* let calc_signal qs = (
   let helper q = (
-    (* return outcome s_q ; 0 or 1 *) q
+    (* TODO: return outcome s_q ; 0 or 1 *)
   ) in
   (List.fold_left (fun s q -> s + helper q) 0 qs) mod 2
 ) *)
+
+(**
+  * Calculates the new angle of a measurement based on the original angle
+  * and the outcomes of signals1 and signals2
+  *
+  * Returns the new angle.
+  *)
+let update_angle angle signals_s signals_t = (
+  let sig qs = float_of_int (calc_signal qs) in
+  ((-1.)**(sig signals_s)) + ((sig signals_t) * (* TODO: get Pi *))
+)
+
 
 (**********************************************************************************
   *                                                                               *
