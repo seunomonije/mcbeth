@@ -12,10 +12,16 @@
    2. [Libraries](#libraries)
       1. [Lacaml](#lacaml-1)
       2. [Complexenv (Cenv)](#complexenv-cenv)
-   3. [Running Tests](#running-tests)
+      3. [Created Dune Libraries](#created-dune-libraries)
+   3. [Test Cases](#test-cases)
+      1. [Running Tests](#running-tests)
+      2. [Creating Tests](#creating-tests)
+      3. [Available Test Cases](#available-test-cases)
 3. [Programming in MCL](#programming-in-mcl)
-   1. [Writing Programs](#writing-programs)
-   2. [Compiling Programs](#compiling-programs)
+   1. [MCL Libraries](#mcl-libraries)
+      1. [Backend](#backend)
+   2. [Writing Programs](#writing-programs)
+   3. [Compiling Programs](#compiling-programs)
 
 ## Installation
 
@@ -72,9 +78,9 @@ As mentioned in the above section, we used Dune to help build and test our proje
 
 The project is currently split into three main folders: [backend](/mclang/backend), [lib](/mclang/lib), and [tests](/mclang/tests).
 
-The [backend](/mclang/backend) directory contains the main files for creating, processing, and running MCL programs. Specifically, [types.mli](/mclang/backend/types.mli) contains the data type definitions used to write MCL programs, [run.ml](/mclang/backend/run.ml) contains the code used to simulate MCL programs, and [presets.ml](/mclang/backend/presets.ml) contains functions which can be used to help write common quantun algorithms. More details on the contents of these files are explained in the [Writing Programs](#writing-programs) section below.
+The [backend](/mclang/backend) directory contains the files in MCL's Backend library. More details on this library are discussed in the [Backend section of MCL Libraries](#backend).
 
-The [lib](/mclang/lib) directory contains the libraries that MCL programs require in order to run. Details about these libraries are discussed in the [Libraries](#libraries) section below.
+The [lib](/mclang/lib) directory contains the external libraries that MCL programs require in order to run. Details about these libraries are discussed in the [Libraries](#libraries) section below.
 
 The [tests](/mclang/tests) directory contains various tests used during development. How to run these tests and create new tests are explained in the [Running Tests](#running-tests) section below.
 
@@ -82,7 +88,7 @@ The [tests](/mclang/tests) directory contains various tests used during developm
 
 #### Lacaml
 
-[Lacaml](https://github.com/mmottl/lacaml) provides the linear algebra operations needed to calculate and store quantum state information. More information about what the Lacaml is is provided [under the Installation section](#lacaml).
+[Lacaml](https://github.com/mmottl/lacaml) provides the linear algebra operations needed to calculate and store quantum state information. More information about what the Lacaml external library is is provided [under the Installation section](#lacaml).
 
 We primarily rely on the [Lacaml.Z](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html) module for calculations involving double precision complex numbers. We also use the [Lacaml.Io](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Io/index.html) module for pretty printing matrices and vectors. Links to these and other helpful modules are listed below.
 
@@ -98,7 +104,7 @@ The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](h
 
 #### Complexenv (Cenv)
 
-[Complexenv](/mclang/lib/complexenv), or Cenv for short, is a custom-made library to make the use of complex numbers easier in OCaml. Cenv contains new helpful functions and redefines arithmatic operators to use complex numbers instead of integers. It uses the complex numbers type `Complex.t` defined the OCaml standard library [Complex module](https://ocaml.org/api/Complex.html); this same type is [used in Lacaml](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html#type-num_type).
+[Complexenv](/mclang/lib/complexenv), or Cenv for short, is a custom-made external library to make the use of complex numbers easier in OCaml. Cenv contains new helpful functions and redefines arithmatic operators to use complex numbers instead of integers. It uses the complex numbers type `Complex.t` defined the OCaml standard library [Complex module](https://ocaml.org/api/Complex.html); this same type is [used in Lacaml](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html#type-num_type).
 
 ##### Functions
 
@@ -110,7 +116,6 @@ The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](h
 
 ##### Redefined Operators
 
-### Running Tests
 - Addition (`x + y`)
 - Subtraction (`x - y`)
 - Unary Negation (`-x`)
@@ -123,12 +128,93 @@ The Cenv library is refered to as `cenv` in dune files -- [dune file link](/mcla
 
 - Exponentiation (`x ** y`; "x to the power of y")
 
+#### Created Dune Libraries
+
+To ease development, two libraries are currently defined in the [main dune file](/mclang/dune) for the project. These libraries simply group other modules and libraries together.
+
+##### mcl
+
+The `mcl` library groups all of the parts of MCL into one dune library so all of MCL can be included in a build by just adding `mcl` to a dune stanza's `libraries` field. Currently, `mcl` just includes [the backend](/mclang/backend). MCL libraries, i.e., "the parts of MCL," are further discussed in the [MCL Libraries](#mcl-libraries) section.
+
+##### linalg
+
+The `linalg` library groups the `lacaml` and `cenv` external libraries into one dune library so all linear algebra functions can be included in a build by just adding `linalg` to a dune stanza's `libraries` field.
+
+### Test Cases
+
+We also use Dune to manage test cases via its `runtest` command and `tests` stanza. All tests are contained in subdirectories of the [tests](/mclang/tests) directory.
+
+#### Running Tests
+
+To run all tests, run `dune runtest tests --force`.
+
+To run only a subset of tests, run `dune runtest tests/subdir --force` where `subdir` is the subdirectory containing the desired subset of tests.
+
+##### The `--force` Flag
+
+Adding the `--force` flag to the end of the runtest command forces all of the specified test cases run. Without the flag, only tests which have been modified since the last runtest call will run.
+
+Not using the force flag is useful when creating or developing tests. Because only modified tests will run, no already developed tests will run and, therefore, the output will only contain the current tests being worked on.
+
+#### Creating Tests
+
+Tests are defined by adding the module name to the dune file in the tests' subdirectory.
+
+Each dune file looks something like this:
+
+```
+;; Example Tests
+
+(tests
+  (names example1 test1337 prog7)
+  (libraries mcl linalg)
+)
+```
+
+The `names` field lists each test that should be included. In this example, the tests "example1", "test1337", and "prog7" are included. Each test name should have a corresponding `.ml` file in the same directory; for example, "example1" should have a corresponding "example1.ml" file.
+
+The `libraries` field lists all libraries that running these tests depends on. In this example, these tests need the "mcl" and "linalg" libraries.
+
+Say we wish to add "new_test" to some set of tests.
+
+If "new_test" is being added to an already created subset of tests, then paste the "new_test.ml" file in the desired subdirectory of [tests](/mclang/tests) and then add "new_test" to that subdirectory's dune file's `names` field. For example, the `names` field of the above example file would now be:
+
+```
+  (names example1 test1337 prog7 new_test)
+```
+
+If "new_test" is the first test in a new subset of tests, then create a new subdirectory in [tests](/mclang/tests) and create a file based on the example file above. For the `names` field, just include "new_test":
+
+```
+  (names new_test)
+```
+
+#### Available Test Cases
+
 ## Programming in MCL
 
-#### Writing Programs
+### MCL Libraries
 
-[run.mli](/mclang/backend/run.mli) lists the functions contained in [run.ml](/mclang/backend/run.ml) which are available in the `Backend.Run` module.
+#### Backend
 
-#### Compiling Programs
+The MCL Backend library is responsible for processing and running MCL programs; it also contains the data types used when writing MCL programs. The [backend](/mclang/backend) directory contains all of the files used in the library. Each file defines a module within the Backend library; each module contains functions available for use when creating and testing MCL programs. Each `.ml` file has a corresponding `.mli` file which lists the functions in the `.ml` file available for use outside of the `.ml` file.
+
+##### Files List
+
+- [types.mli](/mclang/backend/types.mli): contains the data type definitions used to write MCL programs
+- [run.ml](/mclang/backend/run.ml): contains the functions used to process MCL programs
+- [presets.ml](/mclang/backend/presets.ml): contains functions which can be used to help write common quantun algorithms
+
+##### Modules
+
+###### Types
+
+###### Run
+
+###### Presets
+
+### Writing Programs
+
+### Compiling Programs
 
 We can build with `dune build [file_name.exe]` and then run with `dune exec file_name.exe`.
