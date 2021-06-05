@@ -343,8 +343,8 @@ let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
 );;
 
 let eval_preps qubit_num preps = (
-  let init_vec_arr = Array.make qubit_num (Vec.create 2) in
-  let states : Vec.vec array = List.iter (fun p -> eval_prep init_vec_arr p) preps in
+  let states = Array.make qubit_num (Vec.create 2) in
+  List.iter (fun p -> eval_prep states p) preps;
   (* Compute state vectors based on the states in `states` *)
 )
 
