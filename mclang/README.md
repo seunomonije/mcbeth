@@ -56,7 +56,7 @@ For more installation options and to learn more about Dune, visit https://github
 
 Lacaml is an OCaml library from linear algebra. It interfaces with the [BLAS](http://www.netlib.org/blas/) and [LAPACK](http://www.netlib.org/lapack/) linear algebra libraries, which are widely used for fast performing fast linear algebra operations.
 
-The Lacaml library is included as the submodule "lacaml" located in the [/lib](/mclang/lib) directory but still requires some dependencies to be installed.
+The Lacaml library is included as the submodule "lacaml" located in the [lib](/mclang/lib) directory but still requires some dependencies to be installed.
 
 First, the Lacaml library requires the [dune-configurator library](https://opam.ocaml.org/packages/dune-configurator/). Install it by running `opam install dune-configurator`.
 
@@ -66,22 +66,57 @@ Learn more about Lacaml at https://mmottl.github.io/lacaml/ and https://github.c
 
 ## Project Structure
 
+As mentioned in the above section, we used Dune to help build and test our project.
+
 ### File Organization
 
-As mentioned in the above section, we used Dune to help build and test our project.
+The project is currently split into three main folders: [backend](/mclang/backend), [lib](/mclang/lib), and [tests](/mclang/tests).
+
+The [backend](/mclang/backend) directory contains the main files for creating, processing, and running MCL programs. Specifically, [types.mli](/mclang/backend/types.mli) contains the data type definitions used to write MCL programs, [run.ml](/mclang/backend/run.ml) contains the code used to simulate MCL programs, and [presets.ml](/mclang/backend/presets.ml) contains functions which can be used to help write common quantun algorithms. More details on the contents of these files are explained in the [Writing Programs](#writing-programs) section below.
+
+The [lib](/mclang/lib) directory contains the libraries that MCL programs require in order to run. Details about these libraries are discussed in the [Libraries](#libraries) section below.
+
+The [tests](/mclang/tests) directory contains various tests used during development. How to run these tests and create new tests are explained in the [Running Tests](#running-tests) section below.
 
 ### Libraries
 
 #### Lacaml
 
+[Lacaml](https://github.com/mmottl/lacaml) provides the linear algebra operations needed to calculate and store quantum state information. More information about what the Lacaml is is provided [under the Installation section](#lacaml).
+
+We primarily rely on the [Lacaml.Z](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html) module for calculations involving double precision complex numbers. We also use the [Lacaml.Io](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Io/index.html) module for pretty printing matrices and vectors. Links to these and other helpful modules are listed below.
+
+##### Helpful Module Links:
+
+- [Lacaml](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/index.html): the main module
+- [Lacaml.Io](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Io/index.html): functions for representing matrices and vectors as strings
+- [Lacaml.Z](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html): functions using double precision complex numbers
+- [Lacaml.Z.Vec](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/Vec/index.html): creating and performing operations on vectors
+- [Lacam.Z.Mat](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/Mat/index.html): creating and performing operations on matrices
+
+The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](https://github.com/mmottl/lacaml/blob/master/src/dune).
+
 #### Complexenv (Cenv)
 
-### Running Tests
+[Cenv](/mclang/lib/complexenv) is a custom-made library to make the use of complex numbers easier in OCaml. Cenv contains new helpful functions and redefines arithmatic operators to use complex numbers instead of integers. It uses the complex numbers type `Complex.t` defined the OCaml standard library [Complex module](https://ocaml.org/api/Complex.html); this same type is [used in Lacaml](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html#type-num_type).
 
-We can build with `dune build [file_name.exe]` and then run with `dune exec file_name.exe`.
+##### Functions
+
+- `val c : float -> float -> Complex.t`<br>
+  The function `c re im` creates a new complex number given two floats, `re` and `im`. `re` is the real part of the complex number and `im` is the imaginary part.
+- `val cstr : Complex.t -> string`<br>
+  The
+
+##### Operators
+
+### Running Tests
 
 ## Programming in MCL
 
 #### Writing Programs
 
+[run.mli](/mclang/backend/run.mli) lists the functions contained in [run.ml](/mclang/backend/run.ml) which are available in the `Backend.Run` module.
+
 #### Compiling Programs
+
+We can build with `dune build [file_name.exe]` and then run with `dune exec file_name.exe`.
