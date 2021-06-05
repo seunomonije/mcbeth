@@ -1,4 +1,4 @@
-# MCL Documentation
+# Project Documentation
 
 ## Tables of Contents
 
@@ -7,15 +7,15 @@
    2. [Opam](#opam)
    3. [Dune](#dune)
    4. [Lacaml](#lacaml)
-2. [Development](#development)
+2. [Project Structure](#project-structure)
    1. [File Organization](#file-organization)
    2. [Libraries](#libraries)
       1. [Lacaml](#lacaml-1)
       2. [Complexenv (Cenv)](#complexenv-cenv)
-   3. [Testing](#testing)
-   4. [Programming in MCL](#programming-in-mcl)
-      1. [Writing Programs](#writing-programs)
-      2. [Compiling Programs](#compiling-programs)
+   3. [Running Tests](#running-tests)
+3. [Programming in MCL](#programming-in-mcl)
+   1. [Writing Programs](#writing-programs)
+   2. [Compiling Programs](#compiling-programs)
 
 ## Installation
 
@@ -64,7 +64,7 @@ Second, the Lacaml library requires the BLAS and LAPACK libraries. Install them 
 
 Learn more about Lacaml at https://mmottl.github.io/lacaml/ and https://github.com/mmottl/lacaml.
 
-## Development
+## Project Structure
 
 ### File Organization
 
@@ -76,11 +76,11 @@ As mentioned in the above section, we used Dune to help build and test our proje
 
 #### Complexenv (Cenv)
 
-### Testing
+### Running Tests
 
 We can build with `dune build [file_name.exe]` and then run with `dune exec file_name.exe`.
 
-### Programming in MCL
+## Programming in MCL
 
 #### Writing Programs
 
