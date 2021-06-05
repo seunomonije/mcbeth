@@ -98,18 +98,30 @@ The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](h
 
 #### Complexenv (Cenv)
 
-[Cenv](/mclang/lib/complexenv) is a custom-made library to make the use of complex numbers easier in OCaml. Cenv contains new helpful functions and redefines arithmatic operators to use complex numbers instead of integers. It uses the complex numbers type `Complex.t` defined the OCaml standard library [Complex module](https://ocaml.org/api/Complex.html); this same type is [used in Lacaml](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html#type-num_type).
+[Complexenv](/mclang/lib/complexenv), or Cenv for short, is a custom-made library to make the use of complex numbers easier in OCaml. Cenv contains new helpful functions and redefines arithmatic operators to use complex numbers instead of integers. It uses the complex numbers type `Complex.t` defined the OCaml standard library [Complex module](https://ocaml.org/api/Complex.html); this same type is [used in Lacaml](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/index.html#type-num_type).
 
 ##### Functions
 
 - `val c : float -> float -> Complex.t`<br>
-  The function `c re im` creates a new complex number given two floats, `re` and `im`. `re` is the real part of the complex number and `im` is the imaginary part.
+  The function `c re im` creates a new complex number given two floats, `re` and `im`. `re` is the real part of the complex number and `im` is the imaginary part.<br>
+  Note: when passing negative numerals as arguments, the numeral must be wrapped in parenthesis and use `-.` to negate the value. E.g., to create the complex number "-1.3+1.0i" call `c (-.1.3) 1.0`.
 - `val cstr : Complex.t -> string`<br>
-  The
+  The function `cstr n` converts the complex number `n` into a string. For example, say `n` was a complex number with the real part equal to 3.0 and the imaginary party equal to 2.1; `cstr n` would produce the string, "3.00+2.1i".
 
-##### Operators
+##### Redefined Operators
 
 ### Running Tests
+- Addition (`x + y`)
+- Subtraction (`x - y`)
+- Unary Negation (`-x`)
+- Multiplication (`x * y`)
+- Division (`x / y`)
+
+The Cenv library is refered to as `cenv` in dune files -- [dune file link](/mclang/lib/complexenv/dune).
+
+##### New Operators
+
+- Exponentiation (`x ** y`; "x to the power of y")
 
 ## Programming in MCL
 
