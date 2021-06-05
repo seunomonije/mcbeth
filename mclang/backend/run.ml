@@ -223,7 +223,7 @@ let check_D4 (err, comp_space_tbl) = (
   *
   *  Returns nothing.
   *)(*
-let construct_output (out_tbl, meas_tbl) c = (
+let construct_output_tbl (out_tbl, meas_tbl) c = (
   let handler q = (
     if not (H.mem meas_tbl q) then (
       H.add out_tbl q ()
@@ -267,15 +267,15 @@ let well_formed ((preps, cmds) : prog) : int = (
     List.iter (check_D1 (err, meas_tbl)) cmds;
     List.iter (check_D0 (err, meas_tbl)) cmds;
     check_D4 (err, comp_space_tbl)
-    (* List.iter (construct_output (out_tbl, meas_tbl)) cmds (* not needed for well_formed *) *)
+    (* List.iter (construct_output_tbl (out_tbl, meas_tbl)) cmds (* not needed for well_formed *) *)
   );
   if (!err) then 0 else H.length comp_space_tbl
 );;
 
 
 (**
-  *  Initializes global matrix stored in memory given the number of qubits to be simulated.
-  *  Returns true on success; false on failure.
+  * Initializes global matrix stored in memory given the number of qubits to be simulated.
+  * Returns true on success; false on failure.
   *)
 let init_matrix (x : int) : bool = (
   if (x > 0) then (
@@ -284,6 +284,22 @@ let init_matrix (x : int) : bool = (
   ) else false
 );;
 
+(**
+  * Calculates signals -- i.e., a single number based on the outcomes of qubits.
+  * Takes a list of qubits which the signal depends on as input.
+  *
+  * Signal s = \Sum_{i \in I}(s_i) where s_i = 0 if the measurement of qubit i
+  * collapses the state to |+_\alpha> and s_i = 1 if the state collapses to
+  * |-_\alpha>. The summation is performed in Z_2. 
+  *
+  * Returns the signal.
+  *)
+let calc_signal qs = (
+  let helper q = (
+    (* return outcome s_q ; 0 or 1 *)
+  ) in
+  (List.fold_left (fun s q -> s + helper q) 0 qs) mod 2
+)
 
 (**********************************************************************************
   *                                                                               *
