@@ -22,6 +22,10 @@
    1. [MCL Libraries](#mcl-libraries)
       1. [Backend](#backend)
    2. [Writing Programs](#writing-programs)
+      1. [Overview](#overview)
+      2. [Preparations](#preparations)
+      3. [Commands](#commands)
+      4. [Program Constraints](#program-constraints)
    3. [Compiling Programs](#compiling-programs)
 
 ## Installation
@@ -196,7 +200,11 @@ If "new_test" is the first test in a new subset of tests, then create a new subd
 
 #### Available Test Cases
 
-TODO
+The following test case subsets are currently in the [tests](/mclang/tests) directory:
+
+- [la](/mclang/tests/la): linear algebra test cases
+- [wf](/mclang/tests/wf): test cases for the `well_formed` function in [backend/run.ml](/mclang/backend/run.ml)
+- [one](/mclang/tests/one): a single test case, [one.ml](/mclang/tests/one/one.ml), used for running quick tests
 
 ## Programming in MCL
 
@@ -216,11 +224,23 @@ The MCL Backend library is responsible for processing and running MCL programs; 
 
 ###### Types
 
-TODO
+- `type qubit = int`<br>
+  Qubits are currently represented as integers.
+- `type prep = Init of qubit * float | Init0 of qubit | Init1 of qubit | InitPlus of qubit | InitMinus of qubit | InitNonInput of qubit list`<br>
+  Type `prep` defines the instructions used to prepare qubits. <br> Details on these instructions are provided in the [Writing Programs](#writing-programs) section below.
+- `type cmd = Entangle of qubit * qubit | Measure of qubit * float * qubit list * qubit list | XCorrect of qubit * qubit list | ZCorrect of qubit * qubit list`<br>
+  Type `cmd` defines the instructions used to perform specific actions an the qubits. <br> Details on these instructions are provided in the [Writing Programs](#writing-programs) section below.
+- `type prog = prep list * cmd list`<br>
+  Type `prog` defines what an entire program consists of. A program is defined as a pair of lists of instructions: one of prepare instructions and one of command instructions.
 
 ###### Run
 
-TODO
+- `val print_prog : prog -> unit`<br>
+  This function takes a program as input and prints to standard output the a more readable version of it.
+- `val well_formed : prog -> int`<br>
+  This function ensures that the program is valid. A program is valid if it does not violates the constraints described in the [Program Constraints](#program-constraints) section below. If valid, then the function returns the number of qubits used; if not valid, then the function returns 0.
+- `val eval : prog -> bool list`<br>
+  This function runs a program by executing each instruction while keeping track of the resulting qubit states. It returns a list of booleans corresponding to the final measured states of each qubit; `true` for 1 and `false` for 0.
 
 ###### Presets
 
@@ -228,10 +248,48 @@ TODO
 
 ### Writing Programs
 
+#### Overview
+
 TODO
+
+#### Preparations
+
+- `InitNonInput([q1; q2; ...])`: Sets all qubits which are not used for inputto the state `|+>`.
+
+All other instructions act on input qubits to set them to some input state as follows:
+
+- `Init(q, f)`: Sets the state of qubit `q` to the state `f`.
+- `Init0(q)`: Sets `q` to `|0>`.
+- `Init1(q)`: Sets `q` to `|1>`.
+- `InitPlus(q)`: Sets `q` to `|+>`.
+- `InitMinus(q)`: Sets `q` to `|->`.
+
+If a qubit is used for both input and output, **do not** include it in `InitNonInput`.
+
+#### Commands
+
+- `Entangle(q1, q2)`: Entangles qubits `q1` and `q2`.
+- `Measure(q, angle, signals1, signals2)`: Measures qubit `q` at an angle based on the value of `angle`and on the outcomes of the qubits specified in `signals1` and `signals2`.
+- `XCorrect(q, signals)`: Performs Pauli X correction based on the outcomes of the qubits specified in `signals`.
+- `ZCorrect(q, signals)`: Performs Pauli Z correction based on the outcomes of the qubits specified in `signals`.
+
+TODO: explain signals
+
+#### Program Constraints
+
+A program is valid, i.e., well formed, if it does not violate the following constraints:
+
+##### General Constraints:
+
+- (D0) No command depends on an outcome not yet measured. In other words, only qubits which have been measured can be included in a "signals" list.
+- (D1) No command acts on a qubit already measured.
+- (D2) No command acts on a qubit not yet prepared, unless it is an input qubit. In other words, all qubits must be in some state.
+- (D3) A qubit `i` is measured _if and only if_ `i` is not an output. Equivalently, a qubit `i` is an output _iff_ `i` is not measured.
+
+##### Implementation-based Constraints:
+
+- (D4) The "qubit integers" must start at 0 and increase without skipping an integer. "qubit integers" refers to the integer each qubit is defined as, since qubits are defined as integers currently.
 
 ### Compiling Programs
 
-TODO
-
-We can build with `dune build [file_name.exe]` and then run with `dune exec file_name.exe`.
+To compile a program as an executable, put the written program in [main.ml](/mclang/main.ml) and run `dune build main.exe`. To then run the compiled program, run `dune exec ./main.exe`.
