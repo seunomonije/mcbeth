@@ -2,7 +2,7 @@
 type qubit = int
 
 type prep = 
-  | Init of qubit * float
+    Init of qubit * float
   | Init0 of qubit
   | Init1 of qubit
   | InitPlus of qubit
@@ -10,7 +10,7 @@ type prep =
   | InitNonInput of qubit list
 
 type cmd =
-  | Entangle of qubit * qubit
+    Entangle of qubit * qubit
   | Measure of qubit * float * qubit list * qubit list
   | XCorrect of qubit * qubit list
   | ZCorrect of qubit * qubit list

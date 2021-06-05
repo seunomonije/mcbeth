@@ -249,7 +249,7 @@ let construct_output (out_tbl, meas_tbl) c = (
   *      (D3) A qubit i is measured if and only if i is not an output.
   *           Equivalently, a qubit i is an output iff i is not measured. 
   *    Additional constraints per the current implementation:
-  *      (D5) The "qubit integers" must start at 0 and increase without skipping an integer.
+  *      (D4) The "qubit integers" must start at 0 and increase without skipping an integer.
   *
   *  Returns 0 on failure.
   *  On success, returns the number of qubits used in the program.
