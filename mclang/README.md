@@ -7,8 +7,15 @@
    2. [Opam](#opam)
    3. [Dune](#dune)
    4. [Lacaml](#lacaml)
-2. [File Organization](#file-organization)
-3. [Development and Testing](#development-and-testing)
+2. [Development](#development)
+   1. [File Organization](#file-organization)
+   2. [Libraries](#libraries)
+      1. [Lacaml]()
+      2. [Complexenv (Cenv)]()
+   3. [Testing](#testing)
+   4. [Programming in MCL](#programming-in-mcl)
+      1. [Writing Programs](#writing-programs)
+      2. [Compiling Programs](#compiling-programs)
 
 ## Installation
 
@@ -49,16 +56,32 @@ For more installation options and to learn more about Dune, visit https://github
 
 Lacaml is an OCaml library from linear algebra. It interfaces with the [BLAS](http://www.netlib.org/blas/) and [LAPACK](http://www.netlib.org/lapack/) linear algebra libraries, which are widely used for fast performing fast linear algebra operations.
 
-The Lacaml library is included as a submodule located in the [/lib](/mclang/lib) folder but still requires some dependencies to be installed.
+The Lacaml library is included as the submodule "lacaml" located in the [/lib](/mclang/lib) directory but still requires some dependencies to be installed.
 
-First, the Lacaml library requires the [dune-configurator library](https://opam.ocaml.org/packages/dune-configurator/); install it by running `opam install dune-configurator`.
+First, the Lacaml library requires the [dune-configurator library](https://opam.ocaml.org/packages/dune-configurator/). Install it by running `opam install dune-configurator`.
 
 Second, the Lacaml library requires the BLAS and LAPACK libraries. Install them both by running `sudo apt-get install libblas-dev liblapack-dev`.
 
 Learn more about Lacaml at https://mmottl.github.io/lacaml/ and https://github.com/mmottl/lacaml.
 
-## File Organization
+## Development
 
-## Development and Testing
+### File Organization
+
+As mentioned in the above section, we used Dune to help build and test our project.
+
+### Libraries
+
+#### Lacaml
+
+#### Complexenv (Cenv)
+
+### Testing
 
 We can build with `dune build [file_name.exe]` and then run with `dune exec file_name.exe`.
+
+### Programming in MCL
+
+#### Writing Programs
+
+#### Compiling Programs
