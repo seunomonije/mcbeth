@@ -49,7 +49,7 @@ For more installation options and to learn more about Dune, visit https://github
 
 Lacaml is an OCaml library from linear algebra. It interfaces with the [BLAS](http://www.netlib.org/blas/) and [LAPACK](http://www.netlib.org/lapack/) linear algebra libraries, which are widely used for fast performing fast linear algebra operations.
 
-The Lacaml library is included as a submodule in [/lib/lacaml](/mclang/lib/lacaml) but still requires some dependencies to be installed.
+The Lacaml library is included as a submodule located in the [/lib](/mclang/lib) folder but still requires some dependencies to be installed.
 
 First, the Lacaml library requires the [dune-configurator library](https://opam.ocaml.org/packages/dune-configurator/); install it by running `opam install dune-configurator`.
 
