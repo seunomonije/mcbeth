@@ -338,13 +338,13 @@ let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
   )
   | InitNonInput (qubits) -> (
     (* Non-input qubits are all initialized to |+> *)
-    List.fold_left (fun ss x -> (eval_prep ss (InitPlus(x)))) states qubits
+    List.iter (fun x -> (eval_prep states (InitPlus(x)))) qubits
   )
 );;
 
 let eval_preps qubit_num preps = (
   let init_vec_arr = Array.make qubit_num (Vec.create 2) in
-  let states : Vec.vec array = List.fold_left eval_prep init_vec_arr preps in
+  let states : Vec.vec array = List.iter (fun p -> eval_prep init_vec_arr p) preps in
   (* Compute state vectors based on the states in `states` *)
 )
 
