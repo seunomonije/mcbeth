@@ -55,7 +55,6 @@ let minus_state = (
   |]
 );;
 
-(*
 let dummy_vector = ( (* used for testing only *)
   let open Cenv in 
   Vec.of_array [|
@@ -63,7 +62,7 @@ let dummy_vector = ( (* used for testing only *)
     c 37. 0.;
   |]
 );;
-*)
+
 
 (**********************************************************************************
   *                                                                               *
@@ -375,9 +374,9 @@ let print_states (states : Vec.t array) = (
   *)
 let rec eval_prep (states : Vec.t array) (p : prep) : unit = (
   match p with
-  | Init (qubit, base_angle) -> (
+  | Init (qubit, _) -> (
     (* Initalizes a qubit with angle base_angle *)
-    
+    states.(qubit) <- dummy_vector
   )
   | Init0 (qubit) -> (
     (* states[qubit] = column vector of [1, 0] *)
@@ -411,18 +410,18 @@ let eval_preps qubit_num preps = (
   *  Performs appropriate operations to execute command.
   *  Matrix stored in memory changed as a side-effect.
   *)
-let eval_cmd state_vec (c : cmd) : unit = (
+let eval_cmd _ (c : cmd) : unit = (
   match c with 
-  | Entangle (left, right) -> (
+  | Entangle (_, _) -> (
 
   )
-  | Measure (qubit, angle, signals_s, signals_t) -> (
+  | Measure (_, _, _, _) -> (
 
   )
-  | XCorrect (qubit, signals) -> (
+  | XCorrect (_, _) -> (
 
   )
-  | ZCorrect (qubit, signals) -> (
+  | ZCorrect (_, _) -> (
 
   )
 );;
@@ -462,7 +461,7 @@ let foobar() = (
   in (
     printf "a = @[%a@]@\n@\n" pp_cmat a
   );*)
-  let p = ([InitPlus(0); Init(1, 0.375324); InitNonInput([2; 3])], 
+  let p = ([Init0(0); Init1(1); InitMinus(2); Init(3, 0.375324); InitNonInput([4; 5])], 
             [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]) 
   in let _ = eval p in ()
 );;
