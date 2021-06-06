@@ -359,6 +359,27 @@ let print_states (states : Vec.t array) = (
   printf "states = @[%a@]@\n@\n" pp_cmat (Mat.of_col_vecs states)
 );;
 
+
+(* *** Linear Algebra Utils -- will probably put in separate file later *** *)
+
+(**
+  * Performs scalar multiplication on vector `v` by scalar `s`
+  *)
+(*
+let vec_scal_mul (v : Vec.t) (s : Complex.t) : Vec.t = (
+  Vec.map (fun e -> Cenv.(e * s)) v
+);;
+*)
+
+(**
+  * Performs scalar multiplication on matrix `m` by scalar `s`
+  *)
+let mat_scal_mul (m : Mat.t) (s : Complex.t) : Mat.t = (
+  Mat.map (fun e -> Cenv.(e * s)) m
+)
+
+
+
 (**********************************************************************************
   *                                                                               *
   *                             Evaluation Functions                              *
@@ -451,16 +472,18 @@ let eval ((preps, cmds) as p : prog) : bool list = (
 
 let foobar() = (
   print_endline("-- foobar test --");
-  (*let open Cenv in
+  let open Cenv in
   let a =
     Mat.of_array
       [|
         [| c 2. 0.; c 3. 1.5 |];
         [| c 1. 2.; c (-.5.) 0. |];
       |]
-  in (
-    printf "a = @[%a@]@\n@\n" pp_cmat a
-  );*)
+  in
+  let a' = mat_scal_mul a (c 2. 0.) in (
+    printf "a = @[%a@]@\n@\n" pp_cmat a;
+    printf "a' = @[%a@]@\n@\n" pp_cmat a'
+  );
   let p = ([Init0(0); Init1(1); InitMinus(2); Init(3, 0.375324); InitNonInput([4; 5])], 
             [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]) 
   in let _ = eval p in ()
