@@ -55,6 +55,7 @@ let minus_state = (
   |]
 );;
 
+(*
 let dummy_vector = ( (* used for testing only *)
   let open Cenv in 
   Vec.of_array [|
@@ -62,7 +63,7 @@ let dummy_vector = ( (* used for testing only *)
     c 37. 0.;
   |]
 );;
-
+*)
 
 (**********************************************************************************
   *                                                                               *
