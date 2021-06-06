@@ -313,7 +313,8 @@ let well_formed ((preps, cmds) : prog) : int = (
   *
   * Returns the signal.
   *)
-(* let calc_signal qs = (
+(* 
+let calc_signal qs = (
   let helper q = (
     (* TODO: return outcome s_q ; 0 or 1 *)
   ) in
@@ -326,11 +327,19 @@ let well_formed ((preps, cmds) : prog) : int = (
   *
   * Returns the new angle.
   *)
-(* let update_angle angle signals_s signals_t = (
+(* 
+let update_angle angle signals_s signals_t = (
   let sig qs = float_of_int (calc_signal qs) in
   ((-1.)**(sig signals_s)) + ((sig signals_t) * (* TODO: get Pi *))
 );; *)
 
+(* Helper function that adds a value to the end of a list *)
+(*
+let rec custom_append l i =
+  match l with 
+  [] -> [i]
+  | h :: t -> h :: (custom_append t i)
+*)
 
 (**********************************************************************************
   *                                                                               *
@@ -339,45 +348,13 @@ let well_formed ((preps, cmds) : prog) : int = (
   *********************************************************************************)
 
 (* TODO: *)
-(* Randomized *)
+(* Randomized Eval *)
+
 (**
   *  Performs appropriate operations to initialize qubits.
-  *  Matrix stored in memory changed as a side-effect.
+  *  `states` array in memory changed as a side-effect.
   *)
-let r2o2 = Float.div 1.0 (sqrt 2.);;
-let zero_vector = 
-  let open Cenv in
-  Vec.of_array [|
-    c 1. 0.;
-    c 0. 0.;
-  |];;
-
-let one_vector = 
-  let open Cenv in 
-  Vec.of_array [|
-    c 0. 0.;
-    c 1. 0.;
-  |];;
-let plus_state = 
-  let open Cenv in 
-  Vec.of_array [|
-    c r2o2 0.;
-    c r2o2 0.;
-  |];;
-let minus_state = 
-  let open Cenv in 
-  Vec.of_array [|
-    c r2o2 0.;
-    c (-.r2o2) 0.;
-  |];;
-
-(* Helper function that adds a value to the end of a list *)
-let rec custom_append l i =
-  match l with 
-  [] -> [i]
-  | h :: t -> h :: (custom_append t i)
-
-let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
+let rec eval_prep (states : Vec.t array) (p : prep) : unit = (
   match p with
   | Init (qubit, base_angle) -> (
     (* Initalizes a qubit with angle base_angle *)
@@ -403,16 +380,18 @@ let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
 );;
 
 let eval_preps qubit_num preps = (
-  let states = Array.make qubit_num (Vec.create 2) in
-  List.iter (fun p -> eval_prep states p) preps;
-  (* Compute state vectors based on the states in `states` *)
+  let states = Array.make qubit_num Vec.empty in (
+    List.iter (fun p -> eval_prep states p) preps;
+    (* Compute state vectors based on the states in `states` *)
+    Vec.empty
+  )
 );;
 
 (**
   *  Performs appropriate operations to execute command.
   *  Matrix stored in memory changed as a side-effect.
   *)
-let eval_cmd (c : cmd) : unit = (
+let eval_cmd state_vec (c : cmd) : unit = (
   match c with 
   | Entangle (left, right) -> (
 
@@ -428,6 +407,11 @@ let eval_cmd (c : cmd) : unit = (
   )
 );;
 
+let eval_cmds state_vec cmds = (
+  List.iter (fun p -> eval_cmd state_vec p) cmds
+);;
+
+
 (**
   *  Runs a program, evaluating the quantum measurements using random functions.
   *  First eval checks if the function is well formed. It then initializes the
@@ -435,13 +419,12 @@ let eval_cmd (c : cmd) : unit = (
   *  and returns the result extracted from the state matrix.
   *)
 let eval ((preps, cmds) as p : prog) : bool list = (
-  let
-    qubit_num = well_formed(p)
-  in (
-    if init_matrix(qubit_num) then (
-      let state_vec = eval_preps qubit_num preps in
-      List.iter eval_cmd cmds;
-      [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
+  let qubit_num = well_formed(p) in (
+    if qubit_num > 0 then (
+      let state_vec = eval_preps qubit_num preps in (
+        eval_cmds state_vec cmds;
+        [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
+      )
     ) else []
   )
 );;
@@ -451,19 +434,12 @@ let foobar() = (
   print_endline("-- foobar test --");
   let open Cenv in
   let a =
-    (* Mat.of_array
+    Mat.of_array
       [|
         [| c 2. 0.; c 3. 1.5 |];
         [| c 1. 2.; c (-.5.) 0. |];
-      |]  *)
-      let open Cenv in
-      Vec.of_array [|
-        c 1. 0.;
-        c 0. 0.;
-      |];
-  in
-  if init_matrix 4 then (
-    printf "a = @[%a@]@\n@\n" pp_cmat a;
-    printf "a = @[%a@]@\n@\n" pp_cmat (!states);
-  ) else () 
+      |]
+  in (
+    printf "a = @[%a@]@\n@\n" pp_cmat a
+  )
 )
