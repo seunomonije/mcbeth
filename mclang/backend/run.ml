@@ -341,6 +341,10 @@ let rec custom_append l i =
   | h :: t -> h :: (custom_append t i)
 *)
 
+let print_states (states : Vec.t array) = (
+  printf "states = @[%a@]@\n@\n" pp_cmat (Mat.of_col_vecs states)
+);;
+
 (**********************************************************************************
   *                                                                               *
   *                             Evaluation Functions                              *
@@ -382,6 +386,7 @@ let rec eval_prep (states : Vec.t array) (p : prep) : unit = (
 let eval_preps qubit_num preps = (
   let states = Array.make qubit_num Vec.empty in (
     List.iter (fun p -> eval_prep states p) preps;
+    print_states states;
     (* Compute state vectors based on the states in `states` *)
     Vec.empty
   )
@@ -432,7 +437,7 @@ let eval ((preps, cmds) as p : prog) : bool list = (
 
 let foobar() = (
   print_endline("-- foobar test --");
-  let open Cenv in
+  (*let open Cenv in
   let a =
     Mat.of_array
       [|
@@ -441,5 +446,8 @@ let foobar() = (
       |]
   in (
     printf "a = @[%a@]@\n@\n" pp_cmat a
-  )
-)
+  );*)
+  let p = ([InitPlus(0); Init(1, 0.375324); InitNonInput([2; 3])], 
+            [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]) 
+  in let _ = eval p in ()
+);;
