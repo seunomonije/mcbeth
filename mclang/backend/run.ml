@@ -348,6 +348,19 @@ let minus_state =
     c (-.r2o2) 0.;
   |];;
 
+let pauli_x = 
+  let open Cenv in 
+  Mat.of_array [|
+    [| c 0. 0.; c 1. 0. |];
+    [| c 1. 2.; c 0. 0. |]; 
+  |]
+let pauli_x = 
+  let open Cenv in 
+  Mat.of_array [|
+    [| c 1. 0.; c 0. 0. |];
+    [| c 0. 2.; c (-.1.) 0. |]; 
+  |] 
+
 (* Helper function that adds a value to the end of a list *)
 let rec custom_append l i =
   match l with 
@@ -389,18 +402,20 @@ let eval_preps qubit_num preps = (
   *  Performs appropriate operations to execute command.
   *  Matrix stored in memory changed as a side-effect.
   *)
-let eval_cmd (c : cmd) : unit = (
+let eval_cmd (states: Vec.vec array) (c : cmd) : unit = (
   match c with 
-  | Entangle (left, right) -> (
+  | Entangle (states, left, right) -> (
 
   )
-  | Measure (qubit, angle, signals_s, signals_t) -> (
+  | Measure (states, qubit, angle, signals_s, signals_t) -> (
 
   )
-  | XCorrect (qubit, signals) -> (
-
+  | XCorrect (states, qubit, signals) -> (
+    let prev_state = states.(qubit)
+    let new_state = prev_state * 
+    states.(qubit) <- 
   )
-  | ZCorrect (qubit, signals) -> (
+  | ZCorrect (states, qubit, signals) -> (
 
   )
 );;
