@@ -14,7 +14,6 @@ open Lacaml.Io;;  (* for testing/debugging *)
 
 module H = Hashtbl;;
 
-
 (**********************************************************************************
   *                                                                               *
   *                               Utility Functions                               *
@@ -270,12 +269,16 @@ let well_formed ((preps, cmds) : prog) : int = (
 
 
 (**
-  * Initializes global matrix stored in memory given the number of qubits to be simulated.
+  * Creates an empty matrix stored in memory given the number of qubits to be simulated.
+  *)
+  let init_matrix (rows: int) (columns: int) = (
+    Mat.create rows columns;  (* TODO: Double check numbers *)
+  );;
+
+(**
+  * Initializes a vector with 
   * Returns true on success; false on failure.
   *)
-let init_matrix (x : int) (y : int) : bool = (
-  Mat.create x y
-);;
 
 (**
   * Calculates signals -- i.e., a single number based on the outcomes of qubits.
@@ -300,10 +303,10 @@ let init_matrix (x : int) (y : int) : bool = (
   *
   * Returns the new angle.
   *)
-let update_angle angle signals_s signals_t = (
+(* let update_angle angle signals_s signals_t = (
   let sig qs = float_of_int (calc_signal qs) in
   ((-1.)**(sig signals_s)) + ((sig signals_t) * (* TODO: get Pi *))
-)
+);; *)
 
 
 (**********************************************************************************
@@ -318,6 +321,39 @@ let update_angle angle signals_s signals_t = (
   *  Performs appropriate operations to initialize qubits.
   *  Matrix stored in memory changed as a side-effect.
   *)
+let r2o2 = Float.div 1.0 (sqrt 2.);;
+let zero_vector = 
+  let open Cenv in
+  Vec.of_array [|
+    c 1. 0.;
+    c 0. 0.;
+  |];;
+
+let one_vector = 
+  let open Cenv in 
+  Vec.of_array [|
+    c 0. 0.;
+    c 1. 0.;
+  |];;
+let plus_state = 
+  let open Cenv in 
+  Vec.of_array [|
+    c r2o2 0.;
+    c r2o2 0.;
+  |];;
+let minus_state = 
+  let open Cenv in 
+  Vec.of_array [|
+    c r2o2 0.;
+    c (-.r2o2) 0.;
+  |];;
+
+(* Helper function that adds a value to the end of a list *)
+let rec custom_append l i =
+  match l with 
+  [] -> [i]
+  | h :: t -> h :: (custom_append t i)
+
 let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
   match p with
   | Init (qubit, base_angle) -> (
@@ -326,15 +362,16 @@ let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
   )
   | Init0 (qubit) -> (
     (* states[qubit] = column vector of [1, 0] *)
+    states.(qubit) <- zero_vector
   )
   | Init1 (qubit) -> (
-
+    states.(qubit) <- one_vector
   )
   | InitPlus (qubit) -> (
-
+    states.(qubit) <- plus_state
   )
   | InitMinus (qubit) -> (
-
+    states.(qubit) <- minus_state
   )
   | InitNonInput (qubits) -> (
     (* Non-input qubits are all initialized to |+> *)
@@ -346,7 +383,7 @@ let eval_preps qubit_num preps = (
   let states = Array.make qubit_num (Vec.create 2) in
   List.iter (fun p -> eval_prep states p) preps;
   (* Compute state vectors based on the states in `states` *)
-)
+);;
 
 (**
   *  Performs appropriate operations to execute command.
@@ -391,14 +428,19 @@ let foobar() = (
   print_endline("-- foobar test --");
   let open Cenv in
   let a =
-    Mat.of_array
+    (* Mat.of_array
       [|
         [| c 2. 0.; c 3. 1.5 |];
         [| c 1. 2.; c (-.5.) 0. |];
-      |] 
+      |]  *)
+      let open Cenv in
+      Vec.of_array [|
+        c 1. 0.;
+        c 0. 0.;
+      |];
   in
   if init_matrix 4 then (
     printf "a = @[%a@]@\n@\n" pp_cmat a;
     printf "a = @[%a@]@\n@\n" pp_cmat (!states);
-  ) else ()
+  ) else () 
 )
