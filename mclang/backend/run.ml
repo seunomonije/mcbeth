@@ -361,6 +361,14 @@ let pauli_x =
     [| c 0. 2.; c (-.1.) 0. |]; 
   |] 
 
+let controlled_z = 
+  let open Cenv in
+  Mat.of_array [|
+    [| c 1. 0.; c 0. 0.; c 0. 0.; c 0. 0. |];
+    [| c 0. 0.; c 1. 0.; c 0. 0.; c 0. 0. |];
+    [| c 0. 0.; c 0. 0.; c 1. 0.; c 0. 0. |];
+    [| c 0. 0.; c 0. 0.; c 0. 0.; c (-.1.) 0. |];
+  |]
 (* Helper function that adds a value to the end of a list *)
 let rec custom_append l i =
   match l with 
@@ -411,12 +419,10 @@ let eval_cmd (states: Vec.vec array) (c : cmd) : unit = (
 
   )
   | XCorrect (states, qubit, signals) -> (
-    let prev_state = states.(qubit)
-    let new_state = prev_state * 
-    states.(qubit) <- 
+    states.(qubit) <- states.(qubit) * pauli_x
   )
   | ZCorrect (states, qubit, signals) -> (
-
+    states.(qubit) <- states.(qubit) * pauli_z
   )
 );;
 
