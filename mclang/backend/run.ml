@@ -14,6 +14,42 @@ open Lacaml.Io;;  (* for testing/debugging *)
 
 module H = Hashtbl;;
 
+
+(**********************************************************************************
+  *                                                                               *
+  *                               Global Constants                                *
+  *                                                                               *
+  *********************************************************************************)
+
+let r2o2 = Float.div 1.0 (sqrt 2.);;
+let zero_vector = 
+  let open Cenv in
+  Vec.of_array [|
+    c 1. 0.;
+    c 0. 0.;
+  |];;
+
+let one_vector = 
+  let open Cenv in 
+  Vec.of_array [|
+    c 0. 0.;
+    c 1. 0.;
+  |];;
+let plus_state = 
+  let open Cenv in 
+  Vec.of_array [|
+    c r2o2 0.;
+    c r2o2 0.;
+  |];;
+let minus_state = 
+  let open Cenv in 
+  Vec.of_array [|
+    c r2o2 0.;
+    c (-.r2o2) 0.;
+  |];;
+
+
+
 (**********************************************************************************
   *                                                                               *
   *                               Utility Functions                               *
