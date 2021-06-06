@@ -303,19 +303,6 @@ let well_formed ((preps, cmds) : prog) : int = (
   if (!err) then 0 else H.length comp_space_tbl
 );;
 
-
-(**
-  * Creates an empty matrix stored in memory given the number of qubits to be simulated.
-  *)
-  let init_matrix (rows: int) (columns: int) = (
-    Mat.create rows columns;  (* TODO: Double check numbers *)
-  );;
-
-(**
-  * Initializes a vector with 
-  * Returns true on success; false on failure.
-  *)
-
 (**
   * Calculates signals -- i.e., a single number based on the outcomes of qubits.
   * Takes a list of qubits which the signal depends on as input.
