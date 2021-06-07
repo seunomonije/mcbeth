@@ -376,9 +376,16 @@ let vec_scal_mul (v : Vec.t) (s : Complex.t) : Vec.t = (
   *)
 let mat_scal_mul (m : Mat.t) (s : Complex.t) : Mat.t = (
   Mat.map (fun e -> Cenv.(e * s)) m
-)
+);;
 
-
+(**
+  * Calculates the tensor product of two vectors
+  *)
+let tensor_prod v1 v2 = (
+  let open Vec in
+  let n = dim v1 in
+  concat (List.rev (fold (fun ls e -> (mul (make n e) v2)::ls) [] v1))
+);;
 
 (**********************************************************************************
   *                                                                               *
@@ -472,17 +479,25 @@ let eval ((preps, cmds) as p : prog) : bool list = (
 
 let foobar() = (
   print_endline("-- foobar test --");
-  let open Cenv in
-  let a =
-    Mat.of_array
-      [|
-        [| c 2. 0.; c 3. 1.5 |];
-        [| c 1. 2.; c (-.5.) 0. |];
-      |]
-  in
-  let a' = mat_scal_mul a (c 2. 0.) in (
-    printf "a = @[%a@]@\n@\n" pp_cmat a;
-    printf "a' = @[%a@]@\n@\n" pp_cmat a'
+  let open Cenv in (
+    let a =
+      Mat.of_array
+        [|
+          [| c 2. 0.; c 3. 1.5 |];
+          [| c 1. 2.; c (-.5.) 0. |];
+        |]
+    in
+    let a' = mat_scal_mul a (c 2. 0.) in (
+      printf "a = @[%a@]@\n@\n" pp_cmat a;
+      printf "a' = @[%a@]@\n@\n" pp_cmat a'
+    );
+    let v1 = Vec.of_array [| c 2. 0.; c 3. 0.; |] in
+    let v2 = Vec.of_array [| c 4. 0.; c 5. 0.; |] in
+    let t = tensor_prod v1 v2 in (
+      printf "v1 = @[%a@]@\n@\n" pp_cvec v1;
+      printf "v2 = @[%a@]@\n@\n" pp_cvec v2;
+      printf "v1 (x) v2 = @[%a@]@\n@\n" pp_cvec t
+    )
   );
   let p = ([Init0(0); Init1(1); InitMinus(2); Init(3, 0.375324); InitNonInput([4; 5])], 
             [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]) 
