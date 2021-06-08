@@ -21,6 +21,11 @@ module H = Hashtbl;;
   *                                                                               *
   *********************************************************************************)
 
+(*
+These vectors will need to be changed to type matrix, OR,
+rather than maintaining a list we maintain a global state/matrix
+which represents the state of our entire sytem. 
+*)
 let r2o2 = Float.div 1.0 (sqrt 2.);;
 
 let zero_vector = (
@@ -55,6 +60,9 @@ let minus_state = (
   |]
 );;
 
+let controlled_z = (
+
+)
 let dummy_vector = ( (* used for testing only *)
   let open Cenv in 
   Vec.of_array [|
@@ -438,20 +446,26 @@ let eval_preps qubit_num preps = (
   *  Performs appropriate operations to execute command.
   *  Matrix stored in memory changed as a side-effect.
   *)
-let eval_cmd (states: Vec.vec array) (c : cmd) : unit = (
+let eval_cmd (states: Vec.t array) (c : cmd) : unit = (
   match c with 
-  | Entangle (states, qubit_1, qubit_2) -> (
-    let entangled_state = 
-    states.(qubit1)
+  | Entangle (qubit_1, qubit_2) -> (
+    (* Logic if the state if control is in 1 or 0, do the following: *)
+    (* states.(qubit1) <- mat_scal_mul control_z qubit_1 *)
+    (* states.(qubit2) <- mat_scal_mul control_z qubit_2*)
   )
-  | Measure (states, qubit, angle, signals_s, signals_t) -> (
-
+  | Measure (qubit, angle, signals_s, signals_t) -> (
+    (* Measuring at this point should be nothing more than a signal or
+    flag that we add to the end, we can actually preform the calculations
+    at the end after we have generated the map of states. *)
   )
-  | XCorrect (states, qubit, signals) -> (
-    states.(qubit) <- states.(qubit) * pauli_x
+  | XCorrect (qubit, signals) -> (
+    (* Multiplying a scalar by a vector generates a matrix, so we 
+    will need to adjust our array to type matrix and evaluate
+    as such.*)
+    states.(qubit) <- mat_scal_mul states.(qubit) 
   )
-  | ZCorrect (states, qubit, signals) -> (
-    states.(qubit) <- states.(qubit) * pauli_z
+  | ZCorrect (qubit, signals) -> (
+    states.(qubit) <- mat_scal_mul states.(qubit)
   )
 );;
 

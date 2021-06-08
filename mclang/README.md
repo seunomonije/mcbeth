@@ -57,7 +57,7 @@ opam install dune-configurator
 brew install openblas lapack
 ```
 
-Note that MacOS com pree install with the [vecLib framework](https://developer.apple.com/documentation/accelerate/veclib) which
+Note that MacOS comes pre installed with the [vecLib framework](https://developer.apple.com/documentation/accelerate/veclib) which
 already contains both BLAS and LAPACK. You can point this project to those pre-existing installations, or download a fresh
 set. 
 
