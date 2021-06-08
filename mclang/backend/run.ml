@@ -14,6 +14,56 @@ open Lacaml.Io;;  (* for testing/debugging *)
 
 module H = Hashtbl;;
 
+
+(**********************************************************************************
+  *                                                                               *
+  *                               Global Constants                                *
+  *                                                                               *
+  *********************************************************************************)
+
+let r2o2 = Float.div 1.0 (sqrt 2.);;
+
+let zero_vector = (
+  let open Cenv in
+  Vec.of_array [|
+    c 1. 0.;
+    c 0. 0.;
+  |]
+);;
+
+let one_vector = (
+  let open Cenv in 
+  Vec.of_array [|
+    c 0. 0.;
+    c 1. 0.;
+  |]
+);;
+
+let plus_state = (
+  let open Cenv in 
+  Vec.of_array [|
+    c r2o2 0.;
+    c r2o2 0.;
+  |]
+);;
+
+let minus_state = (
+  let open Cenv in 
+  Vec.of_array [|
+    c r2o2 0.;
+    c (-.r2o2) 0.;
+  |]
+);;
+
+let dummy_vector = ( (* used for testing only *)
+  let open Cenv in 
+  Vec.of_array [|
+    c 13. 0.;
+    c 37. 0.;
+  |]
+);;
+
+
 (**********************************************************************************
   *                                                                               *
   *                               Utility Functions                               *
@@ -267,19 +317,6 @@ let well_formed ((preps, cmds) : prog) : int = (
   if (!err) then 0 else H.length comp_space_tbl
 );;
 
-
-(**
-  * Creates an empty matrix stored in memory given the number of qubits to be simulated.
-  *)
-  let init_matrix (rows: int) (columns: int) = (
-    Mat.create rows columns;  (* TODO: Double check numbers *)
-  );;
-
-(**
-  * Initializes a vector with 
-  * Returns true on success; false on failure.
-  *)
-
 (**
   * Calculates signals -- i.e., a single number based on the outcomes of qubits.
   * Takes a list of qubits which the signal depends on as input.
@@ -290,7 +327,8 @@ let well_formed ((preps, cmds) : prog) : int = (
   *
   * Returns the signal.
   *)
-(* let calc_signal qs = (
+(* 
+let calc_signal qs = (
   let helper q = (
     (* TODO: return outcome s_q ; 0 or 1 *)
   ) in
@@ -303,11 +341,51 @@ let well_formed ((preps, cmds) : prog) : int = (
   *
   * Returns the new angle.
   *)
-(* let update_angle angle signals_s signals_t = (
+(* 
+let update_angle angle signals_s signals_t = (
   let sig qs = float_of_int (calc_signal qs) in
   ((-1.)**(sig signals_s)) + ((sig signals_t) * (* TODO: get Pi *))
 );; *)
 
+(* Helper function that adds a value to the end of a list *)
+(*
+let rec custom_append l i =
+  match l with 
+  [] -> [i]
+  | h :: t -> h :: (custom_append t i)
+*)
+
+let print_states (states : Vec.t array) = (
+  printf "states = @[%a@]@\n@\n" pp_cmat (Mat.of_col_vecs states)
+);;
+
+
+(* *** Linear Algebra Utils -- will probably put in separate file later *** *)
+
+(**
+  * Performs scalar multiplication on vector `v` by scalar `s`
+  *)
+(*
+let vec_scal_mul (v : Vec.t) (s : Complex.t) : Vec.t = (
+  Vec.map (fun e -> Cenv.(e * s)) v
+);;
+*)
+
+(**
+  * Performs scalar multiplication on matrix `m` by scalar `s`
+  *)
+let mat_scal_mul (m : Mat.t) (s : Complex.t) : Mat.t = (
+  Mat.map (fun e -> Cenv.(e * s)) m
+);;
+
+(**
+  * Calculates the tensor product of two vectors
+  *)
+let tensor_prod v1 v2 = (
+  let open Vec in
+  let n = dim v2 in
+  concat (List.rev (fold (fun ls e -> (mul (make n e) v2)::ls) [] v1))
+);;
 
 (**********************************************************************************
   *                                                                               *
@@ -316,71 +394,17 @@ let well_formed ((preps, cmds) : prog) : int = (
   *********************************************************************************)
 
 (* TODO: *)
-(* Randomized *)
+(* Randomized Eval *)
+
 (**
   *  Performs appropriate operations to initialize qubits.
-  *  Matrix stored in memory changed as a side-effect.
+  *  `states` array in memory changed as a side-effect.
   *)
-let r2o2 = Float.div 1.0 (sqrt 2.);;
-let zero_vector = 
-  let open Cenv in
-  Vec.of_array [|
-    c 1. 0.;
-    c 0. 0.;
-  |];;
-
-let one_vector = 
-  let open Cenv in 
-  Vec.of_array [|
-    c 0. 0.;
-    c 1. 0.;
-  |];;
-let plus_state = 
-  let open Cenv in 
-  Vec.of_array [|
-    c r2o2 0.;
-    c r2o2 0.;
-  |];;
-let minus_state = 
-  let open Cenv in 
-  Vec.of_array [|
-    c r2o2 0.;
-    c (-.r2o2) 0.;
-  |];;
-
-let pauli_x = 
-  let open Cenv in 
-  Mat.of_array [|
-    [| c 0. 0.; c 1. 0. |];
-    [| c 1. 0.; c 0. 0. |]; 
-  |]
-let pauli_z = 
-  let open Cenv in 
-  Mat.of_array [|
-    [| c 1. 0.; c 0. 0. |];
-    [| c 0. 0.; c (-.1.) 0. |]; 
-  |] 
-
-let controlled_z = 
-  let open Cenv in
-  Mat.of_array [|
-    [| c 1. 0.; c 0. 0.; c 0. 0.; c 0. 0. |];
-    [| c 0. 0.; c 1. 0.; c 0. 0.; c 0. 0. |];
-    [| c 0. 0.; c 0. 0.; c 1. 0.; c 0. 0. |];
-    [| c 0. 0.; c 0. 0.; c 0. 0.; c (-.1.) 0. |];
-  |]
-  
-(* Helper function that adds a value to the end of a list *)
-let rec custom_append l i =
-  match l with 
-  [] -> [i]
-  | h :: t -> h :: (custom_append t i)
-
-let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
+let rec eval_prep (states : Vec.t array) (p : prep) : unit = (
   match p with
-  | Init (qubit, base_angle) -> (
+  | Init (qubit, _) -> (
     (* Initalizes a qubit with angle base_angle *)
-    
+    states.(qubit) <- dummy_vector
   )
   | Init0 (qubit) -> (
     (* states[qubit] = column vector of [1, 0] *)
@@ -402,9 +426,12 @@ let rec eval_prep (states : Vec.vec array) (p : prep) : unit = (
 );;
 
 let eval_preps qubit_num preps = (
-  let states = Array.make qubit_num (Vec.create 2) in
-  List.iter (fun p -> eval_prep states p) preps;
-  (* Compute state vectors based on the states in `states` *)
+  let states = Array.make qubit_num Vec.empty in (
+    List.iter (fun p -> eval_prep states p) preps;
+    print_states states;
+    (* Compute state vectors based on the states in `states` *)
+    Vec.empty
+  )
 );;
 
 (**
@@ -428,6 +455,11 @@ let eval_cmd (states: Vec.vec array) (c : cmd) : unit = (
   )
 );;
 
+let eval_cmds state_vec cmds = (
+  List.iter (fun p -> eval_cmd state_vec p) cmds
+);;
+
+
 (**
   *  Runs a program, evaluating the quantum measurements using random functions.
   *  First eval checks if the function is well formed. It then initializes the
@@ -435,13 +467,12 @@ let eval_cmd (states: Vec.vec array) (c : cmd) : unit = (
   *  and returns the result extracted from the state matrix.
   *)
 let eval ((preps, cmds) as p : prog) : bool list = (
-  let
-    qubit_num = well_formed(p)
-  in (
-    if init_matrix(qubit_num) then (
-      let state_vec = eval_preps qubit_num preps in
-      List.iter eval_cmd cmds;
-      [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
+  let qubit_num = well_formed(p) in (
+    if qubit_num > 0 then (
+      let state_vec = eval_preps qubit_num preps in (
+        eval_cmds state_vec cmds;
+        [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
+      )
     ) else []
   )
 );;
@@ -449,21 +480,27 @@ let eval ((preps, cmds) as p : prog) : bool list = (
 
 let foobar() = (
   print_endline("-- foobar test --");
-  let open Cenv in
-  let a =
-    (* Mat.of_array
-      [|
-        [| c 2. 0.; c 3. 1.5 |];
-        [| c 1. 2.; c (-.5.) 0. |];
-      |]  *)
-      let open Cenv in
-      Vec.of_array [|
-        c 1. 0.;
-        c 0. 0.;
-      |];
-  in
-  if init_matrix 4 then (
-    printf "a = @[%a@]@\n@\n" pp_cmat a;
-    printf "a = @[%a@]@\n@\n" pp_cmat (!states);
-  ) else () 
-)
+  let open Cenv in (
+    let a =
+      Mat.of_array
+        [|
+          [| c 2. 0.; c 3. 1.5 |];
+          [| c 1. 2.; c (-.5.) 0. |];
+        |]
+    in
+    let a' = mat_scal_mul a (c 2. 0.) in (
+      printf "a = @[%a@]@\n@\n" pp_cmat a;
+      printf "a' = @[%a@]@\n@\n" pp_cmat a'
+    );
+    let v1 = Vec.of_array [| c 1. 0.; c 2. 0.; c 3. 0.; |] in
+    let v2 = Vec.of_array [| c 1. 0.; c 2. 0.; |] in
+    let t = tensor_prod v1 v2 in (
+      printf "v1 = @[%a@]@\n@\n" pp_cvec v1;
+      printf "v2 = @[%a@]@\n@\n" pp_cvec v2;
+      printf "v1 (x) v2 = @[%a@]@\n@\n" pp_cvec t
+    )
+  );
+  let p = ([Init0(0); Init1(1); InitMinus(2); Init(3, 0.375324); InitNonInput([4; 5])], 
+            [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]) 
+  in let _ = eval p in ()
+);;
