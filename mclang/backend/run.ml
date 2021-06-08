@@ -369,6 +369,7 @@ let controlled_z =
     [| c 0. 0.; c 0. 0.; c 1. 0.; c 0. 0. |];
     [| c 0. 0.; c 0. 0.; c 0. 0.; c (-.1.) 0. |];
   |]
+  
 (* Helper function that adds a value to the end of a list *)
 let rec custom_append l i =
   match l with 
