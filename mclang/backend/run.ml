@@ -352,13 +352,13 @@ let pauli_x =
   let open Cenv in 
   Mat.of_array [|
     [| c 0. 0.; c 1. 0. |];
-    [| c 1. 2.; c 0. 0. |]; 
+    [| c 1. 0.; c 0. 0. |]; 
   |]
-let pauli_x = 
+let pauli_z = 
   let open Cenv in 
   Mat.of_array [|
     [| c 1. 0.; c 0. 0. |];
-    [| c 0. 2.; c (-.1.) 0. |]; 
+    [| c 0. 0.; c (-.1.) 0. |]; 
   |] 
 
 let controlled_z = 
@@ -412,8 +412,9 @@ let eval_preps qubit_num preps = (
   *)
 let eval_cmd (states: Vec.vec array) (c : cmd) : unit = (
   match c with 
-  | Entangle (states, left, right) -> (
-
+  | Entangle (states, qubit_1, qubit_2) -> (
+    let entangled_state = 
+    states.(qubit1)
   )
   | Measure (states, qubit, angle, signals_s, signals_t) -> (
 
