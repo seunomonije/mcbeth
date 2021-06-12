@@ -11,6 +11,7 @@
   (name linalg)
   (modules)
   (libraries 
+    (re_export lacamlext)
     (re_export lacaml)
     (re_export cenv)
   )
