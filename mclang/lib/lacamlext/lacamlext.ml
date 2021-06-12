@@ -8,6 +8,10 @@ module Lacaml = struct
     module Vec = struct
       include Lacaml.Z.Vec
 
+      let print v = (
+        Format.printf "@[%a@]@\n@\n" Io.pp_cvec v;
+      );;
+
       (**
         * Performs scalar multiplication on vector `v` by scalar `s`
         *)
@@ -26,10 +30,24 @@ module Lacaml = struct
         Array.fold_left (fun v1 v2 -> append v1 v2) empty arr
       );;
 
+      let tensor_prod_list vs = (
+        let open Complex in
+        List.fold_left tensor_prod (make 1 { re = 1.; im = 0.; }) vs
+      );;
+      
+      let tensor_prod_arr vs = (
+        let open Complex in
+        Array.fold_left tensor_prod (make 1 { re = 1.; im = 0.; }) vs
+      );;
+
     end
 
     module Mat = struct
       include Lacaml.Z.Mat
+
+      let print m = (
+        Format.printf "@[%a@]@\n@\n" Io.pp_cmat m;
+      );;
 
       (**
         * Performs scalar multiplication on matrix `m` by scalar `s`
@@ -51,8 +69,19 @@ module Lacaml = struct
         let rows = m1_rows * m2_rows in
         let cols = m1_cols * m2_cols in
         let calc_m1_index = fun r c -> ((c-1) / m2_cols) + m1_cols * ((r-1) / m2_rows) in
-        let calc_m2_index = fun r c -> ((c-1) mod m2_cols) + m2_rows * ((r-1) mod m1_rows) in
+        let calc_m2_index = fun r c -> ((c-1) mod m2_cols) + m2_rows * ((r-1) mod m2_rows) in
         init_rows rows cols (fun row col -> Complex.mul (m1_arr.(calc_m1_index row col)) (m2_arr.(calc_m2_index row col)))
+        (* init_rows rows cols (fun row col -> { Complex.re = (Int.to_float (calc_m1_index row col)); im = (Int.to_float (calc_m2_index row col)); }) (* for debugging *) *)
+      );;
+
+      let tensor_prod_list ms = (
+        let open Complex in
+        List.fold_left tensor_prod (make 1 1 { re = 1.; im = 0.; }) ms
+      );;
+      
+      let tensor_prod_arr ms = (
+        let open Complex in
+        Array.fold_left tensor_prod (make 1 1 { re = 1.; im = 0.; }) ms
       );;
 
     end  

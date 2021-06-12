@@ -136,7 +136,7 @@ The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](h
 
 #### Lacamlext
 
-[Lacamlext](/mclang/lib/lacamlext) is a custom-made library which extends the Lacaml library to include more functions.
+[Lacamlext](/mclang/lib/lacamlext) is a custom-made library which extends the Lacaml library to include more functions. To use the the library, include `open Lacamlext;;` at the very beginning of any file which using the Lacaml module.
 
 ##### Functions
 
