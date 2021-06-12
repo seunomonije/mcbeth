@@ -22,7 +22,7 @@ open Lacaml.Z;;
   *  Performs appropriate operations to execute command.
   *  Matrix stored in memory changed as a side-effect.
   *)
-let eval_cmd (states: Vec.t array) (c : cmd) : unit = (
+let eval_cmd (statevec : Vec.t) (c : cmd) : unit = (
   match c with 
   | Entangle (qubit_1, qubit_2) -> (
     (* Logic if the state if control is in 1 or 0, do the following: *)
@@ -59,10 +59,23 @@ let eval_cmds state_vec cmds = (
 let eval ((preps, cmds) as p : prog) : bool list = (
   let qubit_num = well_formed(p) in (
     if qubit_num > 0 then (
-      let  = prep_qubits qubit_num preps in (
+      let qubit_inits = prep_qubits qubit_num preps in
+      let state_vec = Vec.tensor_prod_arr qubit_inits in (
         eval_cmds state_vec cmds;
         [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
       )
     ) else []
   )
 );;
+
+
+
+
+let foobar() = (
+  print_endline("-- foobar test --");
+  let p = ([Init0(0); Init1(1); InitMinus(2); Init(3, 0.375324); InitNonInput([4; 5])], 
+            [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]) 
+  in let _ = eval p in ()
+);;
+
+

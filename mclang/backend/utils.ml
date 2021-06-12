@@ -334,31 +334,41 @@ let well_formed ((preps, cmds) : prog) : int = (
 
 (**
   * Calculates signals -- i.e., a single number based on the outcomes of qubits.
-  * Takes a list of qubits which the signal depends on as input.
   *
   * Signal s = \Sum_{i \in I}(s_i) where s_i = 0 if the measurement of qubit i
   * collapses the state to |+_\alpha> and s_i = 1 if the state collapses to
   * |-_\alpha>. The summation is performed in Z_2. 
   *
-  * Returns the signal.
+  * Input:
+  *   get_outcome : a function which given a qubit, returns the outcome of the qubit,
+  *                 should be 0 or 1; returns -1 on error.
+  *   qs          : a list of qubits which the signal depends on
+  * Output:
+  *   Returns the signal, 0 or 1.
   *)
-let calc_signal qs = (
-  let helper q = (
-    (* TODO: return outcome s_q ; 0 or 1 *)
-  ) in
-  (List.fold_left (fun s q -> s + helper q) 0 qs) mod 2
-)
+let calc_signal (get_outcome : qubit -> int) (qs : qubit list) = (
+  (List.fold_left (fun s q -> s + get_outcome q) 0 qs) mod 2
+);;
 
 
 (**
   * Calculates the new angle of a measurement based on the original angle
   * and the outcomes of signals1 and signals2
   *
-  * Returns the new angle.
+  * Input:
+  *   get_outcome : a function to be passed to calc_signal; see calc_signal above
+  *   angle       : the original angle \alpha of type float
+  *   signals_s   : a list of qubits
+  *   signals_t   : a list of qubits
+  *
+  * Output:
+  *   Returns the new angle, of type float.
   *)
-let new_angle angle signals_s signals_t = (
-  let sig qs = float_of_int (calc_signal qs) in
-  ((-1.)**(sig signals_s)) + ((sig signals_t) * (* TODO: get Pi *))
+let new_angle get_outcome angle signals_s signals_t = (
+  let signal qs = float_of_int (calc_signal get_outcome qs) in
+  let ( + ) = Float.add in
+  let ( * ) = Float.mul in
+  (-1.)**(signal signals_s) * angle + (signal signals_t) * Float.pi
 );;
 
 
@@ -395,7 +405,7 @@ let rec prep (states : Vec.t array) (p : prep) : unit = (
   )
   | InitNonInput (qubits) -> (
     (* Non-input qubits are all initialized to |+> *)
-    List.iter (fun x -> (eval_prep states (InitPlus(x)))) qubits
+    List.iter (fun x -> (prep states (InitPlus(x)))) qubits
   )
 );;
 
@@ -406,17 +416,7 @@ let prep_qubits qubit_num preps = (
   let states = Array.make qubit_num Vec.empty in (
     List.iter (fun p -> prep states p) preps;
     print_states states;
-    (* Compute state vectors based on the states in `states` *)
-    Vec.empty
+    states
   )
 );;
 
-
-
-
-let foobar() = (
-  print_endline("-- foobar test --");
-  let p = ([Init0(0); Init1(1); InitMinus(2); Init(3, 0.375324); InitNonInput([4; 5])], 
-            [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]) 
-  in let _ = eval p in ()
-);;
