@@ -360,13 +360,6 @@ let update_angle angle signals_s signals_t = (
   ((-1.)**(sig signals_s)) + ((sig signals_t) * (* TODO: get Pi *))
 );; *)
 
-(* Helper function that adds a value to the end of a list *)
-(*
-let rec custom_append l i =
-  match l with 
-  [] -> [i]
-  | h :: t -> h :: (custom_append t i)
-*)
 
 let print_states (states : Vec.t array) = (
   printf "states = @[%a@]@\n@\n" pp_cmat (Mat.of_col_vecs states)
