@@ -35,8 +35,6 @@ let ( * )   = mul;; (* Multiplication *)
 let ( / )   = div;; (* Division *)
 
 (**
-  * Creates new operator for quick exponentiation.
-  * 
   * x ** y = Complex.pow x y
   * I.e., x to the power of y 
   *)
