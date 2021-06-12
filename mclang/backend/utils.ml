@@ -107,7 +107,7 @@ let prep_to_string p = (
   | InitNonInput (qubits) ->
     "InitNonInput[" ^ (String.concat ", " (List.map to_string qubits)) ^ "]"
 );;
-  
+
 (**
   *  Converts a command to a friendly, human-readable string.
   *)
@@ -126,6 +126,7 @@ let cmd_to_string c = (
     "Z[" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "]]"
 );;
 
+
 (**
   *  Prints out the program in a friendly, human-readable format.
   *)
@@ -133,6 +134,7 @@ let print_prog ((preps, cmds) : prog) = (
   List.iter (fun x -> print_endline(prep_to_string(x))) preps;
   List.iter (fun x -> print_endline(cmd_to_string(x))) cmds
 );;
+
 
 (**
   *  Prints an error messgae to stdout noting the command and violation.
@@ -273,7 +275,6 @@ let check_D4 (err, comp_space_tbl) = (
   )
 );;
 
-
 (**
   *  Utility used for `well_formed` below.
   *
@@ -330,6 +331,7 @@ let well_formed ((preps, cmds) : prog) : int = (
   if (!err) then 0 else H.length comp_space_tbl
 );;
 
+
 (**
   * Calculates signals -- i.e., a single number based on the outcomes of qubits.
   * Takes a list of qubits which the signal depends on as input.
@@ -340,13 +342,13 @@ let well_formed ((preps, cmds) : prog) : int = (
   *
   * Returns the signal.
   *)
-(* 
 let calc_signal qs = (
   let helper q = (
     (* TODO: return outcome s_q ; 0 or 1 *)
   ) in
   (List.fold_left (fun s q -> s + helper q) 0 qs) mod 2
-) *)
+)
+
 
 (**
   * Calculates the new angle of a measurement based on the original angle
@@ -354,32 +356,25 @@ let calc_signal qs = (
   *
   * Returns the new angle.
   *)
-(* 
-let update_angle angle signals_s signals_t = (
+let new_angle angle signals_s signals_t = (
   let sig qs = float_of_int (calc_signal qs) in
   ((-1.)**(sig signals_s)) + ((sig signals_t) * (* TODO: get Pi *))
-);; *)
+);;
 
 
+(**
+  * Prints qubits
+  *)
 let print_states (states : Vec.t array) = (
   printf "states = @[%a@]@\n@\n" pp_cmat (Mat.of_col_vecs states)
 );;
 
 
-(**********************************************************************************
-  *                                                                               *
-  *                             Evaluation Functions                              *
-  *                                                                               *
-  *********************************************************************************)
-
-(* TODO: *)
-(* Randomized Eval *)
-
 (**
   *  Performs appropriate operations to initialize qubits.
   *  `states` array in memory changed as a side-effect.
   *)
-let rec eval_prep (states : Vec.t array) (p : prep) : unit = (
+let rec prep (states : Vec.t array) (p : prep) : unit = (
   match p with
   | Init (qubit, _) -> (
     (* Initalizes a qubit with angle base_angle *)
@@ -404,63 +399,19 @@ let rec eval_prep (states : Vec.t array) (p : prep) : unit = (
   )
 );;
 
-let eval_preps qubit_num preps = (
+(**
+  * 
+  *)
+let prep_qubits qubit_num preps = (
   let states = Array.make qubit_num Vec.empty in (
-    List.iter (fun p -> eval_prep states p) preps;
+    List.iter (fun p -> prep states p) preps;
     print_states states;
     (* Compute state vectors based on the states in `states` *)
     Vec.empty
   )
 );;
 
-(**
-  *  Performs appropriate operations to execute command.
-  *  Matrix stored in memory changed as a side-effect.
-  *)
-let eval_cmd (states: Vec.t array) (c : cmd) : unit = (
-  match c with 
-  | Entangle (qubit_1, qubit_2) -> (
-    (* Logic if the state if control is in 1 or 0, do the following: *)
-    (* states.(qubit1) <- mat_scal_mul control_z qubit_1 *)
-    (* states.(qubit2) <- mat_scal_mul control_z qubit_2*)
-  )
-  | Measure (qubit, angle, signals_s, signals_t) -> (
-    (* Measuring at this point should be nothing more than a signal or
-    flag that we add to the end, we can actually preform the calculations
-    at the end after we have generated the map of states. *)
-  )
-  | XCorrect (qubit, signals) -> (
-    (* Multiplying a scalar by a vector generates a matrix, so we 
-    will need to adjust our array to type matrix and evaluate
-    as such.*)
-    states.(qubit) <- mat_scal_mul states.(qubit) 
-  )
-  | ZCorrect (qubit, signals) -> (
-    states.(qubit) <- mat_scal_mul states.(qubit)
-  )
-);;
 
-let eval_cmds state_vec cmds = (
-  List.iter (fun p -> eval_cmd state_vec p) cmds
-);;
-
-
-(**
-  *  Runs a program, evaluating the quantum measurements using random functions.
-  *  First eval checks if the function is well formed. It then initializes the
-  *  global matrix used to store state information. After, it runs the program
-  *  and returns the result extracted from the state matrix.
-  *)
-let eval ((preps, cmds) as p : prog) : bool list = (
-  let qubit_num = well_formed(p) in (
-    if qubit_num > 0 then (
-      let state_vec = eval_preps qubit_num preps in (
-        eval_cmds state_vec cmds;
-        [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
-      )
-    ) else []
-  )
-);;
 
 
 let foobar() = (
