@@ -12,8 +12,9 @@
    1. [File Organization](#file-organization)
    2. [Libraries](#libraries)
       1. [Lacaml](#lacaml-1)
-      2. [Complexenv (Cenv)](#complexenv-cenv)
-      3. [Created Dune Libraries](#created-dune-libraries)
+      1. [Lacamlext](#lacamlext)
+      1. [Complexenv (Cenv)](#complexenv-cenv)
+      1. [Created Dune Libraries](#created-dune-libraries)
    3. [Test Cases](#test-cases)
       1. [Running Tests](#running-tests)
       2. [Creating Tests](#creating-tests)
@@ -32,7 +33,8 @@
 
 ### Quick Start
 
-#### Linux 
+#### Linux
+
 The following commands worked to install all needed dependencies on Ubuntu 20.04:
 
 ```
@@ -45,6 +47,7 @@ sudo apt-get install libblas-dev liblapack-dev
 ```
 
 ### MacOS
+
 It's recommended to use package manager [Homebrew](https://brew.sh/) to download dependencies that aren't reliant on Opam.
 Translating the quick start above, this looks like:
 
@@ -59,9 +62,9 @@ brew install openblas lapack
 
 Note that MacOS comes pre installed with the [vecLib framework](https://developer.apple.com/documentation/accelerate/veclib) which
 already contains both BLAS and LAPACK. You can point this project to those pre-existing installations, or download a fresh
-set. 
+set.
 
-When cloning the repository, be sure to pull in all submodules with it by running `git submodule update --init --recursive`. 
+When cloning the repository, be sure to pull in all submodules with it by running `git submodule update --init --recursive`.
 
 More detail is available in the following sections.
 
@@ -130,6 +133,30 @@ We primarily rely on the [Lacaml.Z](http://mmottl.github.io/lacaml/api/lacaml/La
 - [Lacam.Z.Mat](http://mmottl.github.io/lacaml/api/lacaml/Lacaml/Z/Mat/index.html): creating and performing operations on matrices
 
 The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](https://github.com/mmottl/lacaml/blob/master/src/dune).
+
+#### Lacamlext
+
+[Lacamlext](/mclang/lib/lacamlext) is a custom-made library which extends the Lacaml library to include more functions.
+
+##### Functions
+
+- Scalar Multiplication<br>
+  `Lacaml.Z.Vec` and `Lacaml.Z.Mat` are extended to include scalar multiplication functions which multiply each element of a vector or matrix by a complex scalar:<br>
+  - `val scal_mul : Complex.t -> Vec.t -> Vec.t`
+  - `val scal_mul : Complex.t -> Mat.t -> Mat.t`
+- Tensor Product
+  `Lacaml.Z.Vec` and `Lacaml.Z.Mat` are extended to include tensor product functions:<br>
+
+  - `val tensor_prod : Vec.t -> Vec.t -> Vec.t`
+  - `val tensor_prod : Mat.t -> Mat.t -> Mat.t`
+  - `val tensor_prod_list : Vec.t list -> Vec.t`
+  - `val tensor_prod_list : Mat.t list -> Mat.t`
+  - `val tensor_prod_arr : Vec.t array -> Vec.t`
+  - `val tensor_prod_arr : Mat.t array -> Mat.t`
+
+  `tensor_prod` calculates the tensor product between two vectors or two matrices; i.e., x<sub>1</sub> &otimes; x<sub>2</sub>.
+
+  `tensor_prod_list` and `tensor_prod_arr` produces the tensor product of multiple vectors or matrices, evaluating the list or array from left to right; i.e., x<sub>1</sub> &otimes; x<sub>2</sub> &otimes; &hellip; &otimes; x<sub>n</sub>.
 
 #### Complexenv (Cenv)
 
