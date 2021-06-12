@@ -140,11 +140,15 @@ The Lacaml library is refered to as `lacaml` in dune files -- [dune file link](h
 
 ##### Functions
 
+- Print<br>
+  `Lacaml.Z.Vec` and `Lacaml.Z.Mat` are extended to include functions which pretty print a vector or matrix to standard output.<br>
+  - `val print : Vec.t -> unit`
+  - `val print : Mat.t -> unit`
 - Scalar Multiplication<br>
   `Lacaml.Z.Vec` and `Lacaml.Z.Mat` are extended to include scalar multiplication functions which multiply each element of a vector or matrix by a complex scalar:<br>
   - `val scal_mul : Complex.t -> Vec.t -> Vec.t`
   - `val scal_mul : Complex.t -> Mat.t -> Mat.t`
-- Tensor Product
+- Tensor Product<br>
   `Lacaml.Z.Vec` and `Lacaml.Z.Mat` are extended to include tensor product functions:<br>
 
   - `val tensor_prod : Vec.t -> Vec.t -> Vec.t`
