@@ -23,12 +23,12 @@ open Qgates;;
 (**
   *  Performs appropriate operations to execute command.
   *)
-let eval_cmd qubit_num (statevec : Vec.t) (c : cmd) : unit = (
+let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : unit = (
   match c with 
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
     (* qubit1 is the control *)
-    ctrl_z qubit_num qubit1 qubit2
+    gemm (ctrl_z qubit_num qubit1 qubit2) statevec
   )
   | Measure (qubit, angle, signals_s, signals_t) -> (
     (* Measuring at this point should be nothing more than a signal or
@@ -36,13 +36,10 @@ let eval_cmd qubit_num (statevec : Vec.t) (c : cmd) : unit = (
     at the end after we have generated the map of states. *)
   )
   | XCorrect (qubit, signals) -> (
-    (* Multiplying a scalar by a vector generates a matrix, so we 
-    will need to adjust our array to type matrix and evaluate
-    as such.*)
-    (* states.(qubit) <- mat_scal_mul states.(qubit) *) 
+    
   )
   | ZCorrect (qubit, signals) -> (
-    (* states.(qubit) <- mat_scal_mul states.(qubit) *)
+
   )
 );;
 
@@ -60,8 +57,8 @@ let eval ((preps, cmds) as p : prog) : bool list = (
   let qubit_num = well_formed(p) in (
     if qubit_num > 0 then (
       let qubit_inits = prep_qubits qubit_num preps in
-      let init_statevec = Vec.tensor_prod_arr qubit_inits in
-      let statevec = eval_cmds qubit_num init_statevec cmds in (
+      let init_statevec = Mat.from_col_vec (Vec.tensor_prod_arr qubit_inits) in
+      let statevec = Mat.as_vec (eval_cmds qubit_num init_statevec cmds) in (
         [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
       )
     ) else []
