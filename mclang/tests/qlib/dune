@@ -1,0 +1,9 @@
+;; Quantum Library Tests
+
+(tests
+  (names
+    pauli
+    controlled
+  )
+  (libraries mcl linalg qlib)
+)

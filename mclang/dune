@@ -1,19 +1,27 @@
 
 (library
-  (name mcl)
-  (modules)
-  (libraries 
-    (re_export backend)
-  )
-)
-
-(library
   (name linalg)
   (modules)
   (libraries 
     (re_export lacamlext)
     (re_export lacaml)
     (re_export cenv)
+  )
+)
+
+(library
+  (name qlib)
+  (modules)
+  (libraries
+    (re_export qgates)
+  )
+)
+
+(library
+  (name mcl)
+  (modules)
+  (libraries 
+    (re_export backend)
   )
 )
 

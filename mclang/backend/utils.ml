@@ -62,11 +62,6 @@ let minus_state = (
   |]
 );;
 
-(*
-let controlled_z = (
-
-)
-*)
 
 let dummy_vector = ( (* used for testing only *)
   let open Cenv in 

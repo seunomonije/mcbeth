@@ -3,5 +3,5 @@
   (name backend)
   (modules_without_implementation types)
   (modules types utils statevec densitymat presets)
-  (libraries linalg)
+  (libraries linalg qlib)
 )
