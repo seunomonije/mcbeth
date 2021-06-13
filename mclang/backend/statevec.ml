@@ -44,23 +44,22 @@ let eval_cmd (statevec : Vec.t) (c : cmd) : unit = (
   )
 );;
 
-let eval_cmds state_vec cmds = (
-  List.iter (fun p -> eval_cmd state_vec p) cmds
+let eval_cmds statevec cmds = (
+  List.fold_left (fun svec p -> eval_cmd svec p) statevec cmds
 );;
 
 
 (**
   *  Runs a program, evaluating the quantum measurements using random functions.
-  *  First eval checks if the function is well formed. It then initializes the
-  *  global matrix used to store state information. After, it runs the program
+  *  First eval checks if the function is well formed. It then it runs the program
   *  and returns the result extracted from the state matrix.
   *)
 let eval ((preps, cmds) as p : prog) : bool list = (
   let qubit_num = well_formed(p) in (
     if qubit_num > 0 then (
       let qubit_inits = prep_qubits qubit_num preps in
-      let state_vec = Vec.tensor_prod_arr qubit_inits in (
-        eval_cmds state_vec cmds;
+      let init_statevec = Vec.tensor_prod_arr qubit_inits in
+      let statevec = eval_cmds init_statevec cmds in (
         [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
       )
     ) else []

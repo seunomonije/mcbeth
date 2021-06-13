@@ -20,7 +20,7 @@ open Lacaml.Z;;
 (**
   *  Performs appropriate operations to execute command.
   *)
-let eval_cmd (statevec : Vec.t) (c : cmd) : unit = (
+let eval_cmd (densitymat : Mat.t) (c : cmd) : unit = (
   match c with 
   | Entangle (qubit_1, qubit_2) -> (
     (* Logic if the state if control is in 1 or 0, do the following: *)
@@ -43,8 +43,8 @@ let eval_cmd (statevec : Vec.t) (c : cmd) : unit = (
   )
 );;
 
-let eval_cmds state_vec cmds = (
-  List.iter (fun p -> eval_cmd state_vec p) cmds
+let eval_cmds densitymat cmds = (
+  List.fold_left (fun dmat p -> eval_cmd dmat p) densitymat cmds
 );;
 
 
@@ -58,8 +58,8 @@ let eval ((preps, cmds) as p : prog) : bool list = (
   let qubit_num = well_formed(p) in (
     if qubit_num > 0 then (
       let qubit_inits = prep_qubits qubit_num preps in
-      let state_vec = Vec.tensor_prod_arr qubit_inits in (
-        eval_cmds state_vec cmds;
+      let init_densitymat = (* TODO *) Mat.empty in
+      let densitymat = eval_cmds init_densitymat cmds in (
         [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
       )
     ) else []
