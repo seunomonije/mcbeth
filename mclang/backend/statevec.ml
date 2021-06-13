@@ -9,6 +9,8 @@ open Utils;;
 open Lacamlext;;
 open Lacaml.Z;;
 
+open Qgates;;
+
 
 
 (**********************************************************************************
@@ -21,12 +23,12 @@ open Lacaml.Z;;
 (**
   *  Performs appropriate operations to execute command.
   *)
-let eval_cmd (statevec : Vec.t) (c : cmd) : unit = (
+let eval_cmd qubit_num (statevec : Vec.t) (c : cmd) : unit = (
   match c with 
-  | Entangle (qubit_1, qubit_2) -> (
-    (* Logic if the state if control is in 1 or 0, do the following: *)
-    (* states.(qubit1) <- mat_scal_mul control_z qubit_1 *)
-    (* states.(qubit2) <- mat_scal_mul control_z qubit_2*)
+  | Entangle (qubit1, qubit2) -> (
+    (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
+    (* qubit1 is the control *)
+    ctrl_z qubit_num qubit1 qubit2
   )
   | Measure (qubit, angle, signals_s, signals_t) -> (
     (* Measuring at this point should be nothing more than a signal or
@@ -59,14 +61,12 @@ let eval ((preps, cmds) as p : prog) : bool list = (
     if qubit_num > 0 then (
       let qubit_inits = prep_qubits qubit_num preps in
       let init_statevec = Vec.tensor_prod_arr qubit_inits in
-      let statevec = eval_cmds init_statevec cmds in (
+      let statevec = eval_cmds qubit_num init_statevec cmds in (
         [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
       )
     ) else []
   )
 );;
-
-
 
 
 let foobar() = (
