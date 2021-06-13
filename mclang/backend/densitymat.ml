@@ -50,8 +50,7 @@ let eval_cmds densitymat cmds = (
 
 (**
   *  Runs a program, evaluating the quantum measurements using random functions.
-  *  First eval checks if the function is well formed. It then initializes the
-  *  global matrix used to store state information. After, it runs the program
+  *  First eval checks if the function is well formed. It then it runs the program
   *  and returns the result extracted from the state matrix.
   *)
 let eval ((preps, cmds) as p : prog) : bool list = (
