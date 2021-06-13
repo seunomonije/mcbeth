@@ -20,7 +20,6 @@ open Lacaml.Z;;
 
 (**
   *  Performs appropriate operations to execute command.
-  *  Matrix stored in memory changed as a side-effect.
   *)
 let eval_cmd (statevec : Vec.t) (c : cmd) : unit = (
   match c with 

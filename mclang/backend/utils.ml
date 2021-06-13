@@ -387,7 +387,7 @@ let print_states (states : Vec.t array) = (
 let rec prep (states : Vec.t array) (p : prep) : unit = (
   match p with
   | Init (qubit, _) -> (
-    (* Initalizes a qubit with angle base_angle *)
+    (* Initalizes a qubit with base `basis` *)
     states.(qubit) <- dummy_vector
   )
   | Init0 (qubit) -> (
