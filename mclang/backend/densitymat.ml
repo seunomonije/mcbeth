@@ -20,7 +20,7 @@ open Lacaml.Z;;
 (**
   *  Performs appropriate operations to execute command.
   *)
-let eval_cmd (densitymat : Mat.t) (c : cmd) : unit = (
+let eval_cmd (densitymat : Mat.t) (c : cmd) : Mat.t = (
   match c with 
   | Entangle (qubit_1, qubit_2) -> (
     (* Logic if the state if control is in 1 or 0, do the following: *)
