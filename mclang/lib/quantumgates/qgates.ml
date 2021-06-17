@@ -13,14 +13,14 @@ let ci = Cenv.c 0. 1.;;
 
 
 (* Pauli Matrices *)
-let pauli_x = (
+let single_pauli_x = (
   Mat.of_array [|
     [| c0; c1 |];
     [| c1; c0 |];
   |]
 );;
 
-let pauli_y = (
+let single_pauli_y = (
   let open Cenv in
   Mat.of_array [|
     [| c0; -ci |];
@@ -28,13 +28,26 @@ let pauli_y = (
   |]
 );;
 
-let pauli_z = (
+let single_pauli_z = (
   let open Cenv in
   Mat.of_array [|
     [| c1; c0 |];
     [| c0; -c1 |];
   |]
 );;
+
+(**
+  * Creates a gate matrix for an `n`-qubit system acting on qubit `q` with gate `u`.
+  *)
+let gate u n q = (
+  let iden x = Mat.identity (Int.shift_left 1 x) in
+  let ( * ) = Mat.tensor_prod in
+  (iden q) * u * (iden (n - q - 1))
+);;
+
+let pauli_x n q = gate single_pauli_x n q;;
+let pauli_y n q = gate single_pauli_y n q;;
+let pauli_z n q = gate single_pauli_z n q;;
 
 
 (**
@@ -68,8 +81,8 @@ let controlled u n q1 q2 = (
   Mat.add left right
 );;
 
-let ctrl_x n q1 q2 = controlled pauli_x n q1 q2;;
-let ctrl_y n q1 q2 = controlled pauli_y n q1 q2;;
-let ctrl_z n q1 q2 = controlled pauli_z n q1 q2;;
+let ctrl_x n q1 q2 = controlled single_pauli_x n q1 q2;;
+let ctrl_y n q1 q2 = controlled single_pauli_y n q1 q2;;
+let ctrl_z n q1 q2 = controlled single_pauli_z n q1 q2;;
 
 let cnot = ctrl_x;;
