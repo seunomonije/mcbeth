@@ -5,10 +5,57 @@
 open Lacamlext;;
 open Lacaml.Z;;
 
-(* Commonly Used Complex Constants *)
+(* Commonly Used Constants *)
 let c0 = Cenv.c 0. 0.;;
 let c1 = Cenv.c 1. 0.;;
 let ci = Cenv.c 0. 1.;;
+
+let r2o2 = Float.div 1.0 (sqrt 2.);;
+
+
+module States = struct
+
+  let zero_state = (
+    let open Cenv in
+    Vec.of_array [|
+      c 1. 0.;
+      c 0. 0.;
+    |]
+  )
+
+  let one_state = (
+    let open Cenv in 
+    Vec.of_array [|
+      c 0. 0.;
+      c 1. 0.;
+    |]
+  )
+
+  let plus_state = (
+    let open Cenv in 
+    Vec.of_array [|
+      c r2o2 0.;
+      c r2o2 0.;
+    |]
+  )
+
+  let minus_state = (
+    let open Cenv in 
+    Vec.of_array [|
+      c r2o2 0.;
+      c (-.r2o2) 0.;
+    |]
+  )
+
+  let dummy_state = ( (* used for testing only *)
+    let open Cenv in 
+    Vec.of_array [|
+      c 13. 0.;
+      c 37. 0.;
+    |]
+  )
+
+end
 
 module Gates = struct
 

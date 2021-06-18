@@ -2,6 +2,14 @@
 open Lacamlext
 open Lacaml.Z
 
+module States : sig
+  val zero_state : Vec.t
+  val one_state : Vec.t
+  val plus_state : Vec.t
+  val minus_state : Vec.t
+  val dummy_state : Vec.t
+end
+
 module Gates : sig
   val single_pauli_x : Mat.t
   val single_pauli_y : Mat.t

@@ -4,6 +4,7 @@
   (names
     pauli
     controlled
+    project
   )
   (libraries mcl linalg quantum)
 )
