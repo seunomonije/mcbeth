@@ -22,8 +22,15 @@ open Qgates;;
 (**
   * Given a state vector, returns the outcome of a qubit `q`.
   * Assumes that the qubit has already been measured.
+  *
+  * Returns 0 if the state collapsed to |+_\alpha>.
+  * Returns 1 if the state collapsed to |-_\alpha>.
+  * Returns -1 if the qubit was never measured.
+  *
+  * \alpha is taken from a passed in hash table mapping the
+  * qubit to its measurement angle.
   *)
-let get_outcome (statevec : Mat.t) (q : qubit) : int = (
+let get_outcome (mtbl : Hashtbl.t) (q : qubit) : int = (
   let _ = (statevec, q) in 0
 )
 
@@ -31,7 +38,7 @@ let get_outcome (statevec : Mat.t) (q : qubit) : int = (
 (**
   * Performs appropriate operations to execute command.
   *)
-let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : Mat.t = (
+let eval_cmd qubit_num (mtbl : Hashtbl.t) (statevec : Mat.t) (c : cmd) : Mat.t = (
   match c with 
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
@@ -39,19 +46,21 @@ let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : Mat.t = (
     gemm (ctrl_z qubit_num qubit1 qubit2) statevec
   )
   | Measure (qubit, angle, signals_s, signals_t) -> (
-    let get_outcome' = get_outcome statevec in
-    let _ = new_angle get_outcome' angle signals_s signals_t in
-    let _ = qubit in
+    let get_outcome' = get_outcome mtbl in
+    let angle' = new_angle get_outcome' angle signals_s signals_t in
+    let _ = (qubit, angle') in
     statevec
   )
   | XCorrect (qubit, signals) -> (
-    let get_outcome' = get_outcome statevec in
+    let get_outcome' = get_outcome mtbl in
+    (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
     if (List.length signals == 0) || (calc_signal get_outcome' signals > 0) then (
       gemm (pauli_x qubit_num qubit) statevec
     ) else statevec
   )
   | ZCorrect (qubit, signals) -> (
-    let get_outcome' = get_outcome statevec in
+    let get_outcome' = get_outcome mtbl in
+    (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
     if (List.length signals == 0) || (calc_signal get_outcome' signals > 0) then (
       gemm (pauli_z qubit_num qubit) statevec
     ) else statevec
@@ -59,7 +68,7 @@ let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : Mat.t = (
 );;
 
 let eval_cmds qubit_num statevec cmds = (
-  let eval_cmd' = eval_cmd qubit_num in
+  let eval_cmd' = eval_cmd qubit_num (Hashtbl.create qubit_num) in
   List.fold_left (fun svec p -> eval_cmd' svec p) statevec cmds
 );;
 

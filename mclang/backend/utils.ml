@@ -1,10 +1,3 @@
-(**
-  * Measurement Calculus Programming Language
-  *
-  * Date: May 2021
-  * Authors: Aidan Evans and Seun Omonije
-  *)
-
 
 open Types;;
 
