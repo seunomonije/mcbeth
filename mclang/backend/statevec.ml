@@ -9,7 +9,7 @@ open Utils;;
 open Lacamlext;;
 open Lacaml.Z;;
 
-open Qgates;;
+open Qlib.Gates;;
 
 
 
@@ -30,15 +30,15 @@ open Qgates;;
   * \alpha is taken from a passed in hash table mapping the
   * qubit to its measurement angle.
   *)
-let get_outcome (mtbl : Hashtbl.t) (q : qubit) : int = (
-  let _ = (statevec, q) in 0
+let get_outcome mtbl q = (
+  let _ = (mtbl, q) in 0
 )
 
 
 (**
   * Performs appropriate operations to execute command.
   *)
-let eval_cmd qubit_num (mtbl : Hashtbl.t) (statevec : Mat.t) (c : cmd) : Mat.t = (
+let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   match c with 
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
