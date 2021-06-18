@@ -39,15 +39,22 @@ let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : Mat.t = (
     gemm (ctrl_z qubit_num qubit1 qubit2) statevec
   )
   | Measure (qubit, angle, signals_s, signals_t) -> (
-    (* Measuring at this point should be nothing more than a signal or
-    flag that we add to the end, we can actually preform the calculations
-    at the end after we have generated the map of states. *)
+    let get_outcome' = get_outcome statevec in
+    let _ = new_angle get_outcome' angle signals_s signals_t in
+    let _ = qubit in
+    statevec
   )
   | XCorrect (qubit, signals) -> (
-    
+    let get_outcome' = get_outcome statevec in
+    if (List.length signals == 0) || (calc_signal get_outcome' signals > 0) then (
+      gemm (pauli_x qubit_num qubit) statevec
+    ) else statevec
   )
   | ZCorrect (qubit, signals) -> (
-
+    let get_outcome' = get_outcome statevec in
+    if (List.length signals == 0) || (calc_signal get_outcome' signals > 0) then (
+      gemm (pauli_z qubit_num qubit) statevec
+    ) else statevec
   )
 );;
 
