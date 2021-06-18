@@ -14,62 +14,9 @@ open Lacaml.Z;;
 open Format;;     (* for testing/debugging *)
 open Lacaml.Io;;  (* for testing/debugging *)
 
+open Qlib.States;;
+
 module H = Hashtbl;;
-
-
-(**********************************************************************************
-  *                                                                               *
-  *                               Global Constants                                *
-  *                                                                               *
-  *********************************************************************************)
-
-(*
-These vectors will need to be changed to type matrix, OR,
-rather than maintaining a list we maintain a global state/matrix
-which represents the state of our entire sytem. 
-*)
-let r2o2 = Float.div 1.0 (sqrt 2.);;
-
-let zero_vector = (
-  let open Cenv in
-  Vec.of_array [|
-    c 1. 0.;
-    c 0. 0.;
-  |]
-);;
-
-let one_vector = (
-  let open Cenv in 
-  Vec.of_array [|
-    c 0. 0.;
-    c 1. 0.;
-  |]
-);;
-
-let plus_state = (
-  let open Cenv in 
-  Vec.of_array [|
-    c r2o2 0.;
-    c r2o2 0.;
-  |]
-);;
-
-let minus_state = (
-  let open Cenv in 
-  Vec.of_array [|
-    c r2o2 0.;
-    c (-.r2o2) 0.;
-  |]
-);;
-
-
-let dummy_vector = ( (* used for testing only *)
-  let open Cenv in 
-  Vec.of_array [|
-    c 13. 0.;
-    c 37. 0.;
-  |]
-);;
 
 
 (**********************************************************************************
@@ -383,14 +330,14 @@ let rec prep (states : Vec.t array) (p : prep) : unit = (
   match p with
   | Init (qubit, _) -> (
     (* Initalizes a qubit with base `basis` *)
-    states.(qubit) <- dummy_vector
+    states.(qubit) <- dummy_state
   )
   | Init0 (qubit) -> (
     (* states[qubit] = column vector of [1, 0] *)
-    states.(qubit) <- zero_vector
+    states.(qubit) <- zero_state
   )
   | Init1 (qubit) -> (
-    states.(qubit) <- one_vector
+    states.(qubit) <- one_state
   )
   | InitPlus (qubit) -> (
     states.(qubit) <- plus_state
