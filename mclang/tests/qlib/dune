@@ -5,5 +5,5 @@
     pauli
     controlled
   )
-  (libraries mcl linalg qlib)
+  (libraries mcl linalg quantum)
 )

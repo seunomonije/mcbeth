@@ -10,10 +10,10 @@
 )
 
 (library
-  (name qlib)
+  (name quantum)
   (modules)
   (libraries
-    (re_export qgates)
+    (re_export qlib)
   )
 )
 

@@ -1,5 +1,5 @@
 
-open Qgates;;
+open Qlib.Gates;;
 
 open Lacamlext;;
 open Lacaml.Z;;
