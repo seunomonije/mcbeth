@@ -19,11 +19,19 @@ open Qgates;;
   *                                                                               *
   *********************************************************************************)
 
+(**
+  * Given a state vector, returns the outcome of a qubit `q`.
+  * Assumes that the qubit has already been measured.
+  *)
+let get_outcome (statevec : Mat.t) (q : qubit) : int = (
+  let _ = (statevec, q) in 0
+)
+
 
 (**
-  *  Performs appropriate operations to execute command.
+  * Performs appropriate operations to execute command.
   *)
-let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : unit = (
+let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : Mat.t = (
   match c with 
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
@@ -43,15 +51,16 @@ let eval_cmd qubit_num (statevec : Mat.t) (c : cmd) : unit = (
   )
 );;
 
-let eval_cmds statevec cmds = (
-  List.fold_left (fun svec p -> eval_cmd svec p) statevec cmds
+let eval_cmds qubit_num statevec cmds = (
+  let eval_cmd' = eval_cmd qubit_num in
+  List.fold_left (fun svec p -> eval_cmd' svec p) statevec cmds
 );;
 
 
 (**
-  *  Runs a program, evaluating the quantum measurements using random functions.
-  *  First eval checks if the function is well formed. It then it runs the program
-  *  and returns the result extracted from the state matrix.
+  * Runs a program, evaluating the quantum measurements using random functions.
+  * First eval checks if the function is well formed. It then it runs the program
+  * and returns the result extracted from the state matrix.
   *)
 let eval ((preps, cmds) as p : prog) : bool list = (
   let qubit_num = well_formed(p) in (
@@ -59,6 +68,7 @@ let eval ((preps, cmds) as p : prog) : bool list = (
       let qubit_inits = prep_qubits qubit_num preps in
       let init_statevec = Mat.from_col_vec (Vec.tensor_prod_arr qubit_inits) in
       let statevec = Mat.as_vec (eval_cmds qubit_num init_statevec cmds) in (
+        let _ = statevec in 
         [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
       )
     ) else []
