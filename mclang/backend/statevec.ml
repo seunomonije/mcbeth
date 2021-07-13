@@ -63,6 +63,8 @@ let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
     let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in
     let plus_projector = Qlib.Measurement.project plus_state in
     let minus_projector = Qlib.Measurement.project minus_state in
+    let _ = Mat.print plus_projector in
+    let _ = Mat.print minus_projector in
     (* Calculates the probabilities given the projectors and statevector *)
     let plus_probability = Qlib.Measurement.prob_single qubit_num qubit statevec plus_projector in
     let minus_probability = Qlib.Measurement.prob_single qubit_num qubit statevec minus_projector in

@@ -148,8 +148,9 @@ module Measurement = struct
     *)
   let collapse (statevec : Mat.t) (proj : Mat.t) = (
     let result = gemm proj statevec in
-    let mag = Cenv.(c 1. 0. / Vec.mag (Mat.as_vec result)) in
-    Mat.scal_mul mag result
+    let mag = Vec.mag (Mat.as_vec result) in
+    let one_over_mag = Cenv.((c 1. 0.) / mag) in
+    Mat.scal_mul one_over_mag result
   )
 
   (**

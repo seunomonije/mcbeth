@@ -44,8 +44,10 @@ module Lacaml = struct
         * Calculates the magnitude of a vector
         *)
       let mag v = (
+        let zero = Complex.zero in
         let two = { Complex.re = 2.; Complex.im = 0.; } in
-        Complex.sqrt (Vec.fold (fun sum e -> Complex.add sum (Complex.pow e two)) Complex.zero v)
+        let temp = (Vec.fold (fun sum e -> Complex.add sum (if e = zero then zero else (Complex.pow e two))) zero v) in
+        Complex.sqrt temp
       )
 
     end
