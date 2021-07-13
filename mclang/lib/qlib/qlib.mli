@@ -30,4 +30,8 @@ end
 
 module Measurement : sig
   val project : Mat.t -> Mat.t
+  val collapse : Mat.t -> Mat.t -> Mat.t
+  val collapse_single : int -> int -> Mat.t -> Mat.t -> Mat.t
+  val prob : Mat.t -> Mat.t -> float
+  val prob_single : int -> int -> Mat.t -> Mat.t -> float
 end
