@@ -40,6 +40,14 @@ module Lacaml = struct
         Array.fold_left tensor_prod (make 1 { re = 1.; im = 0.; }) vs
       );;
 
+      (**
+        * Calculates the magnitude of a vector
+        *)
+      let mag v = (
+        let two = { Complex.re = 2.; Complex.im = 0.; } in
+        Complex.sqrt (Vec.fold (fun sum e -> Complex.add sum (Complex.pow e two)) Complex.zero v)
+      )
+
     end
 
     module Mat = struct
