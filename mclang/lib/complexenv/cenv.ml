@@ -17,12 +17,14 @@ let c re im : t = {
   im = im;
 };;
 
+let float_to_complex f = c f 0.;;
+
 (**
   * Converts a complex number to a string.
   *)
 let cstr n = (
   let ftos x = Printf.sprintf "%.2f" x in
-  (ftos n.re) ^ "+" ^ (ftos n.im) ^ "i"
+  "(" ^ (ftos n.re) ^ ", " ^ (ftos n.im) ^ ")"
 );;
 
 (**
