@@ -82,6 +82,35 @@ let print_err (cmd, msg) = (
   )
 );;
 
+(**
+  * Parses a program to determine the number of qubits being used.
+  *)
+let calc_qubit_num p = (
+  let qubit_tbl = H.create 4 in
+  let insert q = (
+    if H.find_opt qubit_tbl q == None then (
+      H.add qubit_tbl q ()
+    ) else ()
+  ) in
+  let rec helper c = (
+    match c with 
+    | Init (qubit, _)   -> insert qubit
+    | Init0 (qubit)     -> insert qubit
+    | Init1 (qubit)     -> insert qubit
+    | InitPlus (qubit)  -> insert qubit
+    | InitMinus (qubit) -> insert qubit
+    | InitNonInput (qubits) -> (
+      List.iter (fun x -> (helper states (InitPlus(x)))) qubits
+    )
+    | Entangle (left, right)    -> (insert left; insert right)
+    | Measure (qubit, _, _, _)  -> insert qubit
+    | XCorrect (qubit, _)       -> insert qubit
+    | ZCorrect (qubit, _)       -> insert qubit
+  ) in (
+    List.iter helper p;
+    H.length qubit_tbl
+  )
+);;
 
 (**
   *  Utility used for `well_formed` below.
