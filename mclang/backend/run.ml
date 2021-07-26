@@ -1,5 +1,5 @@
 (**
-  * Statevector Implementation of Comamnds
+  * Implementation of Comamnds
   *)
 
 

@@ -1,6 +1,6 @@
 
 open Backend.Types;;
-open Backend.Statevec;;
+open Backend.Run;;
 
 let foobar() = (
   print_endline("-- foobar test --");
