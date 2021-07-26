@@ -350,7 +350,6 @@ let rec prep (states : Vec.t array) (p : prep) : unit = (
 let prep_qubits qubit_num preps = (
   let states = Array.make qubit_num Vec.empty in (
     List.iter (fun p -> prep states p) preps;
-    print_states states;
     states
   )
 );;

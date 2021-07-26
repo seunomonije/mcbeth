@@ -1,4 +1,8 @@
 
 open Types
 
-val rand_eval : prog -> bool list
+open Lacamlext;;
+open Lacaml.Z;;
+
+
+val rand_eval : prog -> Vec.t

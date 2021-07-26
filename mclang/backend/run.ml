@@ -43,16 +43,14 @@ let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
     (* qubit1 is the control *)
-    let _ = Mat.print statevec in
     gemm (ctrl_z qubit_num qubit1 qubit2) statevec
   )
   | Measure (qubit, angle, signals_s, signals_t) -> (
-    let _ = Mat.print statevec in
     (* Calculates the angle of measurement *)
     let get_outcome' = get_outcome mtbl in
     let angle' = new_angle get_outcome' angle signals_s signals_t in
     let angle'' = Cenv.float_to_complex angle' in
-    let _ = print_endline ("Angle: " ^ (Cenv.cstr angle'')) in
+
     (* Calculates the projectors *)
     let exp_const = Complex.exp (Cenv.(Complex.i * angle'')) in
     let r202 = Cenv.float_to_complex (Float.div 1.0 (sqrt 2.)) in
@@ -63,19 +61,14 @@ let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
     let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in
     let plus_projector = Qlib.Measurement.project plus_state in
     let minus_projector = Qlib.Measurement.project minus_state in
-    let _ = Mat.print plus_projector in
-    let _ = Mat.print minus_projector in
+
     (* Calculates the probabilities given the projectors and statevector *)
     let plus_probability = Qlib.Measurement.prob_single qubit_num qubit statevec plus_projector in
-    let minus_probability = Qlib.Measurement.prob_single qubit_num qubit statevec minus_projector in
-    let _ = print_endline (Float.to_string plus_probability) in
-    let _ = print_endline (Float.to_string minus_probability) in
+    
     (* Using the Random module, determines which state to collapse to *)
     let rand_val = Random.float 1. in
-    let _ = print_endline (Float.to_string rand_val) in
     let projector = if rand_val <= plus_probability then plus_projector else minus_projector in
     let statevec' = Qlib.Measurement.collapse_single qubit_num qubit statevec projector in
-    let _ = Mat.print statevec' in
     statevec'
   )
   | XCorrect (qubit, signals) -> (
@@ -103,19 +96,16 @@ let eval_cmds qubit_num statevec cmds = (
 (**
   * Runs a program, evaluating the quantum measurements using random functions.
   * First eval checks if the function is well formed. It then it runs the program
-  * and returns the result extracted from the state matrix.
+  * and returns the resulting state vector.
   *)
-let rand_eval ((preps, cmds) as p : prog) : bool list = (
+let rand_eval ((preps, cmds) as p : prog) : Vec.t = (
   Random.self_init();
   let qubit_num = well_formed(p) in (
     if qubit_num > 0 then (
       let qubit_inits = prep_qubits qubit_num preps in
       let init_statevec = Mat.from_col_vec (Vec.tensor_prod_arr qubit_inits) in
-      let statevec = Mat.as_vec (eval_cmds qubit_num init_statevec cmds) in (
-        let _ = statevec in 
-        [] (* TODO: Will pull bool list from evaluating matrix/vector stored in memory *)
-      )
-    ) else []
+      Mat.as_vec (eval_cmds qubit_num init_statevec cmds)
+    ) else Vec.empty
   )
 );;
 
