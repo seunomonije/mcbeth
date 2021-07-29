@@ -40,6 +40,18 @@ let get_outcome mtbl q = (
   *)
 let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   match c with 
+  | Prep (_)      -> (
+    statevec
+  )
+  | Input (_, _)  -> (
+    statevec
+  )
+  | PrepList (_)  -> (
+    statevec
+  )
+  | InputList (_) -> (
+    statevec
+  )
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
     (* qubit1 is the control *)
@@ -98,15 +110,13 @@ let eval_cmds qubit_num statevec cmds = (
   * First eval checks if the function is well formed. It then it runs the program
   * and returns the resulting state vector.
   *)
-let rand_eval ((preps, cmds) as p : prog) : Vec.t = (
+let rand_eval (cmds : prog) : Vec.t = (
   Random.self_init();
-  let qubit_num = well_formed(p) in (
-    if qubit_num > 0 then (
-      let qubit_inits = prep_qubits qubit_num preps in
-      let init_statevec = Mat.from_col_vec (Vec.tensor_prod_arr qubit_inits) in
-      Mat.as_vec (eval_cmds qubit_num init_statevec cmds)
-    ) else Vec.empty
-  )
+  if well_formed cmds then (
+    let qubit_num = calc_qubit_num cmds in
+    let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 0. 0.) in
+    Mat.as_vec (eval_cmds qubit_num init_statevec cmds)
+  ) else Vec.empty
 );;
 
 
