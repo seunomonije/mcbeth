@@ -1,6 +1,6 @@
 
 open Backend.Types;;
-open Backend.Run;;
+open Backend.Utils;;
 
-let p = ([Init0(0)], []);;
+let p = ([Prep(0)]);;
 print_prog p;;

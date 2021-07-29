@@ -1,30 +1,29 @@
 
 open Backend.Types;;
-open Backend.Run;;
+open Backend.Utils;;
 
-let p = ([Init(1, 0.375324); InitNonInput([0; 2])], [Entangle(1, 0)]);;
+let p = ([Prep(1); PrepList([0; 2]); Entangle(1, 0)]);;
 
 print_prog p;;
-print_endline(Int.to_string (well_formed p));;
+print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;
 print_endline("---------");;
 
-let p = ([InitPlus(0); Init(1, 0.375324); InitNonInput([2; 3])], 
-        [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]);;
+let p = ([Input(0, Plus); Input(1, One); PrepList([2; 3]);
+        Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]);;
 
 print_prog p;;
-print_endline(Int.to_string (well_formed p));;
+print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;
 print_endline("---------");;
 
-let p = ([InitPlus(0); Init(1, 0.375324); InitNonInput([2; 3])], 
-        [Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [1])]);;
+let p = ([Input(0, Plus); Input(1, Plus); PrepList([2; 3]);
+        Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [1])]);;
 
 print_prog p;;
-print_endline(Int.to_string (well_formed p));;
+print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;
 print_endline("---------");;
 
-let p = ([InitPlus(0)], 
-        []);;
+let p = ([Input(0, Plus)]);;
 
 print_prog p;;
-print_endline(Int.to_string (well_formed p));;
+print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;
 print_endline("---------");;
