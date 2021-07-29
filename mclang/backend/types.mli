@@ -1,13 +1,18 @@
 
 type qubit = int
 
+type input = 
+  | Zero 
+  | One 
+  | Plus 
+  | Minus
+  | State of Complex.t * Complex.t
+
 type cmd =
-    Init of qubit * float
-  | Init0 of qubit
-  | Init1 of qubit
-  | InitPlus of qubit
-  | InitMinus of qubit
-  | InitNonInput of qubit list
+  | Prep of qubit
+  | Input of qubit * input
+  | PrepList of qubit list
+  | InputList of (qubit * input) list
   | Entangle of qubit * qubit
   | Measure of qubit * float * qubit list * qubit list
   | XCorrect of qubit * qubit list
