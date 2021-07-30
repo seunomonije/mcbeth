@@ -8,6 +8,8 @@ val calc_qubit_num : prog -> int
 
 val well_formed : prog -> bool
 
+val insert_qubit_statevec : Lacaml.Z.Mat.t -> int -> input -> int -> Lacaml.Z.Mat.t
+
 val calc_signal : (qubit -> int) -> qubit list -> int
 val new_angle : (qubit -> int) -> float -> qubit list -> qubit list -> float
 

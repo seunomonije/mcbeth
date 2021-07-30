@@ -317,6 +317,29 @@ let well_formed (cmds : prog) : bool = (
 
 
 (**
+  * Inserts a new qubit with values of type `input` into a statevector 
+  * `statevec` of size `n` at position `pos`. The position of the current 
+  * qubit in the statevector at position `pos` is assumed to have value [1 1].
+  *)
+let insert_qubit_statevec statevec n input pos = (
+  let open Cenv in
+  let zero = c 0. 0. in
+  let one = c 1. 0. in
+  let r2o2 = Float.div 1.0 (sqrt 2.) in
+  let a, b = (
+    match input with
+    | Zero          -> (one, zero)
+    | One           -> (zero, one)
+    | Plus          -> (c r2o2 0., c r2o2 0.)
+    | Minus         -> (c r2o2 0., c (-.r2o2) 0.)
+    | State(c0, c1) -> (c0, c1)
+  ) in
+  let operator = Qlib.Gates.gate (Mat.of_array [|[| a; zero |]; [| zero; b |]|]) n pos in
+  gemm operator statevec
+);;
+
+
+(**
   * Calculates signals -- i.e., a single number based on the outcomes of qubits.
   *
   * Signal s = \Sum_{i \in I}(s_i) where s_i = 0 if the measurement of qubit i
