@@ -40,17 +40,17 @@ let get_outcome mtbl q = (
   *)
 let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   match c with 
-  | Prep (_)      -> (
-    statevec
+  | Prep (qubit) -> (
+    insert_qubit_statevec statevec qubit_num Plus qubit
   )
-  | Input (_, _)  -> (
-    statevec
+  | Input (qubit, input) -> (
+    insert_qubit_statevec statevec qubit_num input qubit
   )
-  | PrepList (_)  -> (
-    statevec
+  | PrepList (qubits) -> (
+    List.fold_left (fun sv q -> insert_qubit_statevec sv qubit_num Plus q) statevec qubits
   )
-  | InputList (_) -> (
-    statevec
+  | InputList (args) -> (
+    List.fold_left (fun sv (q, i) -> insert_qubit_statevec sv qubit_num i q) statevec args
   )
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
@@ -114,7 +114,7 @@ let rand_eval (cmds : prog) : Vec.t = (
   Random.self_init();
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
-    let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 0. 0.) in
+    let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 1. 0.) in
     Mat.as_vec (eval_cmds qubit_num init_statevec cmds)
   ) else Vec.empty
 );;
