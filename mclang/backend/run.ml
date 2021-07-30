@@ -31,14 +31,16 @@ open Qlib.Gates;;
   * qubit to its measurement angle.
   *)
 let get_outcome mtbl q = (
-  let _ = (mtbl, q) in 0
+  match Hashtbl.find_opt mtbl q with
+  | Some(x) -> x
+  | None    -> -1
 )
 
 
 (**
   * Performs appropriate operations to execute command.
   *)
-let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
+let rand_eval_cmd_exec qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   match c with 
   | Prep (qubit) -> (
     insert_qubit_statevec statevec qubit_num Plus qubit
@@ -79,7 +81,15 @@ let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
     
     (* Using the Random module, determines which state to collapse to *)
     let rand_val = Random.float 1. in
-    let projector = if rand_val <= plus_probability then plus_projector else minus_projector in
+    let projector = (
+      if rand_val <= plus_probability then (
+        Hashtbl.add mtbl qubit 0;
+        plus_projector
+      ) else (
+        Hashtbl.add mtbl qubit 1;
+        minus_projector
+      )
+    ) in
     let statevec' = Qlib.Measurement.collapse_single qubit_num qubit statevec projector in
     statevec'
   )
@@ -99,11 +109,6 @@ let eval_cmd qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   )
 );;
 
-let eval_cmds qubit_num statevec cmds = (
-  let eval_cmd' = eval_cmd qubit_num (Hashtbl.create qubit_num) in
-  List.fold_left (fun svec p -> eval_cmd' svec p) statevec cmds
-);;
-
 
 (**
   * Runs a program, evaluating the quantum measurements using random functions.
@@ -115,7 +120,9 @@ let rand_eval (cmds : prog) : Vec.t = (
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
     let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 1. 0.) in
-    Mat.as_vec (eval_cmds qubit_num init_statevec cmds)
+    let eval_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
+    let statevec_mat = List.fold_left (fun sv p -> eval_cmd' sv p) init_statevec cmds in
+    Mat.as_vec statevec_mat
   ) else Vec.empty
 );;
 
