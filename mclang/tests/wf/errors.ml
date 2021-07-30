@@ -30,7 +30,7 @@ print_prog p;;
 well_formed p;;
 print_endline("---------");;
 
-(* Violates D5 *)
+(* Violates D4 *)
 print_endline(" -- D5 Violation -- ");;
 let p = ([Prep(1); PrepList([2; 3]); Entangle(1, 2)]);;
 
