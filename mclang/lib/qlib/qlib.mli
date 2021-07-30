@@ -7,7 +7,11 @@ module States : sig
   val one_state : Vec.t
   val plus_state : Vec.t
   val minus_state : Vec.t
-  val dummy_state : Vec.t
+  
+  val zero_state_mat : Mat.t
+  val one_state_mat : Mat.t
+  val plus_state_mat : Mat.t
+  val minus_state_mat : Mat.t
 end
 
 module Gates : sig

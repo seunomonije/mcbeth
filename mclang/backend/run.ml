@@ -68,8 +68,8 @@ let rand_eval_cmd_exec qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
     (* Calculates the projectors *)
     let exp_const = Complex.exp (Cenv.(Complex.i * angle'')) in
     let r202 = Cenv.float_to_complex (Float.div 1.0 (sqrt 2.)) in
-    let zero_state = Mat.from_col_vec Qlib.States.zero_state in
-    let one_state = Mat.from_col_vec Qlib.States.one_state in
+    let zero_state = Qlib.States.zero_state_mat in
+    let one_state = Qlib.States.one_state_mat in
     let one_state_e = Mat.scal_mul exp_const one_state in
     let plus_state = Mat.scal_mul r202 (Mat.add zero_state one_state_e) in
     let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in

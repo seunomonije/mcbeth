@@ -47,13 +47,10 @@ module States = struct
     |]
   )
 
-  let dummy_state = ( (* used for testing only *)
-    let open Cenv in 
-    Vec.of_array [|
-      c 13. 0.;
-      c 37. 0.;
-    |]
-  )
+  let zero_state_mat = Mat.from_col_vec zero_state
+  let one_state_mat = Mat.from_col_vec one_state
+  let plus_state_mat = Mat.from_col_vec plus_state
+  let minus_state_mat = Mat.from_col_vec minus_state
 
 end
 
