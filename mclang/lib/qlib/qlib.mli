@@ -15,6 +15,8 @@ module Gates : sig
   val single_pauli_y : Mat.t
   val single_pauli_z : Mat.t
 
+  val iden : int -> Mat.t
+
   val gate : Mat.t -> int -> int -> Mat.t
   val pauli_x : int -> int -> Mat.t
   val pauli_y : int -> int -> Mat.t

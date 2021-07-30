@@ -83,11 +83,12 @@ module Gates = struct
     |]
   )
 
+  let iden x = Mat.identity (Int.shift_left 1 x)
+
   (**
     * Creates a gate matrix for an `n`-qubit system acting on qubit `q` with gate `u`.
     *)
   let gate u n q = (
-    let iden x = Mat.identity (Int.shift_left 1 x) in
     let ( * ) = Mat.tensor_prod in
     (iden q) * u * (iden (n - q - 1))
   )
@@ -106,7 +107,6 @@ module Gates = struct
   let controlled u n q1 q2 = (
     let proj0 = Mat.of_array [|[| c1; c0 |]; [| c0; c0 |]|] in
     let proj1 = Mat.of_array [|[| c0; c0 |]; [| c0; c1 |]|] in
-    let iden x = Mat.identity (Int.shift_left 1 x) in
     let ( * ) = Mat.tensor_prod in
     let left = (iden q1) * proj0 * (iden (n - q1 - 1)) in
     let right = (
