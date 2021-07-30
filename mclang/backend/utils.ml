@@ -340,6 +340,23 @@ let insert_qubit_statevec statevec n input pos = (
 
 
 (**
+  * Given a state vector, returns the outcome of a qubit `q`.
+  * Assumes that the qubit has already been measured.
+  *
+  * `mtbl` maps qubits to 1 or 0 depending to what they were measured to.
+  *
+  * Returns 0 if the state collapsed to |+_\alpha>.
+  * Returns 1 if the state collapsed to |-_\alpha>.
+  * Returns -1 if the qubit was never measured.
+  *)
+let get_outcome mtbl q = (
+  match Hashtbl.find_opt mtbl q with
+  | Some(x) -> x
+  | None    -> -1
+);;
+
+
+(**
   * Calculates signals -- i.e., a single number based on the outcomes of qubits.
   *
   * Signal s = \Sum_{i \in I}(s_i) where s_i = 0 if the measurement of qubit i
