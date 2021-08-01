@@ -1,6 +1,6 @@
 ;; Tests for functions in the backend
 
 (tests
-  (names rand_eval)
+  (names rand_eval simulate)
   (libraries mcl linalg)
 )
