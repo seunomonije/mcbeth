@@ -133,54 +133,95 @@ module Gates = struct
 
 end;;
 
-module Measurement = struct
 
-  (**
-    * Returns the projection of a state |x>; i.e., returns |x><x|.
-    *)
-  let project m = gemm ~transb:`C m m
+module DensityMatrix = struct
 
-  (**
-    * Collapses a statevector `statevec` using the projector `proj`
-    *)
-  let collapse (statevec : Mat.t) (proj : Mat.t) = (
-    let result = gemm proj statevec in
-    let mag = Vec.mag (Mat.as_vec result) in
-    let one_over_mag = Cenv.((c 1. 0.) / mag) in
-    Mat.scal_mul one_over_mag result
+  let from_state_vector statevec = gemm ~transb:`C statevec statevec
+
+  let purity densmat = (Mat.trace (gemm densmat densmat)).re
+
+  let apply_operator op densmat = gemm ~transb:`C (gemm op densmat) op
+
+  module Measurement = struct
+
+    let measure ?(normalize=true) densmat op = (
+      let result = apply_operator op densmat in
+      if normalize then (
+        let trace = Mat.trace result in
+        let one_over_trace = Cenv.((c 1. 0.) / trace) in
+        Mat.scal_mul one_over_trace result
+      ) else result
+    )
+
+    let measure_single ?(normalize=true) n q densmat op = (
+      let op' = Gates.gate op n q in
+      measure ~normalize:normalize densmat op'
+    )
+
+  end
+
+end;;
+
+module StateVector = struct
+
+  let to_density_matrix statevec = (
+    DensityMatrix.from_state_vector statevec
   )
 
-  (**
-    * Collapses a single qubit `q` of an `n` qubit system represented
-    * as a statevector `statevec` using the single qubit projector `proj`.
-    *)
-  let collapse_single n q (statevec : Mat.t) (proj : Mat.t) = (
-    let proj' = Gates.gate proj n q in
-    collapse statevec proj'
+  let purity statevec = (
+    DensityMatrix.purity (DensityMatrix.from_state_vector statevec)
   )
+    
+  module Measurement = struct
 
-  (**
-    * Calculates the probability of collapsing `statevec` to the
-    * state associated with the projector `proj`.
-    *
-    * Probability = <S| P |S>
-    *
-    *)
-  let prob (statevec : Mat.t) (proj : Mat.t) = (
-    let result_matrix = gemm (gemm ~transa:`C statevec proj) statevec in
-    let result_complex = List.hd (List.hd (Mat.to_list result_matrix)) in
-    result_complex.re (* Ignores the imaginary part, just returns the real *)
-  )
+    (**
+      * Returns the projection of a state |x>; i.e., returns |x><x|.
+      *)
+    let project m = gemm ~transb:`C m m
 
-  
-  (**
-    * Calculates the probability of collapsing a single qubit `q` of an 
-    * `n` qubit system represented as a statevector `statevec` to the state
-    * associated with the single qubit projector `proj`.
-    *)
-  let prob_single n q (statevec : Mat.t) (proj : Mat.t) = (
-    let proj' = Gates.gate proj n q in
-    prob statevec proj'
-  )
+    (**
+      * Collapses a state vector `statevec` using the projector `proj`
+      *)
+    let measure (statevec : Mat.t) (proj : Mat.t) = (
+      let result = gemm proj statevec in
+      let mag = Vec.mag (Mat.as_vec result) in
+      let one_over_mag = Cenv.((c 1. 0.) / mag) in
+      Mat.scal_mul one_over_mag result
+    )
+
+    (**
+      * Collapses a single qubit `q` of an `n` qubit system represented
+      * as a state vector `statevec` using the single qubit projector `proj`.
+      *)
+    let measure_single n q (statevec : Mat.t) (proj : Mat.t) = (
+      let proj' = Gates.gate proj n q in
+      measure statevec proj'
+    )
+
+    (**
+      * Calculates the probability of collapsing `statevec` to the
+      * state associated with the projector `proj`.
+      *
+      * Probability = <S| P |S>
+      *
+      *)
+    let prob (statevec : Mat.t) (proj : Mat.t) = (
+      let result_matrix = gemm (gemm ~transa:`C statevec proj) statevec in
+      let result_complex = List.hd (List.hd (Mat.to_list result_matrix)) in
+      result_complex.re (* Ignores the imaginary part, just returns the real *)
+    )
+
+    
+    (**
+      * Calculates the probability of collapsing a single qubit `q` of an 
+      * `n` qubit system represented as a statevector `statevec` to the state
+      * associated with the single qubit projector `proj`.
+      *)
+    let prob_single n q (statevec : Mat.t) (proj : Mat.t) = (
+      let proj' = Gates.gate proj n q in
+      prob statevec proj'
+    )
+
+  end
 
 end;;

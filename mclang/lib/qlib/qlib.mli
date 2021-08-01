@@ -34,10 +34,26 @@ module Gates : sig
   val cnot : int -> int -> int -> Mat.t
 end
 
-module Measurement : sig
-  val project : Mat.t -> Mat.t
-  val collapse : Mat.t -> Mat.t -> Mat.t
-  val collapse_single : int -> int -> Mat.t -> Mat.t -> Mat.t
-  val prob : Mat.t -> Mat.t -> float
-  val prob_single : int -> int -> Mat.t -> Mat.t -> float
+module DensityMatrix : sig
+  val from_state_vector : Mat.t -> Mat.t
+  val purity : Mat.t -> float
+  val apply_operator : Mat.t -> Mat.t -> Mat.t
+
+  module Measurement : sig
+    val measure : ?normalize:bool -> Mat.t -> Mat.t -> Mat.t
+    val measure_single : ?normalize:bool -> int -> int -> Mat.t -> Mat.t -> Mat.t
+  end
+end
+
+module StateVector : sig
+  val to_density_matrix : Mat.t -> Mat.t
+  val purity : Mat.t -> float
+
+  module Measurement : sig
+    val project : Mat.t -> Mat.t
+    val measure : Mat.t -> Mat.t -> Mat.t
+    val measure_single : int -> int -> Mat.t -> Mat.t -> Mat.t
+    val prob : Mat.t -> Mat.t -> float
+    val prob_single : int -> int -> Mat.t -> Mat.t -> float
+  end
 end
