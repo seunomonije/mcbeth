@@ -24,7 +24,7 @@ open Qlib.Gates;;
   * `statevec` of size `n` at position `pos`. The position of the current 
   * qubit in the statevector at position `pos` is assumed to have value [[1] [1]].
   *)
-let insert_qubit matrix n input pos = (
+let insert_qubit ?(densmat=false) matrix n input pos = (
   let open Cenv in
   let zero = c 0. 0. in
   let one = c 1. 0. in
@@ -38,10 +38,14 @@ let insert_qubit matrix n input pos = (
     | State(c0, c1) -> (c0, c1)
   ) in
   let operator = Qlib.Gates.gate (Mat.of_array [|[| a; zero |]; [| zero; b |]|]) n pos in
-  gemm operator matrix
+  let temp = gemm operator matrix in
+  if densmat then (
+    gemm ~transb:`C temp operator
+  ) else temp
 );;
 
-let handle_prep qubit_num matrix prep = (
+let handle_prep ?(densmat=false) qubit_num matrix prep = (
+  let insert_qubit = insert_qubit ~densmat:densmat in
   match prep with
   | Prep (qubit) -> (
     insert_qubit matrix qubit_num Plus qubit
@@ -245,7 +249,7 @@ let simulate_cmd_exec qubit_num mtbl (densmat : Mat.t) (c : cmd) : Mat.t = (
   | ZCorrect (qubit, signals) -> (
     calc_correction mtbl signals apply_operator (pauli_z qubit_num qubit) densmat
   )
-  | prep -> handle_prep qubit_num densmat prep
+  | prep -> handle_prep ~densmat:true qubit_num densmat prep
 );;
 
 
