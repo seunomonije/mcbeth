@@ -1,6 +1,6 @@
 
 open Qlib.States;;
-open Qlib.Measurement;;
+open Qlib.StateVecotr.Measurement;;
 
 open Lacamlext;;
 open Lacaml.Z;;

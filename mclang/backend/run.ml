@@ -36,6 +36,86 @@ let rand_eval_cmd_exec qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   | InputList (args) -> (
     List.fold_left (fun sv (q, i) -> insert_qubit_statevec sv qubit_num i q) statevec args
   )
+
+(**
+  * Returns the outcome of a qubit `q`.
+  *
+  * `mtbl` maps qubits to 1 or 0 depending to what they were measured to.
+  *
+  * Returns 0 if the state collapsed to |+_\alpha>.
+  * Returns 1 if the state collapsed to |-_\alpha>.
+  * Returns -1 if the qubit was never measured.
+  *)
+let get_outcome mtbl q = (
+  match Hashtbl.find_opt mtbl q with
+  | Some(x) -> x
+  | None    -> -1
+);;
+
+
+(**
+  * Calculates signals -- i.e., a single number based on the outcomes of qubits.
+  *
+  * Signal s = \Sum_{i \in I}(s_i) where s_i = 0 if the measurement of qubit i
+  * collapses the state to |+_\alpha> and s_i = 1 if the state collapses to
+  * |-_\alpha>. The summation is performed in Z_2. 
+  *
+  * Input:
+  *   get_outcome : a function which given a qubit, returns the outcome of the qubit,
+  *                 should be 0 or 1; returns -1 on error.
+  *   qs          : a list of qubits which the signal depends on
+  * Output:
+  *   Returns the signal, 0 or 1.
+  *)
+let calc_signal mtbl (qs : qubit list) = (
+  (List.fold_left (fun s q -> s + get_outcome mtbl q) 0 qs) mod 2
+);;
+
+
+(**
+  * Calculates the new angle of a measurement based on the original angle
+  * and the outcomes of signals1 and signals2
+  *
+  * Input:
+  *   get_outcome : a function to be passed to calc_signal; see calc_signal above
+  *   angle       : the original angle \alpha of type float
+  *   signals_s   : a list of qubits
+  *   signals_t   : a list of qubits
+  *
+  * Output:
+  *   Returns the new angle, of type float.
+  *)
+let new_angle mtbl angle signals_s signals_t = (
+  let signal qs = float_of_int (calc_signal mtbl qs) in
+  let ( + ) = Float.add in
+  let ( * ) = Float.mul in
+  (-1.)**(signal signals_s) * angle + (signal signals_t) * Float.pi
+);;
+
+
+let calc_measurement_states mtbl angle signals_s signals_t = (
+  (* Calculates the angle of measurement *)
+  let angle' = new_angle mtbl angle signals_s signals_t in
+  let angle'' = Cenv.float_to_complex angle' in
+
+  (* Calculates the projectors *)
+  let exp_const = Complex.exp (Cenv.(Complex.i * angle'')) in
+  let r202 = Cenv.float_to_complex (Float.div 1.0 (sqrt 2.)) in
+  let zero_state = Qlib.States.zero_state_mat in
+  let one_state = Qlib.States.one_state_mat in
+  let one_state_e = Mat.scal_mul exp_const one_state in
+  let plus_state = Mat.scal_mul r202 (Mat.add zero_state one_state_e) in
+  let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in
+  (plus_state, minus_state)
+)
+
+let calc_correction mtbl signals application_func op matrix = (
+  (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
+  if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
+    application_func op matrix
+  ) else matrix
+);;
+
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
     (* qubit1 is the control *)
