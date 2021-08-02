@@ -56,19 +56,19 @@ let cmd_to_string c = (
     "InputList(" ^ (String.concat ", " (List.map helper args)) ^ ")"
   )
   | Entangle (left, right)  -> (
-    "Entangle(" ^ to_string left ^ ", " ^ to_string right ^ ")"
+    "E(" ^ to_string left ^ ", " ^ to_string right ^ ")"
   )
   | Measure (qubit, angle, parity1, parity2) -> (
-    "Measure(" ^ String.concat ", " [to_string qubit; 
+    "M(" ^ String.concat ", " [to_string qubit; 
                               float_to_string angle; 
                               "[" ^ String.concat ", " (List.map to_string parity1) ^ "]"; 
                               "[" ^ String.concat ", " (List.map to_string parity2) ^ "]"] ^ ")"
   )
   | XCorrect (qubit, signals) -> (
-    "XCorrect(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
+    "X(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
   )
   | ZCorrect (qubit, signals) -> (
-    "ZCorrect(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
+    "Z(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
   )
 );;
 
