@@ -10,12 +10,16 @@ open Qlib.States;;
 
 let foobar() = (
   print_endline("-- foobar test --");
-  let p = ([Input(0, Plus); (*Input(1, Plus);*)
+  let p = ([Input(0, Plus); Input(1, Minus);
             (*Entangle(0, 1); Measure(0, 0.0, [], [])*)]) 
   in (
+    let foo = true in
     let r = rand_eval p in
-    let old_base = (plus_state)
-    Mat.print (change_base)
+    if foo then (
+      let old_base = (plus_state, minus_state) in
+      let new_base = (zero_state, one_state) in
+      Mat.print (change_base old_base new_base r 2)
+    ) else Mat.print r
   )
 );;
 

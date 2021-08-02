@@ -33,14 +33,16 @@ module Gates : sig
 
   val cnot : int -> int -> int -> Mat.t
 
-  val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t
+  val to_all : Mat.t -> int -> Mat.t
+  
+  val change_base : ?qubits:int -> (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t
 end
 
 module DensityMatrix : sig
   val from_state_vector : Mat.t -> Mat.t
   val purity : Mat.t -> float
   val apply_operator : Mat.t -> Mat.t -> Mat.t
-  val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t -> Mat.t
+  val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t -> int -> Mat.t
 
   module Measurement : sig
     val measure : ?normalize:bool -> Mat.t -> Mat.t -> Mat.t
@@ -51,7 +53,7 @@ end
 module StateVector : sig
   val to_density_matrix : Mat.t -> Mat.t
   val purity : Mat.t -> float
-  val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t -> Mat.t
+  val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t -> int -> Mat.t
 
   module Measurement : sig
     val project : Mat.t -> Mat.t

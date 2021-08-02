@@ -131,19 +131,34 @@ module Gates = struct
 
   let cnot = ctrl_x
 
+  (** 
+    * Returns an operator that applies the unitary operator
+    * `unitary` to all qubits in a system with `qubit_num` qubits.
+    *)
+  let to_all unitary qubit_num = (
+    let rec helper temp_mat count = (
+      if count > 1 then (
+        let next_mat = Mat.tensor_prod temp_mat unitary in
+        helper next_mat (count - 1)
+      ) else temp_mat
+    ) in
+    helper unitary qubit_num
+  )
+
   (**
     * Returns the unitary matrix required to change the base of 
     * a state vector from base A to B; i.e., B = UA.
     *)
-  let change_base (old1, old2) (new1, new2) = (
+  let change_base ?(qubits=1) (old1, old2) (new1, new2) = (
     let get_first m = List.hd (List.hd (Mat.to_list m)) in
     let e11 = get_first (gemm ~transa:`C old1 new1) in
     let e12 = get_first (gemm ~transa:`C old1 new2) in
     let e21 = get_first (gemm ~transa:`C old2 new1) in
     let e22 = get_first (gemm ~transa:`C old2 new2) in
     let unitary = Mat.of_array [|[| e11; e12 |]; [| e21; e22 |]|] in
-    let iden = Mat.identity 2 in
-    gemm ~transa:`C unitary iden
+    let unitary' = to_all unitary qubits in
+    let iden = Mat.identity (Int.shift_left 1 qubits) in
+    gemm ~transa:`C unitary' iden
   )
 
 end;;
@@ -157,8 +172,8 @@ module DensityMatrix = struct
 
   let apply_operator op densmat = gemm ~transb:`C (gemm op densmat) op
 
-  let change_base old_b new_b densmat = (
-    apply_operator (Gates.change_base old_b new_b) densmat
+  let change_base old_b new_b densmat qubit_num = (
+    apply_operator (Gates.change_base ~qubits:qubit_num old_b new_b) densmat
   )
 
   module Measurement = struct
@@ -191,8 +206,8 @@ module StateVector = struct
     DensityMatrix.purity (DensityMatrix.from_state_vector statevec)
   )
 
-  let change_base old_b new_b statevec = (
-    gemm (Gates.change_base old_b new_b) statevec
+  let change_base old_b new_b statevec qubit_num = (
+    gemm (Gates.change_base ~qubits:qubit_num old_b new_b) statevec
   )
     
   module Measurement = struct
