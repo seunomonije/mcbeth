@@ -151,7 +151,7 @@ let calc_correction mtbl signals application_func op matrix = (
 (**
   * Performs appropriate operations to execute command.
   *)
-let rand_eval_cmd_exec qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
+let rand_eval_cmd_exec qubit_num mtbl statevec c = (
   match c with 
   | Entangle (qubit1, qubit2) -> (
     (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
@@ -205,8 +205,8 @@ let rand_eval (cmds : prog) : Mat.t = (
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
     let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 1. 0.) in
-    let eval_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
-    let statevec_mat = List.fold_left (fun sv p -> eval_cmd' sv p) init_statevec cmds in
+    let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
+    let statevec_mat = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
     statevec_mat
   ) else Mat.empty
 );;
@@ -222,7 +222,7 @@ let rand_eval (cmds : prog) : Mat.t = (
 (**
   * Performs appropriate operations to execute command.
   *)
-let simulate_cmd_exec qubit_num mtbl (densmat : Mat.t) (c : cmd) : Mat.t = (
+let simulate_cmd_exec qubit_num mtbl densmat c = (
   let open Qlib.DensityMatrix in
   match c with 
   | Entangle (qubit1, qubit2) -> (
@@ -263,8 +263,8 @@ let simulate (cmds : prog) : Mat.t = (
     let qubit_num = calc_qubit_num cmds in
     let size = Int.shift_left 1 qubit_num in
     let init_densmat = Mat.make size size (Cenv.c 1. 0.) in
-    let eval_cmd' = simulate_cmd_exec qubit_num (Hashtbl.create qubit_num) in
-    List.fold_left (fun dm p -> eval_cmd' dm p) init_densmat cmds
+    let exec_cmd' = simulate_cmd_exec qubit_num (Hashtbl.create qubit_num) in
+    List.fold_left (fun dm p -> exec_cmd' dm p) init_densmat cmds
   ) else Mat.empty
 );;
 

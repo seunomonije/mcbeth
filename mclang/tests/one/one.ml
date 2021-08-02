@@ -1,6 +1,7 @@
 
 open Backend.Types;;
 open Backend.Run;;
+open Backend.Utils;;
 
 open Lacamlext;;
 open Lacaml.Z;;
@@ -10,10 +11,12 @@ open Qlib.States;;
 
 let foobar() = (
   print_endline("-- foobar test --");
-  let p = ([Input(0, Plus); Input(1, Plus);
-            Entangle(0, 1); Measure(0, 0.0, [], [])]) 
-  in (
-    let foo = true in
+  let p = (
+    [Input(0, Zero); PrepList([1; 2])] @
+    parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];
+  ) in (
+    let _ = print_prog p in
+    let foo = false in
     let r = simulate p in (
       if foo then (
         let old_base = (plus_state, minus_state) in

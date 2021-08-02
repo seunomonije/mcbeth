@@ -6,7 +6,6 @@ open Lacamlext;;
 open Lacaml.Z;;
 
 open Qlib.DensityMatrix;;
-open Qlib.States;;
 open Qlib.Bases;;
 
 let foobar() = (

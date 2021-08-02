@@ -19,3 +19,9 @@ type cmd =
   | ZCorrect of qubit * qubit list
 
 type prog = cmd list
+
+type pattern_part = 
+  | J of float * qubit * qubit
+  | Z of qubit * qubit
+
+type pattern = pattern_part list

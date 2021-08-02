@@ -1,11 +1,10 @@
 
 open Types;;
 
-open Lacamlext;;
-open Lacaml.Z;;
-
+(*
 open Format;;     (* for testing/debugging *)
 open Lacaml.Io;;  (* for testing/debugging *)
+*)
 
 (* open Qlib.States;; *)
 
@@ -56,17 +55,21 @@ let cmd_to_string c = (
     let helper (q, i) = "(" ^ (to_string q) ^ ", " ^ (parse_input i) ^ ")" in
     "InputList(" ^ (String.concat ", " (List.map helper args)) ^ ")"
   )
-  | Entangle (left, right)  ->
-    "E(" ^ to_string left ^ ", " ^ to_string right ^ ")"
-  | Measure (qubit, angle, parity1, parity2) ->
-    "M(" ^ String.concat ", " [to_string qubit; 
+  | Entangle (left, right)  -> (
+    "Entangle(" ^ to_string left ^ ", " ^ to_string right ^ ")"
+  )
+  | Measure (qubit, angle, parity1, parity2) -> (
+    "Measure(" ^ String.concat ", " [to_string qubit; 
                               float_to_string angle; 
                               "[" ^ String.concat ", " (List.map to_string parity1) ^ "]"; 
                               "[" ^ String.concat ", " (List.map to_string parity2) ^ "]"] ^ ")"
-  | XCorrect (qubit, signals) ->
-    "X(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
-  | ZCorrect (qubit, signals) ->
-    "Z(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
+  )
+  | XCorrect (qubit, signals) -> (
+    "XCorrect(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
+  )
+  | ZCorrect (qubit, signals) -> (
+    "ZCorrect(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
+  )
 );;
 
 
@@ -316,9 +319,17 @@ let well_formed (cmds : prog) : bool = (
 );;
 
 
-(**
-  * Prints qubits
-  *)
-let print_states (states : Vec.t array) = (
-  printf "states = @[%a@]@\n@\n" pp_cmat (Mat.of_col_vecs states)
+let parse_pattern pattern = (
+  let helper p = (
+    match p with
+    | J (angle, q1, q2) -> [
+      Entangle(q1, q2);
+      Measure(q1, angle, [], []);
+      XCorrect(q2, [q1]);
+    ]
+    | Z (q1, q2) -> [
+      Entangle(q1, q2);
+    ]
+  ) in
+  List.fold_left (fun ls p -> ls @ (helper p)) [] pattern
 );;
