@@ -131,6 +131,21 @@ module Gates = struct
 
   let cnot = ctrl_x
 
+  (**
+    * Returns the unitary matrix required to change the base of 
+    * a state vector from base A to B; i.e., B = UA.
+    *)
+  let change_base (old1, old2) (new1, new2) = (
+    let get_first m = List.hd (List.hd (Mat.to_list m)) in
+    let e11 = get_first (gemm ~transa:`C old1 new1) in
+    let e12 = get_first (gemm ~transa:`C old1 new2) in
+    let e21 = get_first (gemm ~transa:`C old2 new1) in
+    let e22 = get_first (gemm ~transa:`C old2 new2) in
+    let unitary = Mat.of_array [|[| e11; e12 |]; [| e21; e22 |]|] in
+    let iden = Mat.identity 2 in
+    gemm ~transa:`C unitary iden
+  )
+
 end;;
 
 
@@ -141,6 +156,10 @@ module DensityMatrix = struct
   let purity densmat = (Mat.trace (gemm densmat densmat)).re
 
   let apply_operator op densmat = gemm ~transb:`C (gemm op densmat) op
+
+  let change_base old_b new_b densmat = (
+    apply_operator (Gates.change_base old_b new_b) densmat
+  )
 
   module Measurement = struct
 
@@ -170,6 +189,10 @@ module StateVector = struct
 
   let purity statevec = (
     DensityMatrix.purity (DensityMatrix.from_state_vector statevec)
+  )
+
+  let change_base old_b new_b statevec = (
+    gemm (Gates.change_base old_b new_b) statevec
   )
     
   module Measurement = struct
