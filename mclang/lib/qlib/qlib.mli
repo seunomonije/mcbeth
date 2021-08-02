@@ -3,15 +3,15 @@ open Lacamlext
 open Lacaml.Z
 
 module States : sig
-  val zero_state : Vec.t
-  val one_state : Vec.t
-  val plus_state : Vec.t
-  val minus_state : Vec.t
+  val zero_state_vec : Vec.t
+  val one_state_vec : Vec.t
+  val plus_state_vec : Vec.t
+  val minus_state_vec : Vec.t
   
-  val zero_state_mat : Mat.t
-  val one_state_mat : Mat.t
-  val plus_state_mat : Mat.t
-  val minus_state_mat : Mat.t
+  val zero_state : Mat.t
+  val one_state : Mat.t
+  val plus_state : Mat.t
+  val minus_state : Mat.t
 end
 
 module Gates : sig

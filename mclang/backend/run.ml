@@ -126,7 +126,7 @@ let calc_measurement_states mtbl angle signals_s signals_t = (
   (* Calculates the projectors *)
   let exp_const = Complex.exp (Cenv.(Complex.i * angle'')) in
   let r202 = Cenv.float_to_complex (Float.div 1.0 (sqrt 2.)) in
-  let zero_state = Qlib.States.zero_state_mat in
+  let zero_state = Qlib.States.zero_state in
   let one_state = Qlib.States.one_state_mat in
   let one_state_e = Mat.scal_mul exp_const one_state in
   let plus_state = Mat.scal_mul r202 (Mat.add zero_state one_state_e) in
@@ -200,15 +200,15 @@ let rand_eval_cmd_exec qubit_num mtbl (statevec : Mat.t) (c : cmd) : Mat.t = (
   * First eval checks if the function is well formed. It then it runs the program
   * and returns the resulting state vector.
   *)
-let rand_eval (cmds : prog) : Vec.t = (
+let rand_eval (cmds : prog) : Mat.t = (
   Random.self_init();
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
     let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 1. 0.) in
     let eval_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
     let statevec_mat = List.fold_left (fun sv p -> eval_cmd' sv p) init_statevec cmds in
-    Mat.as_vec statevec_mat
-  ) else Vec.empty
+    statevec_mat
+  ) else Mat.empty
 );;
 
 

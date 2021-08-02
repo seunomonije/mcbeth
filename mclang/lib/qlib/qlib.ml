@@ -15,7 +15,7 @@ let r2o2 = Float.div 1.0 (sqrt 2.);;
 
 module States = struct
 
-  let zero_state = (
+  let zero_state_vec = (
     let open Cenv in
     Vec.of_array [|
       c 1. 0.;
@@ -23,7 +23,7 @@ module States = struct
     |]
   )
 
-  let one_state = (
+  let one_state_vec = (
     let open Cenv in 
     Vec.of_array [|
       c 0. 0.;
@@ -31,7 +31,7 @@ module States = struct
     |]
   )
 
-  let plus_state = (
+  let plus_state_vec = (
     let open Cenv in 
     Vec.of_array [|
       c r2o2 0.;
@@ -39,7 +39,7 @@ module States = struct
     |]
   )
 
-  let minus_state = (
+  let minus_state_vec = (
     let open Cenv in 
     Vec.of_array [|
       c r2o2 0.;
@@ -47,10 +47,10 @@ module States = struct
     |]
   )
 
-  let zero_state_mat = Mat.from_col_vec zero_state
-  let one_state_mat = Mat.from_col_vec one_state
-  let plus_state_mat = Mat.from_col_vec plus_state
-  let minus_state_mat = Mat.from_col_vec minus_state
+  let zero_state = Mat.from_col_vec zero_state_vec
+  let one_state = Mat.from_col_vec one_state_vec
+  let plus_state = Mat.from_col_vec plus_state_vec
+  let minus_state = Mat.from_col_vec minus_state_vec
 
 end
 
