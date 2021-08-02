@@ -7,6 +7,7 @@ open Lacaml.Z;;
 
 open Qlib.DensityMatrix;;
 open Qlib.States;;
+open Qlib.Bases;;
 
 let foobar() = (
   print_endline("-- foobar test --");
@@ -16,8 +17,8 @@ let foobar() = (
     let foo = true in
     let r = simulate p in
     if foo then (
-      let old_base = (plus_state, minus_state) in
-      let new_base = (zero_state, one_state) in
+      let old_base = x_bases in
+      let new_base = z_bases in
       Mat.print (change_base old_base new_base r 2)
     ) else Mat.print r
   )

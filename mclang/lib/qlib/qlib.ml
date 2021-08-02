@@ -52,7 +52,16 @@ module States = struct
   let plus_state = Mat.from_col_vec plus_state_vec
   let minus_state = Mat.from_col_vec minus_state_vec
 
-end
+end;;
+
+
+module Bases = struct
+  
+  let x_bases = (States.plus_state, States.minus_state)
+  let z_bases = (States.zero_state, States.one_state)
+
+end;;
+
 
 module Gates = struct
 
@@ -196,14 +205,11 @@ module DensityMatrix = struct
 
 end;;
 
+
 module StateVector = struct
 
   let to_density_matrix statevec = (
     DensityMatrix.from_state_vector statevec
-  )
-
-  let purity statevec = (
-    DensityMatrix.purity (DensityMatrix.from_state_vector statevec)
   )
 
   let change_base old_b new_b statevec qubit_num = (

@@ -14,6 +14,11 @@ module States : sig
   val minus_state : Mat.t
 end
 
+module Bases : sig
+  val x_bases : Mat.t * Mat.t
+  val z_bases : Mat.t * Mat.t
+end
+
 module Gates : sig
   val single_pauli_x : Mat.t
   val single_pauli_y : Mat.t
@@ -34,7 +39,7 @@ module Gates : sig
   val cnot : int -> int -> int -> Mat.t
 
   val to_all : Mat.t -> int -> Mat.t
-  
+
   val change_base : ?qubits:int -> (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t
 end
 
@@ -52,7 +57,6 @@ end
 
 module StateVector : sig
   val to_density_matrix : Mat.t -> Mat.t
-  val purity : Mat.t -> float
   val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t -> int -> Mat.t
 
   module Measurement : sig
