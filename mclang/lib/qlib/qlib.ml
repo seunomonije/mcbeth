@@ -5,13 +5,14 @@
 open Lacamlext;;
 open Lacaml.Z;;
 
-(* Commonly Used Constants *)
+(* General Constants and Utils *)
 let c0 = Cenv.c 0. 0.;;
 let c1 = Cenv.c 1. 0.;;
 let ci = Cenv.c 0. 1.;;
 
 let r2o2 = Float.div 1.0 (sqrt 2.);;
 
+let log2 x = Float.div (Float.log10 x) (Float.log10 2.)
 
 module States = struct
 
@@ -183,6 +184,39 @@ module DensityMatrix = struct
 
   let change_base old_b new_b densmat qubit_num = (
     apply_operator (Gates.change_base ~qubits:qubit_num old_b new_b) densmat
+  )
+
+  let extract_info ?(print=false) densmat = (
+    let as_array = Mat.to_array densmat in
+    let len = Array.length as_array in
+    let format_qubit i = (
+      let bit_num = Float.to_int (log2 (Int.to_float len)) in 
+      let rec helper bit = (
+        if bit < bit_num then (
+          let next = if i land (1 lsl bit) <> 0 then "1" else "0" in
+          (helper (bit + 1)) ^ next
+        ) else ""
+      ) in
+      helper 0
+    ) in
+    let info_tbl = Hashtbl.create len in
+    let rec helper i = (
+      if i < len then (
+        let e = as_array.(i).(i) in (
+          if print then (
+            print_endline (format_qubit i ^ "\t" ^ Float.to_string e.re)
+          );
+          Hashtbl.add info_tbl i e.re;
+          helper (i+1)
+        )
+      ) else ()
+    ) in (
+      if print then (
+        print_endline "Qubits\tProbability"
+      );
+      helper 0;
+      info_tbl
+    )
   )
 
   module Measurement = struct
