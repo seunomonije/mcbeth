@@ -12,7 +12,7 @@ let ci = Cenv.c 0. 1.;;
 
 let r2o2 = Float.div 1.0 (sqrt 2.);;
 
-let log2 x = Float.div (Float.log10 x) (Float.log10 2.)
+let log2 x = Float.div (Float.log10 x) (Float.log10 2.);;
 
 module States = struct
 
@@ -247,7 +247,12 @@ module StateVector = struct
   )
 
   let change_base old_b new_b statevec qubit_num = (
-    gemm (Gates.change_base ~qubits:qubit_num old_b new_b) statevec
+    let new_mat = gemm (Gates.change_base ~qubits:qubit_num old_b new_b) statevec in
+    Mat.cleanup new_mat
+  )
+
+  let extract_info ?(print=false) statevec = (
+    DensityMatrix.extract_info ~print:print (to_density_matrix statevec)
   )
     
   module Measurement = struct

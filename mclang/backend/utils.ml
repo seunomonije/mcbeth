@@ -324,7 +324,7 @@ let parse_pattern pattern = (
     match p with
     | J (angle, q1, q2) -> [
       Entangle(q1, q2);
-      Measure(q1, angle, [], []);
+      Measure(q1, -.angle, [], []);
       XCorrect(q2, [q1]);
     ]
     | Z (q1, q2) -> [
