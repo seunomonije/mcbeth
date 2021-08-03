@@ -48,6 +48,7 @@ module DensityMatrix : sig
   val purity : Mat.t -> float
   val apply_operator : Mat.t -> Mat.t -> Mat.t
   val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t -> int -> Mat.t
+  val extract_info : ?print:bool -> Mat.t -> (int, float) Hashtbl.t
 
   module Measurement : sig
     val measure : ?normalize:bool -> Mat.t -> Mat.t -> Mat.t
@@ -58,6 +59,7 @@ end
 module StateVector : sig
   val to_density_matrix : Mat.t -> Mat.t
   val change_base : (Mat.t * Mat.t) -> (Mat.t * Mat.t) -> Mat.t -> int -> Mat.t
+  val extract_info : ?print:bool -> Mat.t -> (int, float) Hashtbl.t
 
   module Measurement : sig
     val project : Mat.t -> Mat.t

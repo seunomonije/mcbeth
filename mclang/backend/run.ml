@@ -207,7 +207,7 @@ let rand_eval (cmds : prog) : Mat.t = (
     let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 1. 0.) in
     let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
     let statevec_mat = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
-    statevec_mat
+    Mat.cleanup statevec_mat
   ) else Mat.empty
 );;
 

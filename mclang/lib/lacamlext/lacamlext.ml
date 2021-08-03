@@ -59,6 +59,19 @@ module Lacaml = struct
         Format.printf "@[%a@]@\n@\n" Io.pp_cmat m;
       );;
 
+      let cleanup m = (
+        let helper e = (
+          let zero_out i = (
+            if (Float.abs i) < 10e-17 then 0. else i
+          ) in
+          let { Complex.re = re; im = im; } = e in
+          let re = zero_out re in
+          let im = zero_out im in
+          { Complex.re = re; im = im; }
+        ) in
+        Mat.map helper m
+      );;
+
       (**
         * Performs scalar multiplication on matrix `m` by scalar `s`
         *)

@@ -17,17 +17,23 @@ let foobar() = (
   ) in (
     let _ = print_prog p in
     let qubit_num = calc_qubit_num p in
-    let foo = true in
+    let change = true in
     let r = rand_eval p in (
-      if foo then (
+      if change then (
         let old_base = (plus_state, minus_state) in
         let new_base = (zero_state, one_state) in
-        Mat.print (change_base old_base new_base r qubit_num)
-      ) else Mat.print r;
+        let new_mat = change_base old_base new_base r qubit_num in (
+          Mat.print new_mat;
+          extract_info ~print:true new_mat
+        )
+      ) else (
+        Mat.print r;
+        extract_info ~print:true r
+      )
     )
   )
 );;
 
-let () = foobar();;
+let _ = foobar();;
 
 
