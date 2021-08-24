@@ -35,7 +35,7 @@
 
 #### Linux
 
-The following commands worked to install all needed dependencies on Ubuntu 20.04:
+The following commands will install all needed dependencies on Ubuntu 20.04:
 
 ```
 sudo apt-get install opam
@@ -46,7 +46,7 @@ opam install dune-configurator
 sudo apt-get install libblas-dev liblapack-dev
 ```
 
-### MacOS
+#### MacOS
 
 It's recommended to use package manager [Homebrew](https://brew.sh/) to download dependencies that aren't reliant on Opam.
 Translating the quick start above, this looks like:
@@ -68,7 +68,9 @@ When cloning the repository, be sure to pull in all submodules with it by runnin
 
 More detail is available in the following sections.
 
-### Opam
+### Core dependencies
+
+#### Opam
 
 Opam is a package manager for OCaml projects -- the language MCL is primarily written in. Opam allows for the quick and easy installation of required packages; specifically, we use it to install and manage the Dune build system, discussed below.
 
@@ -78,7 +80,7 @@ For more installation options and instructions, visit https://opam.ocaml.org/doc
 
 Learn more about Opam at https://opam.ocaml.org/.
 
-### Dune
+#### Dune
 
 We use Dune to build and test our project. Mentioned briefly earlier, Dune is a build system used to manage OCaml projects. It helps compile, run, and test OCaml code.
 
@@ -86,7 +88,7 @@ Install Dune by running `opam install dune`.
 
 For more installation options and to learn more about Dune, visit https://github.com/ocaml/dune.
 
-### Lacaml
+#### Lacaml
 
 Lacaml is an OCaml library from linear algebra. It interfaces with the [BLAS](http://www.netlib.org/blas/) and [LAPACK](http://www.netlib.org/lapack/) linear algebra libraries, which are widely used for fast performing fast linear algebra operations.
 
