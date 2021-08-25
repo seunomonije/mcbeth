@@ -1,6 +1,6 @@
 # Project Documentation
 
-## Tables of Contents
+## Table of Contents
 
 1. [Installation](#installation)
    1. [Quick Start](#quick-start)
