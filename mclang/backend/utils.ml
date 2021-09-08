@@ -357,3 +357,5 @@ let standardize prog = (
   (* Performs rewriting rules on other commands until unable to do so. *)
 
   (* Appends the prep and input commands to the beginning of the other commands list. *)
+  prog
+);;
