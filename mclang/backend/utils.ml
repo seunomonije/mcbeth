@@ -332,3 +332,28 @@ let parse_pattern pattern = (
   ) in
   List.fold_left (fun ls p -> ls @ (helper p)) [] pattern
 );;
+
+
+(**
+  * Standardizes the input program by applying the following rewriting rules to the program:
+  *   (1) E_{ij} X^s_i => X^s_i Z^s_j E_{ij}
+  *   (2) E_{ij} X^s_j => X^s_j Z^s_i E_{ij}
+  *   (3) E_{ij} Z^s_i => Z^s_i E_{ij}
+  *   (4) E_{ij} Z^s_j => Z^s_j E_{ij}
+  *   (5) ^t[M^{\alpha}_i]^s X^r_i => ^t[M^{\alpha}_i]^{s+r}
+  *   (6) ^t[M^{\alpha}_i]^s Z^r_i => ^{r+t}[M^{\alpha}_i]^s
+  * The following three rules work on disjoin sets of qubits:
+  *   (7) E_{ij} A_k => A_k E_{ij}  where A is not an entanglement
+  *   (8) A_k E^s_i => X^s_i A_k    where A is not a correction
+  *   (9) A_k Z^s_i => Z^s_i A_k    where A is not a correction
+  * Grammar specific:
+  *   (10) Any prep and input commands may be moved directly to the front in any arbitrary order.
+  *
+  * Returns the standardized program
+  *)
+let standardize prog = (
+  (* Extracts prep and input commands into their own list. *)
+
+  (* Performs rewriting rules on other commands until unable to do so. *)
+
+  (* Appends the prep and input commands to the beginning of the other commands list. *)
