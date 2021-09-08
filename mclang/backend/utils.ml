@@ -298,8 +298,7 @@ let construct_output_tbl (out_tbl, meas_tbl) c = (
   *    Additional constraints per the current implementation:
   *      (D4) The "qubit integers" must start at 0 and increase without skipping an integer.
   *
-  *  Returns 0 on failure.
-  *  On success, returns the number of qubits used in the program.
+  *  Returns true if the program is valid, false otherwise.
   *)
 let well_formed (cmds : prog) : bool = (
   let err = ref false in
