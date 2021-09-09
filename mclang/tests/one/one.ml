@@ -17,6 +17,8 @@ let foobar() = (
     [Input(0, Plus); PrepList([1; 2])] @
     parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];
   ) in (
+    let _ = print_prog p in
+    let _ = print_endline "-----" in
     let p' = standardize p in print_prog p'
   )
 );;
