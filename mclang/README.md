@@ -100,6 +100,12 @@ Second, the Lacaml library requires the BLAS and LAPACK libraries. Install them 
 
 Learn more about Lacaml at https://mmottl.github.io/lacaml/ and https://github.com/mmottl/lacaml.
 
+#### Pyml, pythonlib
+
+Pyml - Bindings for Python 2 and 3. `opam install pyml`.
+
+pythonlib - Wrapper to simplify the connection between Python and Ocaml
+
 ### Troubleshooting
 
 TODO

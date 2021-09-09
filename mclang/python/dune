@@ -1,0 +1,8 @@
+
+(executable 
+  (name ocaml)
+  (libraries base pyml pythonlib mcl)
+  (preprocess (pps ppx_let ppx_python))
+  (modes (native shared_object)) (flags :standard -linkall)
+  
+)
