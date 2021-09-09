@@ -2,3 +2,4 @@ build/
 dist/
 mcl.egg-info
 *.so
+.ipynb_checkpoints
