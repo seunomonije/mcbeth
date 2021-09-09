@@ -1,14 +1,27 @@
 
 open Backend.Types;;
-open Backend.Run;;
 open Backend.Utils;;
+
+(*
+open Backend.Run;;
 
 open Lacamlext;;
 open Lacaml.Z;;
 
 open Qlib.StateVector;;
 open Qlib.States;;
+*)
 
+let foobar() = (
+  let p = (
+    [Input(0, Plus); PrepList([1; 2])] @
+    parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];
+  ) in (
+    let p' = standardize p in print_prog p'
+  )
+);;
+
+(*
 let foobar() = (
   print_endline("-- teleport test --");
   let p = (
@@ -33,6 +46,7 @@ let foobar() = (
     )
   )
 );;
+*)
 
 let _ = foobar();;
 
