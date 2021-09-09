@@ -1,7 +1,6 @@
 open Base
 open Python_lib
 open Python_lib.Let_syntax
-open Backend.Types
 
 let approx_pi = 
   let%map_open n = positional "n" int ~docstring:"the value n" in
@@ -17,7 +16,7 @@ let approx_pi =
 let () =
     if not (Py.is_initialized ()) then Py.initialize ();
     let mod_ = Py_module.create "mcl" in
-    
+
     (* General test fns *)
     Py_module.set mod_ "approx_pi" approx_pi;
 ;;
