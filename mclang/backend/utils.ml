@@ -407,6 +407,7 @@ let standardize prog = (
         )
       )
       | (Measure(q, _, _, _), Entangle(i, j)) -> (
+        stable := false;
         if ((q == i) || (q == j)) then (
           [a] @ (rewrite (b::cmds))
         ) else (
