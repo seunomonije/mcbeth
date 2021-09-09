@@ -298,8 +298,7 @@ let construct_output_tbl (out_tbl, meas_tbl) c = (
   *    Additional constraints per the current implementation:
   *      (D4) The "qubit integers" must start at 0 and increase without skipping an integer.
   *
-  *  Returns 0 on failure.
-  *  On success, returns the number of qubits used in the program.
+  *  Returns true if the program is valid, false otherwise.
   *)
 let well_formed (cmds : prog) : bool = (
   let err = ref false in
@@ -332,4 +331,103 @@ let parse_pattern pattern = (
     ]
   ) in
   List.fold_left (fun ls p -> ls @ (helper p)) [] pattern
+);;
+
+
+(**
+  * Standardizes the input program by applying the following rewriting rules to the program:
+  *   (1) X^s_i E_{ij} => E_{ij} Z^s_j X^s_i
+  *   (2) X^s_j E_{ij} => E_{ij} Z^s_i X^s_j
+  *   (3) Z^s_i E_{ij} => E_{ij} Z^s_i 
+  *   (4) Z^s_j E_{ij} => E_{ij} Z^s_j
+  *   (5) X^r_i ^t[M^{\alpha}_i]^s => ^t[M^{\alpha}_i]^{s+r}
+  *   (6) Z^r_i ^t[M^{\alpha}_i]^s => ^{r+t}[M^{\alpha}_i]^s
+  * The following three rules work on disjoin sets of qubits:
+  *   (7) A_k E_{ij} => E_{ij} A_k  where A is not an entanglement
+  *   (8) X^s_i A_k  => A_k X^s_i   where A is not a correction
+  *   (9) Z^s_i A_k  => A_k Z^s_i   where A is not a correction
+  * Grammar specific:
+  *   (10) Any prep and input commands may be moved directly to the front in any arbitrary order.
+  *
+  * Returns the standardized program
+  *)
+let standardize prog = (
+  (* Extracts prep and input commands into their own list. *)
+  let extract_prep cmd (prep_cmds, main_cmds) = (
+    let helper c = (c::prep_cmds, main_cmds) in
+    match cmd with
+    | Prep (_)      -> helper cmd
+    | Input (_)     -> helper cmd
+    | PrepList (_)  -> helper cmd
+    | InputList (_) -> helper cmd
+    | _ -> (prep_cmds, cmd::main_cmds)
+  ) in
+  let prep_cmds, main_cmds = List.fold_right extract_prep prog ([], [])  in
+
+  (* Performs rewriting rules on the main commands until unable to do so. *)
+  let rec rewrite stable p = (
+    let rewrite = rewrite stable in
+    match p with
+    | a::b::cmds -> (
+      match (a, b) with
+      | (XCorrect(q, s), Entangle(i, j)) -> (
+        stable := false;
+        if (q == i) then (
+          [Entangle(i, j); ZCorrect(j, s)] @ (rewrite (XCorrect(i, s)::cmds))
+        ) else if (q == j) then (
+          [Entangle(i, j); ZCorrect(i, s)] @ (rewrite (XCorrect(j, s)::cmds))
+        ) else (
+          [b] @ (rewrite (a::cmds))
+        )
+      )
+      | (ZCorrect(q, s), Entangle(i, j)) -> (
+        stable := false;
+        if (q == i) then (
+          [Entangle(i, j)] @ (rewrite (ZCorrect(i, s)::cmds))
+        ) else if (q == j) then (
+          [Entangle(i, j)] @ (rewrite (ZCorrect(j, s)::cmds))
+        ) else (
+          [b] @ (rewrite (a::cmds))
+        )
+      )
+      | (XCorrect(q_x, sig_r), Measure(q_m, angle, sig_s, sig_t)) -> (
+        stable := false;
+        if (q_x == q_m) then (
+          rewrite (Measure(q_m, angle, sig_s @ sig_r, sig_t)::cmds)
+        ) else (
+          [b] @ (rewrite (a::cmds))
+        )
+      )
+      | (ZCorrect(q_z, sig_r), Measure(q_m, angle, sig_s, sig_t)) -> (
+        stable := false;
+        if (q_z == q_m) then (
+          rewrite (Measure(q_m, angle, sig_s, sig_r @ sig_t)::cmds)
+        ) else (
+          [b] @ (rewrite (a::cmds))
+        )
+      )
+      | (Measure(q, _, _, _), Entangle(i, j)) -> (
+        if ((q == i) || (q == j)) then (
+          [a] @ (rewrite (b::cmds))
+        ) else (
+          [b] @ (rewrite (a::cmds))
+        )
+      )
+      | _ -> [a] @ (rewrite (b::cmds))
+    )
+    | [a] -> a::rewrite([])
+    | []  -> []
+  ) in
+  let stable = ref true in
+  let rec helper cmds = (
+    let temp = rewrite stable cmds in
+    if !stable then temp else (
+      stable := true;
+      helper temp
+    )
+  ) in
+  let main_cmds' = helper main_cmds in
+
+  (* Returns the full program. *)
+  prep_cmds @ main_cmds'
 );;

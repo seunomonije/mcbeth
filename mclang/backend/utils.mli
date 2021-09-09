@@ -9,4 +9,6 @@ val well_formed : prog -> bool
 
 val parse_pattern : pattern -> prog
 
+val standardize : prog -> prog
+
 (* val prep_qubits : int -> prep list -> Lacaml.Z.Vec.t array *)
