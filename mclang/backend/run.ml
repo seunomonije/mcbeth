@@ -200,14 +200,32 @@ let rand_eval_cmd_exec qubit_num mtbl statevec c = (
   * First eval checks if the function is well formed. It then it runs the program
   * and returns the resulting state vector.
   *)
-let rand_eval (cmds : prog) : Mat.t = (
+let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
   Random.self_init();
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
-    let init_statevec = Mat.make (Int.shift_left 1 qubit_num) 1 (Cenv.c 1. 0.) in
-    let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
-    let statevec_mat = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
-    Mat.cleanup statevec_mat
+    let vec_size = Int.shift_left 1 qubit_num in
+    let run_once = (
+      let init_statevec = Mat.make vec_size 1 Complex.one in
+      let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
+      let statevec_mat = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
+      Mat.cleanup statevec_mat
+    ) in
+    if shots == 0 then (
+      (* Run weak simulation once; don't perform a read-out measurements. *)
+      run_once
+    ) else (
+      (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
+      let rec helper n sum = (
+        if n > 0 then (
+          let res = run_once in
+
+          helper (n-1) (Mat.add res sum)
+        ) else sum
+      ) in
+      let total = helper shots (Mat.make vec_size 1 Complex.zero) in
+      Mat.scal_mul (Cenv.(Complex.one / shots)) total
+    )
   ) else Mat.empty
 );;
 
