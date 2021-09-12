@@ -211,15 +211,15 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
       let rec helper n sum = (
         if n > 0 then (
           (* Runs and applies read-out measurements to output qubits. *)
-          let qubits = List.init qubit_num (fun x -> x) in
+          let out_qubits = get_output_qubits cmds in
           let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.z_bases) qubit_num in
-          let res = List.fold_left (fun vec q -> (let (r, _) = measure q vec in r)) (run_once) qubits in
-          helper (n-1) (Mat.add res sum)
+          let res = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (run_once) in
+          helper (n-1) (Mat.add (Qlib.DensityMatrix.from_state_vector res) sum)
         ) else sum
       ) in
-      let total = helper shots (Mat.make vec_size 1 Complex.zero) in
-      let statevec = Mat.scal_mul (Cenv.(Complex.one / (c (Int.to_float shots) 0.))) total in
-      Mat.cleanup statevec
+      let total = helper shots (Mat.make vec_size vec_size Complex.zero) in
+      let densemat = Mat.scal_mul (Cenv.(Complex.one / (c (Int.to_float shots) 0.))) total in
+      Mat.cleanup (Mat.from_col_vec (Mat.copy_diag densemat))
     )
   ) else Mat.empty
 );;
