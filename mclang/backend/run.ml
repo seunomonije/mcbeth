@@ -144,7 +144,7 @@ let calc_correction mtbl signals application_func op matrix = (
 
 (**********************************************************************************
   *                                                                               *
-  *                           Randomized Evaluation                               *
+  *                     Randomized Evaluation (Weak Simulation)                   *
   *                                                                               *
   *********************************************************************************)
 
@@ -161,27 +161,13 @@ let rand_eval_cmd_exec qubit_num mtbl statevec c = (
   | Measure (qubit, angle, signals_s, signals_t) -> (
     let open Qlib.StateVector.Measurement in
 
-    (* Calculates the projectors *)
-    let (plus_state, minus_state) = calc_measurement_states mtbl angle signals_s signals_t in
-    let plus_projector = project plus_state in
-    let minus_projector = project minus_state in
+    (* Calculates the bases *)
+    let bases = calc_measurement_states mtbl angle signals_s signals_t in
 
-    (* Calculates the probabilities given the projectors and statevector *)
-    let plus_probability = prob_single qubit_num qubit statevec plus_projector in
-    
-    (* Using the Random module, determines which state to collapse to *)
-    let rand_val = Random.float 1. in
-    let projector = (
-      if rand_val <= plus_probability then (
-        Hashtbl.add mtbl qubit 0; (* keeps track of the outcome *)
-        plus_projector
-      ) else (
-        Hashtbl.add mtbl qubit 1;
-        minus_projector
-      )
-    ) in
-    let statevec' = measure_single qubit_num qubit statevec projector in
-    statevec'
+    let (statevec', outcome) = measure bases qubit_num qubit statevec in (
+      Hashtbl.add mtbl qubit outcome; (* keeps track of the outcome *)
+      statevec'
+    )
   )
   | XCorrect (qubit, signals) -> (
     let gemm' a b = gemm a b in
@@ -218,13 +204,15 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
       (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
       let rec helper n sum = (
         if n > 0 then (
-          let res = run_once in
-
+          (* Runs and applies read-out measurements to output qubits. *)
+          let out_qubits = get_output_qubits cmds in
+          let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.z_bases) qubit_num in
+          let res = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (run_once) in
           helper (n-1) (Mat.add res sum)
         ) else sum
       ) in
       let total = helper shots (Mat.make vec_size 1 Complex.zero) in
-      Mat.scal_mul (Cenv.(Complex.one / shots)) total
+      Mat.scal_mul (Cenv.(Complex.one / (c (Int.to_float shots) 0.))) total
     )
   ) else Mat.empty
 );;
@@ -233,7 +221,7 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
 
 (**********************************************************************************
   *                                                                               *
-  *                                   Simulate                                    *
+  *                         Simulate (Strong Simulation)                          *
   *                                                                               *
   *********************************************************************************)
 
@@ -251,15 +239,11 @@ let simulate_cmd_exec qubit_num mtbl densmat c = (
   | Measure (qubit, angle, signals_s, signals_t) -> (
     let open Qlib.DensityMatrix.Measurement in
 
-    (* Calculates the measurement operators *)
-    let (plus_state, minus_state) = calc_measurement_states mtbl angle signals_s signals_t in
-    let plus_op = from_state_vector plus_state in
-    let minus_op = from_state_vector minus_state in
+    (* Calculates the measurement bases *)
+    let bases = calc_measurement_states mtbl angle signals_s signals_t in
+    measure bases qubit_num qubit densmat
 
-    (* Creates the new measured density matrix *)
-    let plus_measurement = measure_single qubit_num qubit densmat plus_op ~normalize:false in
-    let minus_measurement = measure_single qubit_num qubit densmat minus_op ~normalize:false in
-    Mat.add plus_measurement minus_measurement
+    (* TODO: Need to handle the outcom of dependent commands! (How?) *)
   )
   | XCorrect (qubit, signals) -> (
     calc_correction mtbl signals apply_operator (pauli_x qubit_num qubit) densmat

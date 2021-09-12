@@ -331,7 +331,7 @@ let get_output_qubits cmds = (
     | Measure (qubit, _, _, _)  -> insert_meas qubit
     | _ -> ()
   ) in
-  let rec out_helper c = (
+  let out_helper c = (
     match c with
     | Prep (qubit)        -> insert_out qubit
     | Input (qubit, _)    -> insert_out qubit
@@ -343,8 +343,8 @@ let get_output_qubits cmds = (
     )
     | _ -> ()
   ) in (
-    List.iter (fun c -> meas_helper) cmds;
-    List.iter (fun c -> out_helper) cmds;
+    List.iter meas_helper cmds;
+    List.iter out_helper cmds;
     out_tbl
   )
 );;

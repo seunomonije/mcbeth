@@ -221,7 +221,7 @@ module DensityMatrix = struct
 
   module Measurement = struct
 
-    let measure ?(normalize=true) densmat op = (
+    let collapse ?(normalize=true) densmat op = (
       let result = apply_operator op densmat in
       if normalize then (
         let trace = Mat.trace result in
@@ -230,9 +230,20 @@ module DensityMatrix = struct
       ) else result
     )
 
-    let measure_single ?(normalize=true) n q densmat op = (
+    let collapse_single ?(normalize=true) n q densmat op = (
       let op' = Gates.gate op n q in
-      measure ~normalize:normalize densmat op'
+      collapse ~normalize:normalize densmat op'
+    )
+
+    let measure (base_a, base_b) n q densmat = (
+      let base_a_op = from_state_vector base_a in
+      let base_b_op = from_state_vector base_b in
+
+      (* Creates the new measured density matrix *)
+      let collapse_single' = collapse_single n q densmat ~normalize:false in
+      let base_a_measurement = collapse_single' base_a_op in
+      let base_b_measurement = collapse_single' base_b_op in
+      Mat.add base_a_measurement base_b_measurement
     )
 
   end
@@ -265,8 +276,9 @@ module StateVector = struct
     (**
       * Collapses a state vector `statevec` using the projector `proj`
       *)
-    let measure (statevec : Mat.t) (proj : Mat.t) = (
+    let collapse (statevec : Mat.t) (proj : Mat.t) = (
       let result = gemm proj statevec in
+      (* Renormalizes the result. *)
       let mag = Vec.mag (Mat.as_vec result) in
       let one_over_mag = Cenv.((c 1. 0.) / mag) in
       Mat.scal_mul one_over_mag result
@@ -276,9 +288,9 @@ module StateVector = struct
       * Collapses a single qubit `q` of an `n` qubit system represented
       * as a state vector `statevec` using the single qubit projector `proj`.
       *)
-    let measure_single n q (statevec : Mat.t) (proj : Mat.t) = (
+    let collapse_single n q (statevec : Mat.t) (proj : Mat.t) = (
       let proj' = Gates.gate proj n q in
-      measure statevec proj'
+      collapse statevec proj'
     )
 
     (**
@@ -303,6 +315,27 @@ module StateVector = struct
     let prob_single n q (statevec : Mat.t) (proj : Mat.t) = (
       let proj' = Gates.gate proj n q in
       prob statevec proj'
+    )
+
+    let measure (base_a, base_b) n q statevec = (
+      (* Calculates the probabilities given the projectors and statevector *)
+      let base_a_projector = project base_a in
+      let base_a_probability = prob_single n q statevec base_a_projector in
+      
+      (* Using the Random module, determines which state to collapse to *)
+      let rand_val = Random.float 1. in
+      let outcome = ref 0 in
+      let projector = (
+        if rand_val <= base_a_probability then (
+          outcome := 0; (* for keeping track of the outcome *)
+          base_a_projector
+        ) else (
+          outcome := 1;
+          project base_b (* base_b_projector *)
+        )
+      ) in
+      let statevec' = collapse_single n q statevec projector in
+      (statevec', !outcome)
     )
 
   end

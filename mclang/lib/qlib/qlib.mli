@@ -51,8 +51,9 @@ module DensityMatrix : sig
   val extract_info : ?print:bool -> Mat.t -> (int, float) Hashtbl.t
 
   module Measurement : sig
-    val measure : ?normalize:bool -> Mat.t -> Mat.t -> Mat.t
-    val measure_single : ?normalize:bool -> int -> int -> Mat.t -> Mat.t -> Mat.t
+    val collapse : ?normalize:bool -> Mat.t -> Mat.t -> Mat.t
+    val collapse_single : ?normalize:bool -> int -> int -> Mat.t -> Mat.t -> Mat.t
+    val measure : (Mat.t * Mat.t) -> int -> int -> Mat.t -> Mat.t
   end
 end
 
@@ -63,9 +64,10 @@ module StateVector : sig
 
   module Measurement : sig
     val project : Mat.t -> Mat.t
-    val measure : Mat.t -> Mat.t -> Mat.t
-    val measure_single : int -> int -> Mat.t -> Mat.t -> Mat.t
+    val collapse : Mat.t -> Mat.t -> Mat.t
+    val collapse_single : int -> int -> Mat.t -> Mat.t -> Mat.t
     val prob : Mat.t -> Mat.t -> float
     val prob_single : int -> int -> Mat.t -> Mat.t -> float
+    val measure : (Mat.t * Mat.t) -> int -> int -> Mat.t -> (Mat.t * int)
   end
 end
