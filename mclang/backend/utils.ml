@@ -262,29 +262,6 @@ let check_D4 (err, prep_tbl, in_tbl) = (
   )
 );;
 
-(**
-  *  Utility used for `well_formed` below.
-  *
-  *  Constructs a table containing the output qubits by appealing to D3
-  *
-  *  Returns nothing.
-  *)(*
-let construct_output_tbl (out_tbl, meas_tbl) c = (
-  let handler q = (
-    if not (H.mem meas_tbl q) then (
-      H.add out_tbl q ()
-    )
-  )
-  in (
-    match c with
-    | Entangle (left, right)  -> (handler left; handler right)
-    | Measure (_, _, _, _)    -> ()
-    | XCorrect (qubit, _)     -> (handler qubit)
-    | ZCorrect (qubit, _)     -> (handler qubit)
-    | _ -> ()
-  )
-);;
-*)
 
 (**
   *  Checks whether a program is well formed, i.e., whether it satisfies
@@ -312,7 +289,6 @@ let well_formed (cmds : prog) : bool = (
     List.iter (check_D1 (err, meas_tbl)) cmds;
     List.iter (check_D0 (err, meas_tbl)) cmds;
     check_D4 (err, prep_tbl, in_tbl)
-    (* List.iter (construct_output_tbl (out_tbl, meas_tbl)) cmds (* not needed for well_formed *) *)
   );
   if !err then false else true
 );;
@@ -331,6 +307,46 @@ let parse_pattern pattern = (
     ]
   ) in
   List.fold_left (fun ls p -> ls @ (helper p)) [] pattern
+);;
+
+
+(**
+  *  Constructs a table containing the output qubits by appealing to D3 above.
+  *
+  *  Returns the constructed table.
+  *)
+let get_output_qubits cmds = (
+  let meas_tbl = H.create 12 in
+  let out_tbl = H.create 12 in
+  let insert_meas q = (
+    H.add meas_tbl q ()
+  ) in
+  let insert_out q = (
+    if not (H.mem meas_tbl q) then (
+      H.add out_tbl q ()
+    )
+  ) in 
+  let meas_helper c = (
+    match c with
+    | Measure (qubit, _, _, _)  -> insert_meas qubit
+    | _ -> ()
+  ) in
+  let rec out_helper c = (
+    match c with
+    | Prep (qubit)        -> insert_out qubit
+    | Input (qubit, _)    -> insert_out qubit
+    | PrepList (qubits)   -> (
+      List.iter (fun q -> insert_out q) qubits
+    )
+    | InputList (qubits)  -> (
+      List.iter (fun (q, _) -> insert_out q) qubits
+    )
+    | _ -> ()
+  ) in (
+    List.iter (fun c -> meas_helper) cmds;
+    List.iter (fun c -> out_helper) cmds;
+    out_tbl
+  )
 );;
 
 
