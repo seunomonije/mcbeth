@@ -183,8 +183,14 @@ let rand_eval_cmd_exec qubit_num mtbl statevec c = (
 
 (**
   * Runs a program, evaluating the quantum measurements using random functions.
-  * First eval checks if the function is well formed. It then it runs the program
-  * and returns the resulting state vector.
+  * First eval checks if the function is well formed. It then runs the program
+  * `shots` times.
+  *
+  * If `shots == 0`, then the program is run once and the state vector resturned as is.
+  * 
+  * If `shots > 0`, then the program is run multiple times, read-out measurements are performed
+  * on the vector collapsing each qubit to |+> or |->, and a probability distribution of the
+  * results is returned.
   *)
 let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
   Random.self_init();
@@ -194,8 +200,8 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
     let run_once = (
       let init_statevec = Mat.make vec_size 1 Complex.one in
       let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
-      let statevec_mat = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
-      Mat.cleanup statevec_mat
+      let statevec = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
+      Mat.cleanup statevec
     ) in
     if shots == 0 then (
       (* Run weak simulation once; don't perform a read-out measurements. *)
@@ -205,14 +211,15 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
       let rec helper n sum = (
         if n > 0 then (
           (* Runs and applies read-out measurements to output qubits. *)
-          let out_qubits = get_output_qubits cmds in
+          let qubits = List.init qubit_num (fun x -> x) in
           let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.z_bases) qubit_num in
-          let res = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (run_once) in
+          let res = List.fold_left (fun vec q -> (let (r, _) = measure q vec in r)) (run_once) qubits in
           helper (n-1) (Mat.add res sum)
         ) else sum
       ) in
       let total = helper shots (Mat.make vec_size 1 Complex.zero) in
-      Mat.scal_mul (Cenv.(Complex.one / (c (Int.to_float shots) 0.))) total
+      let statevec = Mat.scal_mul (Cenv.(Complex.one / (c (Int.to_float shots) 0.))) total in
+      Mat.cleanup statevec
     )
   ) else Mat.empty
 );;
