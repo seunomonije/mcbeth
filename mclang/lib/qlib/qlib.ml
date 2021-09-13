@@ -58,8 +58,8 @@ end;;
 
 module Bases = struct
   
-  let x_bases = (States.plus_state, States.minus_state)
-  let z_bases = (States.zero_state, States.one_state)
+  let x_basis = (States.plus_state, States.minus_state)
+  let z_basis = (States.zero_state, States.one_state)
 
 end;;
 

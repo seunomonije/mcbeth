@@ -15,8 +15,8 @@ module States : sig
 end
 
 module Bases : sig
-  val x_bases : Mat.t * Mat.t
-  val z_bases : Mat.t * Mat.t
+  val x_basis : Mat.t * Mat.t
+  val z_basis : Mat.t * Mat.t
 end
 
 module Gates : sig

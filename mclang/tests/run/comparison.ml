@@ -16,8 +16,8 @@ let foobar() = (
     let foo = true in
     let r = simulate p in
     if foo then (
-      let old_base = x_bases in
-      let new_base = z_bases in
+      let old_base = x_basis in
+      let new_base = z_basis in
       Mat.print (change_base old_base new_base r 2)
     ) else Mat.print r
   )

@@ -197,7 +197,7 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
     let vec_size = Int.shift_left 1 qubit_num in
-    let run_once = (
+    let run_once () = (
       let init_statevec = Mat.make vec_size 1 Complex.one in
       let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
       let statevec = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
@@ -205,15 +205,15 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
     ) in
     if shots == 0 then (
       (* Run weak simulation once; don't perform a read-out measurements. *)
-      run_once
+      run_once ()
     ) else (
       (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
       let rec helper n sum = (
         if n > 0 then (
           (* Runs and applies read-out measurements to output qubits. *)
           let out_qubits = get_output_qubits cmds in
-          let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.z_bases) qubit_num in
-          let res = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (run_once) in
+          let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.z_basis) qubit_num in
+          let res = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (run_once ()) in
           helper (n-1) (Mat.add (Qlib.DensityMatrix.from_state_vector res) sum)
         ) else sum
       ) in
@@ -266,14 +266,20 @@ let simulate_cmd_exec qubit_num mtbl densmat c = (
   * Runs a program, evaluating the operations using density matrices.
   * First eval checks if the function is well formed. It then it runs the program
   * and returns the resulting state vector.
+  *
+  * If `just_prob == true`, then just the probability distribution is returned.
+  * The entire density matrix is returned otherwise.
   *)
-let simulate (cmds : prog) : Mat.t = (
+let simulate ?(just_prob=false) (cmds : prog) : Mat.t = (
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
     let size = Int.shift_left 1 qubit_num in
     let init_densmat = Mat.make size size (Cenv.c 1. 0.) in
     let exec_cmd' = simulate_cmd_exec qubit_num (Hashtbl.create qubit_num) in
-    List.fold_left (fun dm p -> exec_cmd' dm p) init_densmat cmds
+    let densemat = List.fold_left (fun dm p -> exec_cmd' dm p) init_densmat cmds in
+    if just_prob then (
+      Mat.from_col_vec (Mat.copy_diag densemat)
+    ) else densemat
   ) else Mat.empty
 );;
 
