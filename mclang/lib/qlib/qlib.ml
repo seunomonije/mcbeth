@@ -224,6 +224,7 @@ module DensityMatrix = struct
     let collapse ?(normalize=true) densmat op = (
       let result = apply_operator op densmat in
       if normalize then (
+        (* Normalizes the result *)
         let trace = Mat.trace result in
         let one_over_trace = Cenv.((c 1. 0.) / trace) in
         Mat.scal_mul one_over_trace result

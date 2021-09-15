@@ -134,13 +134,6 @@ let calc_measurement_states mtbl angle signals_s signals_t = (
   (plus_state, minus_state)
 )
 
-let calc_correction mtbl signals application_func op matrix = (
-  (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
-  if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
-    application_func op matrix
-  ) else matrix
-);;
-
 
 (**********************************************************************************
   *                                                                               *
@@ -170,12 +163,16 @@ let rand_eval_cmd_exec qubit_num mtbl statevec c = (
     )
   )
   | XCorrect (qubit, signals) -> (
-    let gemm' a b = gemm a b in
-    calc_correction mtbl signals gemm' (pauli_x qubit_num qubit) statevec
+    (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
+    if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
+      gemm (pauli_x qubit_num qubit) statevec
+    ) else statevec
   )
   | ZCorrect (qubit, signals) -> (
-    let gemm' a b = gemm a b in
-    calc_correction mtbl signals gemm' (pauli_z qubit_num qubit) statevec
+    (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
+    if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
+      gemm (pauli_z qubit_num qubit) statevec
+    ) else statevec
   )
   | prep -> handle_prep qubit_num statevec prep
 );;
@@ -192,7 +189,7 @@ let rand_eval_cmd_exec qubit_num mtbl statevec c = (
   * on the vector collapsing each qubit to |+> or |->, and a probability distribution of the
   * results is returned.
   *)
-let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
+let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
   Random.self_init();
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
@@ -205,16 +202,24 @@ let rand_eval ?(shots=0) (cmds : prog) : Mat.t = (
     ) in
     if shots == 0 then (
       (* Run weak simulation once; don't perform a read-out measurements. *)
-      run_once ()
+      let res = run_once () in
+      match change_base with
+      | None -> res
+      | Some(old_base, new_base) -> Qlib.StateVector.change_base old_base new_base res qubit_num
     ) else (
       (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
       let rec helper n sum = (
         if n > 0 then (
           (* Runs and applies read-out measurements to output qubits. *)
           let out_qubits = get_output_qubits cmds in
-          let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.z_basis) qubit_num in
+          let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.x_basis) qubit_num in
           let res = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (run_once ()) in
-          helper (n-1) (Mat.add (Qlib.DensityMatrix.from_state_vector res) sum)
+          let res' = (
+            match change_base with
+            | None -> res
+            | Some(old_base, new_base) -> Qlib.StateVector.change_base old_base new_base res qubit_num
+          ) in
+          helper (n-1) (Mat.add (Qlib.DensityMatrix.from_state_vector res') sum)
         ) else sum
       ) in
       let total = helper shots (Mat.make vec_size vec_size Complex.zero) in
@@ -253,10 +258,28 @@ let simulate_cmd_exec qubit_num mtbl densmat c = (
     (* TODO: Need to handle the outcom of dependent commands! (How?) *)
   )
   | XCorrect (qubit, signals) -> (
-    calc_correction mtbl signals apply_operator (pauli_x qubit_num qubit) densmat
+    let op = (pauli_x qubit_num qubit) in
+    if (List.length signals == 0) then (
+      apply_operator op densmat
+    ) else (
+      let result = Mat.add (apply_operator op densmat) (densmat) in
+      (* Normalizes the result *)
+      let trace = Mat.trace result in
+      let one_over_trace = Cenv.((c 1. 0.) / trace) in
+      Mat.scal_mul one_over_trace result
+    )
   )
   | ZCorrect (qubit, signals) -> (
-    calc_correction mtbl signals apply_operator (pauli_z qubit_num qubit) densmat
+    let op = (pauli_z qubit_num qubit) in
+    if (List.length signals == 0) then (
+      apply_operator op densmat
+    ) else (
+      let result = Mat.add (apply_operator op densmat) (densmat) in
+      (* Normalizes the result *)
+      let trace = Mat.trace result in
+      let one_over_trace = Cenv.((c 1. 0.) / trace) in
+      Mat.scal_mul one_over_trace result
+    )
   )
   | prep -> handle_prep ~densmat:true qubit_num densmat prep
 );;
