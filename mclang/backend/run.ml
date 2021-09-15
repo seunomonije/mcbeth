@@ -293,16 +293,21 @@ let simulate_cmd_exec qubit_num mtbl densmat c = (
   * If `just_prob == true`, then just the probability distribution is returned.
   * The entire density matrix is returned otherwise.
   *)
-let simulate ?(just_prob=false) (cmds : prog) : Mat.t = (
+let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) : Mat.t = (
   if well_formed cmds then (
     let qubit_num = calc_qubit_num cmds in
     let size = Int.shift_left 1 qubit_num in
     let init_densmat = Mat.make size size (Cenv.c 1. 0.) in
     let exec_cmd' = simulate_cmd_exec qubit_num (Hashtbl.create qubit_num) in
     let densemat = List.fold_left (fun dm p -> exec_cmd' dm p) init_densmat cmds in
+    let densemat' = (
+      match change_base with
+      | None -> densemat
+      | Some(old_base, new_base) -> Qlib.DensityMatrix.change_base old_base new_base densemat qubit_num
+    ) in
     if just_prob then (
-      Mat.from_col_vec (Mat.copy_diag densemat)
-    ) else densemat
+      Mat.from_col_vec (Mat.copy_diag densemat')
+    ) else densemat'
   ) else Mat.empty
 );;
 

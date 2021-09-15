@@ -12,11 +12,11 @@ let foobar() = (
   let p = (
     (*[Input(0, Zero); PrepList([1; 2])] @
     parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];*)
-    [Input(0, Zero); Prep(1); Measure(0, 0.0, [], []); ZCorrect(1, [0])]
+    [Input(0, Zero); Prep(1); Measure(0, 0.0, [], []); ZCorrect(1, [])]
   ) in (
     let p' = standardize p in (
       print_prog p';
-      Mat.print (rand_eval ~shots:100 ~change_base:bases p')
+      Mat.print (simulate ~change_base:bases p')
     )
   )
 );;
