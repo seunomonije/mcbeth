@@ -1,8 +1,8 @@
 
 (executable 
-  (name ocaml)
+  (name program_serialization)
   (libraries base pyml pythonlib mcl yojson)
   (preprocess (pps ppx_let ppx_python))
-  (modes (byte exe) (native shared_object) ) 
+  (modes (best exe) (native shared_object) ) 
   (flags :standard -linkall)
 )

@@ -60,6 +60,10 @@ let simple_program : Yojson.Basic.t list = [
     [("Prep", `Int 1)];
   `Assoc
     [("Prep", `Int 2)];
+  `Assoc
+    [("XCorrect", `Int 0)];
+  `Assoc
+    [("Entangle", `List [`Int 1; `Int 2])];
 ];;
 
 let serialized_program = `List simple_program
