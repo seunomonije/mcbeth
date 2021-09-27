@@ -1,8 +1,8 @@
 
 (executable 
   (name ocaml)
-  (libraries base pyml pythonlib mcl)
+  (libraries base pyml pythonlib mcl yojson)
   (preprocess (pps ppx_let ppx_python))
-  (modes (native shared_object)) (flags :standard -linkall)
-  
+  (modes (byte exe) (native shared_object) ) 
+  (flags :standard -linkall)
 )

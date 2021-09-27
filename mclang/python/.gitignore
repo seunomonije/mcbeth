@@ -3,3 +3,5 @@ dist/
 mcl.egg-info
 *.so
 .ipynb_checkpoints
+*.pyc
+*/__pycache__/
