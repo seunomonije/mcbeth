@@ -294,7 +294,7 @@ let well_formed (cmds : prog) : bool = (
 );;
 
 
-let parse_pattern pattern = (
+let rec parse_pattern pattern = (
   let helper p = (
     match p with
     | J (angle, q1, q2) -> [
@@ -302,11 +302,65 @@ let parse_pattern pattern = (
       Measure(q1, -.angle, [], []);
       XCorrect(q2, [q1]);
     ]
-    | Z (q1, q2) -> [
+    | CZ (q1, q2) -> [
       Entangle(q1, q2);
     ]
+    | H (q1, q2) -> parse_pattern [J(0.0, q1, q2)]
+    | CX (q1, q2, q3, q4) -> parse_pattern [H(q2, q3); CZ(q1, q3); H(q3, q4)]
+    | CNOT (q1, q2, q3, q4) -> parse_pattern [CX(q1, q2, q3, q4)]
+    | RX (angle, q1, q2, q3) -> parse_pattern [H(q1, q2); J(angle, q2, q3)]
+    | RZ (angle, q1, q2, q3) -> parse_pattern [J(angle, q1, q2); H(q2, q3)]
+    | P (angle, q1, q2, q3) -> parse_pattern [RZ(angle, q1, q2, q3)]
+    | CP (angle, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) -> (
+      let angle' = Float.div angle 2. in parse_pattern [
+        P(angle', q2, q3, q10);
+        CNOT(q1, q4, q5, q10);
+        P(-.angle', q6, q7, q10);
+        CNOT(q1, q8, q9, q10)
+      ]
+    )
+    | CMD (cmd) -> [cmd]
   ) in
   List.fold_left (fun ls p -> ls @ (helper p)) [] pattern
+);;
+
+let print_pattern pattern = (
+  let itos = Int.to_string in
+  let ftos = Float.to_string in
+  let helper p = (
+    match p with
+    | J (angle, q1, q2) -> (
+      "J(" ^ (String.concat ", " [ftos angle; itos q1; itos q2]) ^ ")"
+    )
+    | CZ (q1, q2) -> (
+      "^Z(" ^ (String.concat ", " [itos q1; itos q2]) ^ ")"
+    )
+    | H (q1, q2) -> (
+      "H(" ^ (String.concat ", " [itos q1; itos q2]) ^ ")"
+    )
+    | CX (q1, q2, q3, q4) -> (
+      "^X(" ^ (String.concat ", " (List.map itos [q1; q2; q3; q4])) ^ ")"
+    )
+    | CNOT (q1, q2, q3, q4) -> (
+      "CNOT(" ^ (String.concat ", " (List.map itos [q1; q2; q3; q4])) ^ ")"
+    )
+    | RX (angle, q1, q2, q3) -> (
+      "Rx(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3]))) ^ ")"
+    )
+    | RZ (angle, q1, q2, q3) -> (
+      "Rz(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3]))) ^ ")"
+    )
+    | P (angle, q1, q2, q3) -> (
+      "P(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3]))) ^ ")"
+    )
+    | CP (angle, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) -> (
+      "^P(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3; q4; q5; q6; q7; q8; q9; q10]))) ^ ")"
+    )
+    | CMD(cmd) -> (
+      "CMD(" ^ (cmd_to_string cmd) ^ ")"
+    )
+  ) in
+  List.iter (fun p -> print_endline (helper p)) pattern
 );;
 
 
