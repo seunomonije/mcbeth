@@ -27,6 +27,5 @@ let qft (transform_qubits : qubit list) (total_qubits : int) = (
   let (pat, n) = handle_qubit transform_qubits total_qubits in
   let prep_cmd = PrepList(List.init (n - total_qubits) (fun x -> x + total_qubits)) in
   let pat' = [CMD(prep_cmd)] @ pat in
-  let _ = print_pattern pat' in
   parse_pattern pat'
 );;

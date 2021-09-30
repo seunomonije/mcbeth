@@ -2,6 +2,7 @@
 open Types
 
 val print_prog : prog -> unit
+val cmd_to_string : cmd -> string
 
 val calc_qubit_num : prog -> int
 

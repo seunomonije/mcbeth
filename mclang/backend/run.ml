@@ -197,7 +197,13 @@ let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
     let run_once () = (
       let init_statevec = Mat.make vec_size 1 Complex.one in
       let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
-      let statevec = List.fold_left (fun sv p -> exec_cmd' sv p) init_statevec cmds in
+      let statevec = List.fold_left (fun sv p -> (
+        print_endline (cmd_to_string p); 
+        if Vec.mag (Mat.as_vec sv) == Complex.one then (
+          print_endline "yay"
+        ) else print_endline "nay";
+        Mat.print sv; exec_cmd' sv p;
+      )) init_statevec cmds in
       Mat.cleanup statevec
     ) in
     if shots == 0 then (
