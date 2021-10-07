@@ -2,6 +2,7 @@
 open Base;;
 open Python_lib;;
 open Python_lib.Let_syntax;;
+open Backend.Types;;
 
 type serialized_cmd = 
   {
@@ -9,6 +10,7 @@ type serialized_cmd =
   }
 [@@deriving python]
 ;;
+
 
 let approx_pi = 
   let%map_open n = positional "n" int ~docstring:"the value n" in
@@ -48,28 +50,73 @@ let rec insert_at_end l i =
   List.iter ~f:Stdio.print_endline strings
 ;; *) 
 
-(*
-*
-* Start minimal example
-*
-*)
-let simple_program : Yojson.Basic.t list = [
-  `Assoc 
-    [("Prep", `Int 0)];
-  `Assoc
-    [("Prep", `Int 1)];
-  `Assoc
-    [("Prep", `Int 2)];
-  `Assoc
-    [("XCorrect", `Int 0)];
-  `Assoc
-    [("Entangle", `List [`Int 1; `Int 2])];
-];;
+let create_Yojson_list_from_int_list list : Yojson.Basic.t list = (
+  let f element = (
+    `Int element
+  ) in (
+    List.map ~f:f list 
+  )
+)
 
-let serialized_program = `List simple_program
+let build_json_from_program program = (
+  let find_match command : Yojson.Basic.t = (
+    match command with 
+    | Prep (qubit) ->
+        `Assoc [
+          ("Prep", `Assoc [
+            ("on_qubits", `List [`Int qubit;])
+          ])
+        ]
+    | Entangle (left, right) ->
+        `Assoc [
+          ("Entangle", `Assoc [
+            ("on_qubits", `List [`Int left; `Int right;])
+          ])
+        ]
+    | Measure (qubit, angle, signal_s, signal_t) ->
+        `Assoc [
+          ("Measure", `Assoc [
+            ("on_qubits", `List [`Int qubit;]);
+            ("angle", `Float angle);
+            ("signal_s", `List (create_Yojson_list_from_int_list signal_s));
+            ("signal_t", `List (create_Yojson_list_from_int_list signal_t))
+          ])
+        ]
+    | XCorrect (qubit, signals) ->
+        `Assoc [
+          ("XCorrect", `Assoc [
+            ("on_qubits", `List [`Int qubit;]);
+            ("signals", `List (create_Yojson_list_from_int_list signals))
+          ])
+        ]
+    | ZCorrect (qubit, signals) ->
+        `Assoc [
+          ("ZCorrect", `Assoc [
+            ("on_qubits", `List [`Int qubit;]);
+            ("signals", `List (create_Yojson_list_from_int_list signals))
+          ])
+        ]
+    | _ ->
+      `String "Unimplemented Command"
+  ) in (
+    List.map ~f:find_match program
+  )
+);;
+
+(* Minimal Example *)
+let program = [
+  Prep(0); 
+  Prep(1); 
+  Prep(2); 
+  XCorrect(1, []); 
+  Entangle(0, 1);
+  Measure(0, 0.0, [], []);
+]
 
 let () =
-  Yojson.Basic.pretty_to_channel Stdio.stdout serialized_program;;
+  let res = build_json_from_program program in
+      let serialized = `List res in 
+        Yojson.Basic.pretty_to_channel Stdio.stdout serialized;;
 ;;
 
 

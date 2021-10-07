@@ -18,3 +18,7 @@ dll = PyDLL(f"{curdir}/ocaml.so", RTLD_GLOBAL)
 argv_t = c_char_p * 2
 argv = argv_t("ocaml.so".encode('utf-8'), None)
 dll.caml_startup(argv)
+
+# Import relevant files
+from ZXBuilder import ZXBuilder
+from CirqBuilder import CirqBuilder
