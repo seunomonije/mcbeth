@@ -502,3 +502,51 @@ let standardize prog = (
   (* Returns the full program. *)
   prep_cmds @ main_cmds'
 );;
+
+(** Extracts the prep and input commands from the front of a
+  * standardized program, expands any "List" commands, and
+  * orders the commands based on qubit number 
+  *)
+let expand_and_order_prep prog = (
+  let rec extract_prep cmds = (
+    let helper c cmds' = (
+      let (a, b) = extract_prep cmds' in
+      (c::a, b)
+    ) in
+    match cmds with
+    | c::cmds' -> (
+      match c with
+      | Prep (_)      -> helper c cmds'
+      | Input (_)     -> helper c cmds'
+      | PrepList (_)  -> helper c cmds'
+      | InputList (_) -> helper c cmds'
+      | _ -> ([], c::cmds')
+    )
+    | [] -> ([], [])
+  ) in
+  let prep_cmds, main_cmds = extract_prep prog in
+
+  let expand_prep c cmds = (
+    match c with
+      | Prep (_)        -> c::cmds 
+      | Input (_)       -> c::cmds
+      | PrepList (qs)   -> (List.map (fun q -> Prep(q)) qs) @ cmds
+      | InputList (qs)  -> (List.map (fun (q, i) -> Input(q, i)) qs) @ cmds 
+      | _ -> cmds
+  ) in
+  let expanded_prep_cmds = List.fold_right expand_prep prep_cmds [] in
+
+  let order_prep cmds = (
+    let cmp x y = (
+      let get_q c = (
+        match c with
+        | Prep(q)     -> q
+        | Input(q, _) -> q
+        | _ -> -1
+      ) in
+      if (get_q x) < (get_q y) then -1 else 1
+    ) in
+    List.sort cmp cmds
+  ) in
+  (order_prep expanded_prep_cmds) @ main_cmds
+)
