@@ -103,18 +103,33 @@ let build_json_from_program program = (
   )
 );;
 
-(* Minimal Example *)
+(* Minimal Example, quantum teleportation from paper *)
 let program = [
-  Prep(0); 
   Prep(1); 
   Prep(2); 
-  XCorrect(1, []); 
-  Entangle(0, 1);
-  Measure(0, 0.0, [], []);
+  Prep(3); 
+  Entangle(1, 2);
+  Measure(1, 0.0, [], []);
+  XCorrect(2, [1]);
+  Entangle(2, 3);
+  Measure(2, 0.0, [], []);
+  XCorrect(3, [2]);
+]
+(* Standardarized quantum teleportation from paper *)
+let program2 = [
+  Prep(1);
+  Prep(2);
+  Prep(3);
+  Entangle(1, 2);
+  Entangle(2, 3);
+  Measure(1, 0.0, [], []);
+  Measure(2, 0.0, [], []);
+  ZCorrect(3, [1]);
+  XCorrect(3, [2])
 ]
 
 let () =
-  let res = build_json_from_program program in
+  let res = build_json_from_program program2 in
       let serialized = `List res in 
         Yojson.Basic.pretty_to_channel Stdio.stdout serialized;;
 ;;

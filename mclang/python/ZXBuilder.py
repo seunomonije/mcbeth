@@ -83,8 +83,8 @@ def main():
   qasm = zx_graph.to_qasm()
   print(qasm)
 
-if __name__ == '__main__':
-  main()
+`if __name__ == '__main__':
+  main()`
 
 
 """
