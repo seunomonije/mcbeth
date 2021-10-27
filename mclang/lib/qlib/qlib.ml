@@ -308,7 +308,7 @@ module StateVector = struct
       *)
     let collapse_single n q (statevec : Mat.t) (proj : Mat.t) = (
       let proj' = Gates.gate proj n q in
-      let _ = Mat.print proj' in
+      (*let _ = Mat.print proj' in*)
       collapse statevec proj'
     )
 
@@ -355,7 +355,7 @@ module StateVector = struct
       ) in
       let projector = Mat.cleanup projector in
       let statevec' = collapse_single n q statevec projector in
-      let _ = Mat.print statevec' in
+      (*let _ = Mat.print statevec' in*)
       (statevec', !outcome)
     )
 

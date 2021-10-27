@@ -40,16 +40,7 @@ let insert_qubit ?(densmat=false) matrix input = (
   let entry = Mat.of_array [|[| a |]; [| b |]|] in
   let entry' = if densmat then Qlib.DensityMatrix.from_state_vector entry else entry in
   let matrix' = Mat.tensor_prod matrix entry' in
-  let normalize matrix = (
-    if densmat then (
-      let mag = Mat.trace matrix in
-      let inv = Complex.div Complex.one mag in
-      Mat.cleanup (Mat.scal_mul inv matrix)
-    ) else matrix
-  ) in
-  let x = normalize matrix' in
-  let _ = Mat.print x in
-  x
+  matrix'
 );;
 
 let handle_prep ?(densmat=false) matrix prep = (
@@ -160,9 +151,9 @@ let rand_eval_cmd_exec qubit_num mtbl statevec c = (
       (* Calculates the bases *)
       let bases = calc_measurement_states mtbl angle signals_s signals_t in
 
-      let _ = Mat.print statevec in
+      (*let _ = Mat.print statevec in*)
       let (statevec', outcome) = measure bases qubit_num qubit statevec in (
-        print_endline (Int.to_string outcome);
+        (*print_endline (Int.to_string outcome);*)
         Hashtbl.add mtbl qubit outcome; (* keeps track of the outcome *)
         statevec'
       )
@@ -206,8 +197,8 @@ let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
       let init_statevec = Mat.make 1 1 Complex.one in
       let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
       let statevec = List.fold_left (fun sv p -> (
-        let _ = print_endline "HERE" in
-        print_endline (cmd_to_string p);
+        (*let _ = print_endline "HERE" in
+        print_endline (cmd_to_string p);*)
         (*Mat.print sv;*)
         exec_cmd' sv p;
       )) init_statevec cmds in
