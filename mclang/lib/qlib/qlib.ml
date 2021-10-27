@@ -6,45 +6,59 @@ open Lacamlext;;
 open Lacaml.Z;;
 
 (* General Constants and Utils *)
-let c0 = Cenv.c 0. 0.;;
-let c1 = Cenv.c 1. 0.;;
-let ci = Cenv.c 0. 1.;;
+let c0 = Complex.zero;;
+let c1 = Complex.one;;
+let ci = Complex.i;;
 
 let r2o2 = Float.div 1.0 (sqrt 2.);;
+let cr2o2 = Cenv.c r2o2 0.;;
 
 let log2 x = Float.div (Float.log10 x) (Float.log10 2.);;
 
 module States = struct
 
   let zero_state_vec = (
-    let open Cenv in
     Vec.of_array [|
-      c 1. 0.;
-      c 0. 0.;
+      c1;
+      c0;
     |]
   )
 
   let one_state_vec = (
-    let open Cenv in 
     Vec.of_array [|
-      c 0. 0.;
-      c 1. 0.;
+      c0;
+      c1;
     |]
   )
 
   let plus_state_vec = (
-    let open Cenv in 
     Vec.of_array [|
-      c r2o2 0.;
-      c r2o2 0.;
+      cr2o2;
+      cr2o2;
     |]
   )
 
   let minus_state_vec = (
-    let open Cenv in 
+    let open Cenv in
     Vec.of_array [|
-      c r2o2 0.;
-      c (-.r2o2) 0.;
+      cr2o2;
+      -cr2o2;
+    |]
+  )
+
+  let i_state_vec = (
+    let open Cenv in
+    Vec.of_array [|
+      cr2o2;
+      cr2o2 * ci;
+    |]
+  )
+  
+  let negi_state_vec = (
+    let open Cenv in
+    Vec.of_array [|
+      cr2o2;
+      -(cr2o2 * ci);
     |]
   )
 
@@ -52,6 +66,8 @@ module States = struct
   let one_state = Mat.from_col_vec one_state_vec
   let plus_state = Mat.from_col_vec plus_state_vec
   let minus_state = Mat.from_col_vec minus_state_vec
+  let i_state = Mat.from_col_vec i_state_vec
+  let negi_state = Mat.from_col_vec negi_state_vec
 
 end;;
 
@@ -59,6 +75,7 @@ end;;
 module Bases = struct
   
   let x_basis = (States.plus_state, States.minus_state)
+  let y_basis = (States.i_state, States.negi_state)
   let z_basis = (States.zero_state, States.one_state)
 
 end;;
@@ -226,7 +243,7 @@ module DensityMatrix = struct
       if normalize then (
         (* Normalizes the result *)
         let trace = Mat.trace result in
-        let one_over_trace = Cenv.((c 1. 0.) / trace) in
+        let one_over_trace = Cenv.(Complex.one / trace) in
         Mat.scal_mul one_over_trace result
       ) else result
     )
@@ -244,7 +261,7 @@ module DensityMatrix = struct
       let collapse_single' = collapse_single n q densmat ~normalize:false in
       let base_a_measurement = collapse_single' base_a_op in
       let base_b_measurement = collapse_single' base_b_op in
-      Mat.add base_a_measurement base_b_measurement
+      (base_a_measurement, base_b_measurement)
     )
 
   end

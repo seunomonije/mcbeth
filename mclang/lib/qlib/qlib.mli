@@ -7,15 +7,20 @@ module States : sig
   val one_state_vec : Vec.t
   val plus_state_vec : Vec.t
   val minus_state_vec : Vec.t
+  val i_state_vec : Vec.t
+  val negi_state_vec : Vec.t
   
   val zero_state : Mat.t
   val one_state : Mat.t
   val plus_state : Mat.t
   val minus_state : Mat.t
+  val i_state : Mat.t
+  val negi_state : Mat.t
 end
 
 module Bases : sig
   val x_basis : Mat.t * Mat.t
+  val y_basis : Mat.t * Mat.t
   val z_basis : Mat.t * Mat.t
 end
 
@@ -53,7 +58,7 @@ module DensityMatrix : sig
   module Measurement : sig
     val collapse : ?normalize:bool -> Mat.t -> Mat.t -> Mat.t
     val collapse_single : ?normalize:bool -> int -> int -> Mat.t -> Mat.t -> Mat.t
-    val measure : (Mat.t * Mat.t) -> int -> int -> Mat.t -> Mat.t
+    val measure : (Mat.t * Mat.t) -> int -> int -> Mat.t -> (Mat.t * Mat.t)
   end
 end
 
