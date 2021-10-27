@@ -280,8 +280,8 @@ module StateVector = struct
     let collapse (statevec : Mat.t) (proj : Mat.t) = (
       let result = gemm proj statevec in
       (* Renormalizes the result. *)
-      let mag = Vec.mag (Mat.as_vec result) in
-      let one_over_mag = Cenv.((c 1. 0.) / mag) in
+      let mag = Mat.cleanup (gemm ~transa:`C result result) in
+      let one_over_mag = Cenv.(Complex.one / (Mat.to_array mag).(0).(0)) in
       Mat.scal_mul one_over_mag result
     )
 
@@ -291,6 +291,7 @@ module StateVector = struct
       *)
     let collapse_single n q (statevec : Mat.t) (proj : Mat.t) = (
       let proj' = Gates.gate proj n q in
+      let _ = Mat.print proj' in
       collapse statevec proj'
     )
 
@@ -335,7 +336,9 @@ module StateVector = struct
           project base_b (* base_b_projector *)
         )
       ) in
+      let projector = Mat.cleanup projector in
       let statevec' = collapse_single n q statevec projector in
+      let _ = Mat.print statevec' in
       (statevec', !outcome)
     )
 

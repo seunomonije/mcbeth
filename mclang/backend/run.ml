@@ -24,7 +24,7 @@ open Qlib.Gates;;
   * `statevec` of size `n` at position `pos`. The position of the current 
   * qubit in the statevector at position `pos` is assumed to have value [[1] [1]].
   *)
-let insert_qubit ?(densmat=false) matrix n input pos = (
+let insert_qubit ?(densmat=false) matrix input = (
   let open Cenv in
   let zero = c 0. 0. in
   let one = c 1. 0. in
@@ -37,27 +37,29 @@ let insert_qubit ?(densmat=false) matrix n input pos = (
     | Minus         -> (c r2o2 0., c (-.r2o2) 0.)
     | State(c0, c1) -> (c0, c1)
   ) in
-  let operator = Qlib.Gates.gate (Mat.of_array [|[| a; zero |]; [| zero; b |]|]) n pos in
-  let temp = gemm operator matrix in
-  if densmat then (
-    gemm ~transb:`C temp operator
-  ) else temp
+  let entry = Mat.of_array [|[| a |]; [| b |]|] in
+  let entry' = if densmat then Qlib.DensityMatrix.from_state_vector entry else entry in
+  let matrix' = Mat.tensor_prod matrix entry' in
+  let normalize matrix = (
+    if densmat then (
+      let mag = Mat.trace matrix in
+      let inv = Complex.div Complex.one mag in
+      Mat.cleanup (Mat.scal_mul inv matrix)
+    ) else matrix
+  ) in
+  let x = normalize matrix' in
+  let _ = Mat.print x in
+  x
 );;
 
-let handle_prep ?(densmat=false) qubit_num matrix prep = (
+let handle_prep ?(densmat=false) matrix prep = (
   let insert_qubit = insert_qubit ~densmat:densmat in
   match prep with
-  | Prep (qubit) -> (
-    insert_qubit matrix qubit_num Plus qubit
+  | Prep (_) -> (
+    insert_qubit matrix Plus 
   )
-  | Input (qubit, input) -> (
-    insert_qubit matrix qubit_num input qubit
-  )
-  | PrepList (qubits) -> (
-    List.fold_left (fun m q -> insert_qubit m qubit_num Plus q) matrix qubits
-  )
-  | InputList (args) -> (
-    List.fold_left (fun m (q, i) -> insert_qubit m qubit_num i q) matrix args
+  | Input (_, input) -> (
+    insert_qubit matrix input
   )
   | _ -> matrix
 );;
@@ -145,36 +147,41 @@ let calc_measurement_states mtbl angle signals_s signals_t = (
   * Performs appropriate operations to execute command.
   *)
 let rand_eval_cmd_exec qubit_num mtbl statevec c = (
-  match c with 
-  | Entangle (qubit1, qubit2) -> (
-    (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
-    (* qubit1 is the control *)
-    gemm (ctrl_z qubit_num qubit1 qubit2) statevec
-  )
-  | Measure (qubit, angle, signals_s, signals_t) -> (
-    let open Qlib.StateVector.Measurement in
-
-    (* Calculates the bases *)
-    let bases = calc_measurement_states mtbl angle signals_s signals_t in
-
-    let (statevec', outcome) = measure bases qubit_num qubit statevec in (
-      Hashtbl.add mtbl qubit outcome; (* keeps track of the outcome *)
-      statevec'
+  let result = (
+    match c with 
+    | Entangle (qubit1, qubit2) -> (
+      (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
+      (* qubit1 is the control *)
+      gemm (ctrl_z qubit_num qubit1 qubit2) statevec
     )
-  )
-  | XCorrect (qubit, signals) -> (
-    (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
-    if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
-      gemm (pauli_x qubit_num qubit) statevec
-    ) else statevec
-  )
-  | ZCorrect (qubit, signals) -> (
-    (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
-    if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
-      gemm (pauli_z qubit_num qubit) statevec
-    ) else statevec
-  )
-  | prep -> handle_prep qubit_num statevec prep
+    | Measure (qubit, angle, signals_s, signals_t) -> (
+      let open Qlib.StateVector.Measurement in
+
+      (* Calculates the bases *)
+      let bases = calc_measurement_states mtbl angle signals_s signals_t in
+
+      let _ = Mat.print statevec in
+      let (statevec', outcome) = measure bases qubit_num qubit statevec in (
+        print_endline (Int.to_string outcome);
+        Hashtbl.add mtbl qubit outcome; (* keeps track of the outcome *)
+        statevec'
+      )
+    )
+    | XCorrect (qubit, signals) -> (
+      (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
+      if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
+        gemm (pauli_x qubit_num qubit) statevec
+      ) else statevec
+    )
+    | ZCorrect (qubit, signals) -> (
+      (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
+      if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
+        gemm (pauli_z qubit_num qubit) statevec
+      ) else statevec
+    )
+    | prep -> handle_prep statevec prep
+  ) in
+  result
 );;
 
 
@@ -192,17 +199,17 @@ let rand_eval_cmd_exec qubit_num mtbl statevec c = (
 let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
   Random.self_init();
   if well_formed cmds then (
+    let cmds = expand_and_order_prep cmds in
     let qubit_num = calc_qubit_num cmds in
     let vec_size = Int.shift_left 1 qubit_num in
     let run_once () = (
-      let init_statevec = Mat.make vec_size 1 Complex.one in
+      let init_statevec = Mat.make 1 1 Complex.one in
       let exec_cmd' = rand_eval_cmd_exec qubit_num (Hashtbl.create qubit_num) in
       let statevec = List.fold_left (fun sv p -> (
-        print_endline (cmd_to_string p); 
-        if Vec.mag (Mat.as_vec sv) == Complex.one then (
-          print_endline "yay"
-        ) else print_endline "nay";
-        Mat.print sv; exec_cmd' sv p;
+        let _ = print_endline "HERE" in
+        print_endline (cmd_to_string p);
+        (*Mat.print sv;*)
+        exec_cmd' sv p;
       )) init_statevec cmds in
       Mat.cleanup statevec
     ) in
@@ -287,7 +294,7 @@ let simulate_cmd_exec qubit_num mtbl densmat c = (
       Mat.scal_mul one_over_trace result
     )
   )
-  | prep -> handle_prep ~densmat:true qubit_num densmat prep
+  | prep -> handle_prep ~densmat:true densmat prep
 );;
 
 
@@ -301,9 +308,9 @@ let simulate_cmd_exec qubit_num mtbl densmat c = (
   *)
 let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) : Mat.t = (
   if well_formed cmds then (
+    let cmds = expand_and_order_prep cmds in
     let qubit_num = calc_qubit_num cmds in
-    let size = Int.shift_left 1 qubit_num in
-    let init_densmat = Mat.make size size (Cenv.c 1. 0.) in
+    let init_densmat = Mat.make 1 1 Complex.one in
     let exec_cmd' = simulate_cmd_exec qubit_num (Hashtbl.create qubit_num) in
     let densemat = List.fold_left (fun dm p -> exec_cmd' dm p) init_densmat cmds in
     let densemat' = (
