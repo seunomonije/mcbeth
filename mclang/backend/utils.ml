@@ -551,8 +551,8 @@ let expand_and_order_prep prog = (
   (order_prep expanded_prep_cmds) @ main_cmds
 );;
 
-let performance p func = (
+let performance func p = (
   let t = Sys.time() in
   let _ = func p in
-  Sys.time() - t
+  Float.sub (Sys.time()) t
 );;

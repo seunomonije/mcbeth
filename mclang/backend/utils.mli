@@ -16,4 +16,4 @@ val get_output_qubits : prog -> (qubit, unit) Hashtbl.t
 val standardize : prog -> prog
 val expand_and_order_prep : prog -> prog
 
-val performance : prog -> float
+val performance : ('a -> 'b) -> 'a -> float
