@@ -209,21 +209,22 @@ let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
       let res = run_once () in
       match change_base with
       | None -> res
-      | Some(old_base, new_base) -> Qlib.StateVector.change_base old_base new_base res qubit_num
+      | Some(new_base) -> Qlib.StateVector.change_base Qlib.Bases.z_basis new_base res qubit_num
     ) else (
       (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
       let rec helper n sum = (
         if n > 0 then (
           (* Runs and applies read-out measurements to output qubits. *)
           let out_qubits = get_output_qubits cmds in
-          let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.x_basis) qubit_num in
-          let res = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (run_once ()) in
+          let measure = Qlib.StateVector.Measurement.measure (Qlib.Bases.z_basis) qubit_num in
+          let res = run_once () in
           let res' = (
             match change_base with
             | None -> res
-            | Some(old_base, new_base) -> Qlib.StateVector.change_base old_base new_base res qubit_num
+            | Some(new_base) -> Qlib.StateVector.change_base Qlib.Bases.z_basis new_base res qubit_num
           ) in
-          helper (n-1) (Mat.add (Qlib.DensityMatrix.from_state_vector res') sum)
+          let res'' = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (res') in
+          helper (n-1) (Mat.add (Qlib.DensityMatrix.from_state_vector res'') sum)
         ) else sum
       ) in
       let total = helper shots (Mat.make vec_size vec_size Complex.zero) in
@@ -313,7 +314,7 @@ let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) : Mat.t = (
     let densemat' = (
       match change_base with
       | None -> densemat
-      | Some(old_base, new_base) -> Qlib.DensityMatrix.change_base old_base new_base densemat qubit_num
+      | Some(new_base) -> Qlib.DensityMatrix.change_base Qlib.Bases.z_basis new_base densemat qubit_num
     ) in
     if just_prob then (
       Mat.from_col_vec (Mat.copy_diag densemat')

@@ -9,7 +9,7 @@ open Lacaml.Z;;
 
 
 let foobar() = (
-  let b = Some(Qlib.Bases.z_basis, Qlib.Bases.y_basis) in
+  let b = Some(Qlib.Bases.y_basis) in
   let p = (
     (*[Input(0, Zero); PrepList([1; 2])] @
     parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];*)
@@ -20,7 +20,7 @@ let foobar() = (
   ) in (
     let p' = standardize p in (
       print_prog (expand_and_order_prep p');
-      Mat.print (rand_eval ~shots:0 ~change_base:b p');
+      Mat.print (rand_eval ~shots:100 ~change_base:b p');
       Mat.print (simulate ~just_prob:true ~change_base:b p');
     )
   )

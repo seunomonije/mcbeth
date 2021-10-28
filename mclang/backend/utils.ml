@@ -549,4 +549,10 @@ let expand_and_order_prep prog = (
     List.sort cmp cmds
   ) in
   (order_prep expanded_prep_cmds) @ main_cmds
-)
+);;
+
+let performance p func = (
+  let t = Sys.time() in
+  let _ = func p in
+  Sys.time() - t
+);;
