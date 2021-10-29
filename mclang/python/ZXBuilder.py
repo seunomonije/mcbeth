@@ -1,10 +1,11 @@
-# import mcl
-# from mcl.ocaml_def_wrappers import *
-
 import pyzx as zx
 import sys
 import json
 
+"""NOTE: ZXBuilder class should be read-only now. Using Cirq 
+to handle all QASM input and output should suffice, and we can
+read in that QASM input to build ZX diagrams.
+"""
 class ZXBuilder:
   CMD_MAP = {
     'Prep': zx.gates.HAD,
@@ -83,19 +84,5 @@ def main():
   qasm = zx_graph.to_qasm()
   print(qasm)
 
-`if __name__ == '__main__':
-  main()`
-
-
-"""
-print(mcl.approx_pi(1000))
-print(mcl.print_from_ocaml(string='Hi! Did this pass of correctly?'))
-
-program = Program()
-program.add(Prep(1).serialize())
-program.add(Prep(2).serialize())
-program.add(Prep(3).serialize())
-
-print(program)
-print(mcl.build_program(cmd_type="Prep"))
-"""
+if __name__ == '__main__':
+  main()

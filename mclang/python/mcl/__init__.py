@@ -21,4 +21,4 @@ dll.caml_startup(argv)
 
 # Import relevant files
 from ZXBuilder import ZXBuilder
-from CirqBuilder import CirqBuilder
+from CirqBuilder import StrictCirqBuilder, ValidCirqBuilder

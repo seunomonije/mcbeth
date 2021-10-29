@@ -1,6 +1,60 @@
 import cirq
 import sys
 import json
+from typing import Union, Dict, Tuple, Iterable, Sequence
+
+def _default_measurement_key_(qubits: Iterable[cirq.Qid]) -> str:
+  return ','.join(str(q) for q in qubits)
+
+class XBasisMeasurementGate(cirq.Gate):
+  """Custopm measurement gate to measure in the X-basis
+  with specified angle.
+  """
+  def __init__(self, theta, key=''):
+    super(XBasisMeasurementGate, self)
+    self.theta = theta
+    self.key = key
+
+  def _num_qubits_(self):
+    return 1
+
+  @property
+  def key(self) -> str:
+    return str(self.mkey)
+
+  @key.setter
+  def key(self, key: Union[str, cirq.value.MeasurementKey]) -> None:
+    if isinstance(key, str):
+      key = cirq.value.MeasurementKey(name=key)
+    self.mkey = key
+
+  def with_key(self, key: Union[str, cirq.value.MeasurementKey]) -> 'XBasisMeasurementGate':
+    """Creates a XBasisMeasurement gate with a new key but otherwise identical."""
+    if key == self.key:
+        return self
+    return XBasisMeasurementGate(self.theta, key=key)
+
+  def _with_measurement_key_mapping_(self, key_map: Dict[str, str]) -> 'XBasisMeasurementGate':
+    return self.with_key(cirq.protocols.with_measurement_key_mapping(self.mkey, key_map))
+
+  def _is_measurement_(self) -> bool:
+    return True
+
+  def _measurement_key_name_(self) -> str:
+    return self.key
+
+  def _measurement_key_obj_(self) -> cirq.value.MeasurementKey:
+    return self.mkey
+
+  def _decompose_(self, qubits):
+    # Note the qubits here is a tuple with one
+    yield cirq.H(*qubits)
+    yield cirq.Rx(rads=self.theta)(*qubits)
+    yield cirq.MeasurementGate(1, self.mkey).on(*qubits)
+
+  def _circuit_diagram_info_(self, args):
+    return f"XM^{self.theta}"
+  
 
 class OpResolver:
   def _resolve_prep(
@@ -65,12 +119,21 @@ class OpResolver:
       for signal_qubit in signal_t_qubits:
         ops.append(cirq.CZ(signal_qubit, *qubits))
     
-    # TODO: Measurement angles, and measure in X basis.
-    ops.append(cirq.measure(*qubits))
-    
+    # Uses the custom XBasisMeasurementGate class to handle
+    # measurement
+    gate = XBasisMeasurementGate(angle)
+    ops.append(gate)
+      
     return ops
 
-class StrictCirqBuilder:
+class CirqBuilder:
+  def to_qasm(self) -> str:
+    return self.circuit.to_qasm()
+
+  def to_circuit(self) -> cirq.Circuit:
+    return self.circuit
+
+class StrictCirqBuilder(CirqBuilder):
   """Builds a Cirq circuit strictly from a provided MCL program. 
 
   StrictCirqBuilder "strictly" builds circuits by taking commands
@@ -107,12 +170,6 @@ class StrictCirqBuilder:
     'Entangle': OpResolver._resolve_entanglement,
     'Measure': OpResolver._resolve_measurement,
   }
-
-  def to_qasm(self) -> str:
-    return self.circuit.to_qasm()
-
-  def to_circuit(self) -> cirq.Circuit:
-    return self.circuit
 
   def __init__(self, json_input: str) -> None:
     self.circuit = cirq.Circuit()
@@ -162,6 +219,7 @@ class StrictCirqBuilder:
         signal_t_qubits=signal_t_qubits, # For measurement
         measurement_angle=measurement_angle # For measurement
         )
+      print(ops)
       self.circuit.append(ops)
 
   def _get_qubits_from_command_ints(self, qubit_list) -> list:
@@ -173,7 +231,7 @@ class StrictCirqBuilder:
 
     return cirq_qubits if len(cirq_qubits) > 0 else None
 
-class ValidCirqBuilder:
+class ValidCirqBuilder(CirqBuilder):
   """
   
   ValidCirqBuilder implements the deferred measurement principle.
@@ -193,35 +251,32 @@ class ValidCirqBuilder:
   3: ───H───────────────@───────X───────
   """
   def __init__(self, strict_cirq_circuit):
-    self.strict_cirq_circuit = strict_cirq_circuit
+    self.circuit = strict_cirq_circuit
 
-  def _delete_measurements(self):
+  def _remove_measurements_from_circuit(self):
     measurement_tuples = []
     measurement_operations = []
 
-    for i, moment in enumerate(self.strict_cirq_circuit):
+    for i, moment in enumerate(self.circuit):
       for operation in moment.operations:
         if isinstance(operation.gate, cirq.MeasurementGate):
-          measurement_tuples.append(i, operation)
+          measurement_tuples.append((i, operation))
           measurement_operations.append(operation)
     
-    self.stripped_circuit = self.strict_cirq_circuit.batch_remove(measurement_tuples)
+    self.circuit.batch_remove(measurement_tuples)
     return measurement_operations
-    
-  def rearrange_measurements(self):
-    measurement_operations_with_indices = []
-    measurement_operations = []
 
-    for i, moment in enumerate(self.strict_cirq_circuit):
-      for operation in moment.operations:
-        print(operation)
-        if isinstance(operation.gate, cirq.MeasurementGate):
-          measurement_operations_with_indices.append((i, operation))
-          measurement_operations.append(operation)
-    
-    self.strict_cirq_circuit.batch_remove(measurement_operations_with_indices)
-    self.strict_cirq_circuit.append(measurement_operations)
-    print(self.strict_cirq_circuit)
+  def rearrange_measurements(self):
+    """Rearranges measurements by finding the location
+    of each measurement operator in the circuit, removing it,
+    and then appending it to the end.
+    """
+
+    measurement_operations = self._remove_measurements_from_circuit()
+    # Store a copy of the stripped_circuit
+    self.stripped_circuit = self.circuit.copy()
+    self.circuit.append(measurement_operations)
+
   
 def main():
   stdin = ''
@@ -239,8 +294,12 @@ def main():
   print(strict_circuit.to_circuit())
   print(strict_circuit.to_qasm())
 
-  valid_circuit = ValidCirqBuilder(strict_circuit.to_circuit())
-  valid_circuit.rearrange_measurements()
+  # valid_circuit = ValidCirqBuilder(strict_circuit.to_circuit())
+  # valid_circuit.rearrange_measurements()
+
+  # print(valid_circuit.to_circuit())
+  # print(valid_circuit.stripped_circuit)
+  # print(valid_circuit.to_qasm())
 
 if __name__ == '__main__':
   main()

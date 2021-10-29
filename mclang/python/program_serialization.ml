@@ -129,7 +129,7 @@ let program2 = [
 ]
 
 let () =
-  let res = build_json_from_program program2 in
+  let res = build_json_from_program program in
       let serialized = `List res in 
         Yojson.Basic.pretty_to_channel Stdio.stdout serialized;;
 ;;
