@@ -21,7 +21,17 @@ type cmd =
 type prog = cmd list
 
 type pattern_part = 
-  | J of float * qubit * qubit
-  | Z of qubit * qubit
+  | J of float * qubit * qubit  (* J generator *)
+  | CZ of qubit * qubit         (* Controlled-Z gate *)
+  | H of qubit * qubit          (* Hadamard gate *)
+  | CX of qubit * qubit * qubit * qubit (* Controlled-X / CNOT *)
+  | CNOT of qubit * qubit * qubit * qubit (* Controlled-X / CNOT *)
+  | RX of float * qubit * qubit * qubit (* X Rotation *)
+  | RZ of float * qubit * qubit * qubit (* Z Rotation *)
+  | P of float * qubit * qubit * qubit (* Phase gate *)
+  | CP of float * qubit * qubit * qubit * qubit
+                * qubit * qubit * qubit * qubit
+                * qubit * qubit (* Controlled Phase gate *)
+  | CMD of cmd
 
 type pattern = pattern_part list

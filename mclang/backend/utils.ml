@@ -294,7 +294,7 @@ let well_formed (cmds : prog) : bool = (
 );;
 
 
-let parse_pattern pattern = (
+let rec parse_pattern pattern = (
   let helper p = (
     match p with
     | J (angle, q1, q2) -> [
@@ -302,11 +302,65 @@ let parse_pattern pattern = (
       Measure(q1, -.angle, [], []);
       XCorrect(q2, [q1]);
     ]
-    | Z (q1, q2) -> [
+    | CZ (q1, q2) -> [
       Entangle(q1, q2);
     ]
+    | H (q1, q2) -> parse_pattern [J(0.0, q1, q2)]
+    | CX (q1, q2, q3, q4) -> parse_pattern [H(q2, q3); CZ(q1, q3); H(q3, q4)]
+    | CNOT (q1, q2, q3, q4) -> parse_pattern [CX(q1, q2, q3, q4)]
+    | RX (angle, q1, q2, q3) -> parse_pattern [H(q1, q2); J(angle, q2, q3)]
+    | RZ (angle, q1, q2, q3) -> parse_pattern [J(angle, q1, q2); H(q2, q3)]
+    | P (angle, q1, q2, q3) -> parse_pattern [RZ(angle, q1, q2, q3)]
+    | CP (angle, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) -> (
+      let angle' = Float.div angle 2. in parse_pattern [
+        P(angle', q2, q3, q10);
+        CNOT(q1, q4, q5, q10);
+        P(-.angle', q6, q7, q10);
+        CNOT(q1, q8, q9, q10)
+      ]
+    )
+    | CMD (cmd) -> [cmd]
   ) in
   List.fold_left (fun ls p -> ls @ (helper p)) [] pattern
+);;
+
+let print_pattern pattern = (
+  let itos = Int.to_string in
+  let ftos = Float.to_string in
+  let helper p = (
+    match p with
+    | J (angle, q1, q2) -> (
+      "J(" ^ (String.concat ", " [ftos angle; itos q1; itos q2]) ^ ")"
+    )
+    | CZ (q1, q2) -> (
+      "^Z(" ^ (String.concat ", " [itos q1; itos q2]) ^ ")"
+    )
+    | H (q1, q2) -> (
+      "H(" ^ (String.concat ", " [itos q1; itos q2]) ^ ")"
+    )
+    | CX (q1, q2, q3, q4) -> (
+      "^X(" ^ (String.concat ", " (List.map itos [q1; q2; q3; q4])) ^ ")"
+    )
+    | CNOT (q1, q2, q3, q4) -> (
+      "CNOT(" ^ (String.concat ", " (List.map itos [q1; q2; q3; q4])) ^ ")"
+    )
+    | RX (angle, q1, q2, q3) -> (
+      "Rx(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3]))) ^ ")"
+    )
+    | RZ (angle, q1, q2, q3) -> (
+      "Rz(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3]))) ^ ")"
+    )
+    | P (angle, q1, q2, q3) -> (
+      "P(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3]))) ^ ")"
+    )
+    | CP (angle, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) -> (
+      "^P(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3; q4; q5; q6; q7; q8; q9; q10]))) ^ ")"
+    )
+    | CMD(cmd) -> (
+      "CMD(" ^ (cmd_to_string cmd) ^ ")"
+    )
+  ) in
+  List.iter (fun p -> print_endline (helper p)) pattern
 );;
 
 
@@ -447,4 +501,58 @@ let standardize prog = (
 
   (* Returns the full program. *)
   prep_cmds @ main_cmds'
+);;
+
+(** Extracts the prep and input commands from the front of a
+  * standardized program, expands any "List" commands, and
+  * orders the commands based on qubit number 
+  *)
+let expand_and_order_prep prog = (
+  let rec extract_prep cmds = (
+    let helper c cmds' = (
+      let (a, b) = extract_prep cmds' in
+      (c::a, b)
+    ) in
+    match cmds with
+    | c::cmds' -> (
+      match c with
+      | Prep (_)      -> helper c cmds'
+      | Input (_)     -> helper c cmds'
+      | PrepList (_)  -> helper c cmds'
+      | InputList (_) -> helper c cmds'
+      | _ -> ([], c::cmds')
+    )
+    | [] -> ([], [])
+  ) in
+  let prep_cmds, main_cmds = extract_prep prog in
+
+  let expand_prep c cmds = (
+    match c with
+      | Prep (_)        -> c::cmds 
+      | Input (_)       -> c::cmds
+      | PrepList (qs)   -> (List.map (fun q -> Prep(q)) qs) @ cmds
+      | InputList (qs)  -> (List.map (fun (q, i) -> Input(q, i)) qs) @ cmds 
+      | _ -> cmds
+  ) in
+  let expanded_prep_cmds = List.fold_right expand_prep prep_cmds [] in
+
+  let order_prep cmds = (
+    let cmp x y = (
+      let get_q c = (
+        match c with
+        | Prep(q)     -> q
+        | Input(q, _) -> q
+        | _ -> -1
+      ) in
+      if (get_q x) < (get_q y) then -1 else 1
+    ) in
+    List.sort cmp cmds
+  ) in
+  (order_prep expanded_prep_cmds) @ main_cmds
+);;
+
+let performance func p = (
+  let t = Sys.time() in
+  let _ = func p in
+  Float.sub (Sys.time()) t
 );;

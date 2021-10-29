@@ -22,6 +22,7 @@
   (modules)
   (libraries 
     (re_export backend)
+    (re_export algos)
   )
 )
 
