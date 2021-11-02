@@ -128,8 +128,18 @@ let program2 = [
   XCorrect(3, [2])
 ]
 
+let x_rotation_pi = [
+  Prep(1);
+  Prep(2);
+  Prep(3);
+  Measure(1, 0.0, [], []);
+  Measure(2, -6.28318, [1], []);
+  ZCorrect(3, [1]);
+  XCorrect(3, [2]);
+]
+
 let () =
-  let res = build_json_from_program program in
+  let res = build_json_from_program x_rotation_pi in
       let serialized = `List res in 
         Yojson.Basic.pretty_to_channel Stdio.stdout serialized;;
 ;;

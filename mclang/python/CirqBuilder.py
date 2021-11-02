@@ -1,59 +1,27 @@
 import cirq
 import sys
 import json
-from typing import Union, Dict, Tuple, Iterable, Sequence
+import numpy as np
 
-def _default_measurement_key_(qubits: Iterable[cirq.Qid]) -> str:
-  return ','.join(str(q) for q in qubits)
-
-class XBasisMeasurementGate(cirq.Gate):
-  """Custopm measurement gate to measure in the X-basis
+class XBasisMeasurementSignal(cirq.SingleQubitGate):
+  """Custom measurement signal to measure in the X-basis
   with specified angle.
+
+  These will signal to the program where measurements need 
+  to go at the end of the program. This method DOES NOT
+  handle any measurmement.
   """
-  def __init__(self, theta, key=''):
-    super(XBasisMeasurementGate, self)
+  def __init__(self, theta):
+    super(XBasisMeasurementSignal, self)
     self.theta = theta
-    self.key = key
-
-  def _num_qubits_(self):
-    return 1
-
-  @property
-  def key(self) -> str:
-    return str(self.mkey)
-
-  @key.setter
-  def key(self, key: Union[str, cirq.value.MeasurementKey]) -> None:
-    if isinstance(key, str):
-      key = cirq.value.MeasurementKey(name=key)
-    self.mkey = key
-
-  def with_key(self, key: Union[str, cirq.value.MeasurementKey]) -> 'XBasisMeasurementGate':
-    """Creates a XBasisMeasurement gate with a new key but otherwise identical."""
-    if key == self.key:
-        return self
-    return XBasisMeasurementGate(self.theta, key=key)
-
-  def _with_measurement_key_mapping_(self, key_map: Dict[str, str]) -> 'XBasisMeasurementGate':
-    return self.with_key(cirq.protocols.with_measurement_key_mapping(self.mkey, key_map))
-
-  def _is_measurement_(self) -> bool:
-    return True
-
-  def _measurement_key_name_(self) -> str:
-    return self.key
-
-  def _measurement_key_obj_(self) -> cirq.value.MeasurementKey:
-    return self.mkey
 
   def _decompose_(self, qubits):
     # Note the qubits here is a tuple with one
     yield cirq.H(*qubits)
     yield cirq.Rx(rads=self.theta)(*qubits)
-    yield cirq.MeasurementGate(1, self.mkey).on(*qubits)
 
   def _circuit_diagram_info_(self, args):
-    return f"XM^{self.theta}"
+    return f"XRot({self.theta})"
   
 
 class OpResolver:
@@ -112,18 +80,18 @@ class OpResolver:
     # Here, we should be able to just apply CNOT or CZ with control signal_s/signal_t to 
     # the desired qubit
     ops = []
-    if signal_s_qubits:
+    if signal_s_qubits: 
       for signal_qubit in signal_s_qubits:
         ops.append(cirq.CX(signal_qubit, *qubits))
     if signal_t_qubits:
       for signal_qubit in signal_t_qubits:
         ops.append(cirq.CZ(signal_qubit, *qubits))
     
-    # Uses the custom XBasisMeasurementGate class to handle
+    # Uses the custom XBasisMeasurementSignal class to handle
     # measurement
-    gate = XBasisMeasurementGate(angle)
+    gate = XBasisMeasurementSignal(angle).on(*qubits)
     ops.append(gate)
-      
+
     return ops
 
 class CirqBuilder:
@@ -138,26 +106,25 @@ class StrictCirqBuilder(CirqBuilder):
 
   StrictCirqBuilder "strictly" builds circuits by taking commands
   from an serialized MCL program and placing operators at the 
-  corresponding timestamps. For circuits that don't include dependent
-  measurements, StrictCirqBuilder returns an accurate gate-based
-  translation of an MCL program. 
-  
-  For circuits that do include dependent measurements, however, 
-  StrictCirqBuilder deconstructs all dependent measurements into
-  a series of controlled gates, and measurement operators. In most
-  cases, the measurement will occur before the controlled gates, and
-  StrictCirqBuilder will incorrectly construct a circuit repesenting this.
+  corresponding timestamps. 
+
+  This method DOES NOT provide a valid circuit, but acts as the 
+  intermediate step. StrictCirqBuilder deconstructs all dependent 
+  measurements into a series of controlled gates, and 
+  XBasisMeasurementSignals. In most cases, the measurement 
+  will occur before the controlled gates, and StrictCirqBuilder will 
+  incorrectly construct a circuit repesenting this.
 
   An example of this can be seen in the simple quantum teleportation example
   (found on page 15 of Danos' The Measurement Calculus)
   X_3^(s_2) M_2^(-B) E_23 X_2^(s_1) M_1^(-a) E_12
 
   This input provides the following strict output:
-  1: ───H───@───M───@───────────────
-            │       │
-  2: ───H───@───────X───@───M───@───
-                        │       │
-  3: ───H───────────────@───────X───
+  1: ───H───@───XRot(0.0)───@───────────────────────
+            │               │
+  2: ───H───@───────────────X───@───XRot(0.0)───@───
+                                │               │
+  3: ───H───────────────────────@───────────────X───
 
   The ValidCirqBuilder class uses the output from StrictCirqBuilder
   to construct valid circuits via the deferred measurement principle. 
@@ -219,7 +186,7 @@ class StrictCirqBuilder(CirqBuilder):
         signal_t_qubits=signal_t_qubits, # For measurement
         measurement_angle=measurement_angle # For measurement
         )
-      print(ops)
+
       self.circuit.append(ops)
 
   def _get_qubits_from_command_ints(self, qubit_list) -> list:
@@ -234,21 +201,24 @@ class StrictCirqBuilder(CirqBuilder):
 class ValidCirqBuilder(CirqBuilder):
   """
   
-  ValidCirqBuilder implements the deferred measurement principle.
+  ValidCirqBuilder implements the deferred measurement principle
+  and adds measurements to the circuit based on the locations of the 
+  XBasisMeasurementSignal objects.
+
   To expand on the example in StrictCirqBuilder, the strict circuit:
-  1: ───H───@───M───@───────────────
-            │       │
-  2: ───H───@───────X───@───M───@───
-                        │       │
-  3: ───H───────────────@───────X───
+  1: ───H───@───XRot(0.0)───@───────────────────────
+            │               │
+  2: ───H───@───────────────X───@───XRot(0.0)───@───
+                                │               │
+  3: ───H───────────────────────@───────────────X───
 
   is converted to the following valid circuit:
 
-  1: ───H───@───────@───M───────────────
+  1: ───H───@───────@───XRot(0.0)───M───────────────────────
             │       │
-  2: ───H───@───────X───@───────@───M───
-                        │       │
-  3: ───H───────────────@───────X───────
+  2: ───H───@───────X───@───────────────@───XRot(0.0)───M───
+                        │               │
+  3: ───H───────────────@───────────────X───────────────────
   """
   def __init__(self, strict_cirq_circuit):
     self.circuit = strict_cirq_circuit
@@ -259,14 +229,14 @@ class ValidCirqBuilder(CirqBuilder):
 
     for i, moment in enumerate(self.circuit):
       for operation in moment.operations:
-        if isinstance(operation.gate, cirq.MeasurementGate):
+        if isinstance(operation.gate, XBasisMeasurementSignal):
           measurement_tuples.append((i, operation))
           measurement_operations.append(operation)
     
     self.circuit.batch_remove(measurement_tuples)
     return measurement_operations
 
-  def rearrange_measurements(self):
+  def rearrange_measurement_signals(self):
     """Rearranges measurements by finding the location
     of each measurement operator in the circuit, removing it,
     and then appending it to the end.
@@ -276,8 +246,13 @@ class ValidCirqBuilder(CirqBuilder):
     # Store a copy of the stripped_circuit
     self.stripped_circuit = self.circuit.copy()
     self.circuit.append(measurement_operations)
-
   
+  def append_final_measurements(self):
+    for i, moment in enumerate(self.circuit):
+      for operation in moment.operations:
+        if isinstance(operation.gate, XBasisMeasurementSignal):
+          self.circuit.append(cirq.measure(*operation.qubits))
+
 def main():
   stdin = ''
 
@@ -292,14 +267,21 @@ def main():
 
   strict_circuit = StrictCirqBuilder(loaded_program)
   print(strict_circuit.to_circuit())
-  print(strict_circuit.to_qasm())
+  
+  valid_circuit = ValidCirqBuilder(strict_circuit.to_circuit())
+  valid_circuit.rearrange_measurement_signals()
+  valid_circuit.append_final_measurements()
+  
+  print(valid_circuit.to_circuit())
+  #print(valid_circuit.to_qasm())
 
-  # valid_circuit = ValidCirqBuilder(strict_circuit.to_circuit())
-  # valid_circuit.rearrange_measurements()
 
-  # print(valid_circuit.to_circuit())
-  # print(valid_circuit.stripped_circuit)
-  # print(valid_circuit.to_qasm())
+  simulator = cirq.Simulator()
+  result = simulator.simulate(valid_circuit.circuit)
+  
+
+
+  print(result)
 
 if __name__ == '__main__':
   main()
