@@ -306,8 +306,11 @@ module StateVector = struct
       * Collapses a single qubit `q` of an `n` qubit system represented
       * as a state vector `statevec` using the single qubit projector `proj`.
       *)
-    let collapse_single n q (statevec : Mat.t) (proj : Mat.t) = (
+    let collapse_single ?(proj_down=true) n q (statevec : Mat.t) (proj : Mat.t) = (
       let proj' = Gates.gate proj n q in
+      let proj' = if proj_down then (
+        gemm ~transa:`C proj' (Mat.identity (Mat.dim1 proj'))
+      ) else proj in
       (*let _ = Mat.print proj' in*)
       collapse statevec proj'
     )
@@ -331,16 +334,18 @@ module StateVector = struct
       * `n` qubit system represented as a statevector `statevec` to the state
       * associated with the single qubit projector `proj`.
       *)
-    let prob_single n q (statevec : Mat.t) (proj : Mat.t) = (
+    let prob_single ?(proj_down=true) n q (statevec : Mat.t) (proj : Mat.t) = (
+      let proj = if proj_down then project proj else proj in
       let proj' = Gates.gate proj n q in
       prob statevec proj'
     )
 
-    let measure (base_a, base_b) n q statevec = (
+    let measure ?(proj_down=true) (base_a, base_b) n q statevec = (
       (* Calculates the probabilities given the projectors and statevector *)
-      let base_a_projector = project base_a in
+      let base_a_projector = if proj_down then (
+        base_a
+      ) else project base_a in
       let base_a_probability = prob_single n q statevec base_a_projector in
-      
       (* Using the Random module, determines which state to collapse to *)
       let rand_val = Random.float 1. in
       let outcome = ref 0 in
@@ -350,7 +355,9 @@ module StateVector = struct
           base_a_projector
         ) else (
           outcome := 1;
-          project base_b (* base_b_projector *)
+          if proj_down then (
+            base_b
+          ) else project base_b (* base_b_projector *)
         )
       ) in
       let projector = Mat.cleanup projector in

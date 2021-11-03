@@ -70,9 +70,9 @@ module StateVector : sig
   module Measurement : sig
     val project : Mat.t -> Mat.t
     val collapse : Mat.t -> Mat.t -> Mat.t
-    val collapse_single : int -> int -> Mat.t -> Mat.t -> Mat.t
+    val collapse_single : ?proj_down:bool -> int -> int -> Mat.t -> Mat.t -> Mat.t
     val prob : Mat.t -> Mat.t -> float
-    val prob_single : int -> int -> Mat.t -> Mat.t -> float
-    val measure : (Mat.t * Mat.t) -> int -> int -> Mat.t -> (Mat.t * int)
+    val prob_single : ?proj_down:bool -> int -> int -> Mat.t -> Mat.t -> float
+    val measure : ?proj_down:bool -> (Mat.t * Mat.t) -> int -> int -> Mat.t -> (Mat.t * int)
   end
 end
