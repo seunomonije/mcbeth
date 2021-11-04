@@ -250,7 +250,7 @@ module DensityMatrix = struct
 
     let collapse_single ?(proj_down=true) ?(normalize=true) n q densmat op = (
       let op = if proj_down then (
-        gemm ~transa:`C op (Mat.identity 2)
+        Mat.cleanup (gemm ~transa:`C op (Mat.identity 2))
       ) else op in
       let op' = Gates.gate op n q in
       collapse ~normalize:normalize densmat op'
@@ -261,7 +261,7 @@ module DensityMatrix = struct
       let base_b_op = if proj_down then base_b else from_state_vector base_b in
 
       (* Creates the new measured density matrix *)
-      let collapse_single' = collapse_single n q densmat ~normalize:false in
+      let collapse_single' = collapse_single n q densmat ~normalize:false ~proj_down:proj_down in
       let base_a_measurement = collapse_single' base_a_op in
       let base_b_measurement = collapse_single' base_b_op in
       (base_a_measurement, base_b_measurement)
@@ -302,7 +302,7 @@ module StateVector = struct
       (* Renormalizes the result. *)
       let mag = Mat.cleanup (gemm ~transa:`C result result) in
       let one_over_mag = Cenv.(Complex.one / (Mat.to_array mag).(0).(0)) in
-      Mat.scal_mul one_over_mag result
+      Mat.cleanup (Mat.scal_mul one_over_mag result)
     )
 
     (**
@@ -312,7 +312,7 @@ module StateVector = struct
     let collapse_single ?(proj_down=true) n q (statevec : Mat.t) (proj : Mat.t) = (
       
       let proj = if proj_down then (
-        gemm ~transa:`C proj (Mat.identity 2)
+        Mat.cleanup (gemm ~transa:`C proj (Mat.identity 2))
       ) else proj in
       let proj' = Gates.gate proj n q in
       (*let _ = Mat.print proj' in*)
@@ -347,7 +347,7 @@ module StateVector = struct
     let measure ?(proj_down=true) (base_a, base_b) n q statevec = (
       (* Calculates the probabilities given the projectors and statevector *)
       let base_a_projector = if proj_down then base_a else project base_a in
-      let base_a_probability = prob_single n q statevec base_a_projector in
+      let base_a_probability = prob_single n q statevec base_a_projector  ~proj_down:proj_down in
       (* Using the Random module, determines which state to collapse to *)
       let rand_val = Random.float 1. in
       let outcome = ref 0 in
@@ -363,7 +363,7 @@ module StateVector = struct
         )
       ) in
       let projector = Mat.cleanup projector in
-      let statevec' = collapse_single n q statevec projector in
+      let statevec' = collapse_single n q statevec projector ~proj_down:proj_down in
       (*let _ = Mat.print statevec' in*)
       (statevec', !outcome)
     )
