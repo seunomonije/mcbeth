@@ -248,14 +248,17 @@ module DensityMatrix = struct
       ) else result
     )
 
-    let collapse_single ?(normalize=true) n q densmat op = (
+    let collapse_single ?(proj_down=true) ?(normalize=true) n q densmat op = (
+      let op = if proj_down then (
+        gemm ~transa:`C op (Mat.identity 2)
+      ) else op in
       let op' = Gates.gate op n q in
       collapse ~normalize:normalize densmat op'
     )
 
-    let measure (base_a, base_b) n q densmat = (
-      let base_a_op = from_state_vector base_a in
-      let base_b_op = from_state_vector base_b in
+    let measure ?(proj_down=true) (base_a, base_b) n q densmat = (
+      let base_a_op = if proj_down then base_a else from_state_vector base_a in
+      let base_b_op = if proj_down then base_b else from_state_vector base_b in
 
       (* Creates the new measured density matrix *)
       let collapse_single' = collapse_single n q densmat ~normalize:false in
@@ -307,10 +310,11 @@ module StateVector = struct
       * as a state vector `statevec` using the single qubit projector `proj`.
       *)
     let collapse_single ?(proj_down=true) n q (statevec : Mat.t) (proj : Mat.t) = (
-      let proj' = Gates.gate proj n q in
-      let proj' = if proj_down then (
-        gemm ~transa:`C proj' (Mat.identity (Mat.dim1 proj'))
+      
+      let proj = if proj_down then (
+        gemm ~transa:`C proj (Mat.identity 2)
       ) else proj in
+      let proj' = Gates.gate proj n q in
       (*let _ = Mat.print proj' in*)
       collapse statevec proj'
     )
@@ -342,9 +346,7 @@ module StateVector = struct
 
     let measure ?(proj_down=true) (base_a, base_b) n q statevec = (
       (* Calculates the probabilities given the projectors and statevector *)
-      let base_a_projector = if proj_down then (
-        base_a
-      ) else project base_a in
+      let base_a_projector = if proj_down then base_a else project base_a in
       let base_a_probability = prob_single n q statevec base_a_projector in
       (* Using the Random module, determines which state to collapse to *)
       let rand_val = Random.float 1. in

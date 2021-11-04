@@ -125,7 +125,7 @@ let calc_measurement_states mtbl angle signals_s signals_t = (
   let plus_state = Mat.scal_mul r202 (Mat.add zero_state one_state_e) in
   let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in
   (Mat.cleanup plus_state, Mat.cleanup minus_state)
-)
+);;
 
 let update_qtbl qtbl to_remove = (
   let update_list = ref [] in (
@@ -137,7 +137,11 @@ let update_qtbl qtbl to_remove = (
     List.iter (fun (q, pos) -> Hashtbl.replace qtbl q (pos-1)) (!update_list)
   );
   Hashtbl.remove qtbl to_remove
-)
+);;
+
+let unpack_qtbl qtbl = (
+  List.of_seq (Hashtbl.to_seq_keys qtbl)
+);;
 
 
 (**********************************************************************************
@@ -270,6 +274,7 @@ let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
   * Performs appropriate operations to execute command.
   *)
 let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
+  let getPos x = Hashtbl.find qtbl x in
   let qubit_num = (Hashtbl.length qtbl) in
   match cmds with
   | c::cmds -> (
@@ -279,7 +284,9 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
     | Entangle (qubit1, qubit2) -> (
       (* Entagles qubit1 and qubit2 by performing a controlled-Z operation *)
       (* qubit1 is the control *)
-      let res = apply_operator (ctrl_z qubit_num qubit1 qubit2) densmat in
+      let res = (
+        apply_operator (ctrl_z qubit_num (getPos qubit1) (getPos qubit2)) densmat
+      ) in
       exec_cmd res
     )
     | Measure (qubit, angle, signals_s, signals_t) -> (
@@ -287,7 +294,7 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
 
       (* Calculates the measurement bases *)
       let bases = calc_measurement_states mtbl angle signals_s signals_t in
-      let (case_1, case_2) = measure bases qubit_num qubit densmat in
+      let (case_1, case_2) = measure bases qubit_num (getPos qubit) densmat in
 
       let _ = update_qtbl qtbl qubit in
 
@@ -300,7 +307,7 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
       )
     )
     | XCorrect (qubit, signals) -> (
-      let op = (pauli_x qubit_num qubit) in
+      let op = (pauli_x qubit_num (getPos qubit)) in
       let res = (
         if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
           apply_operator op densmat
@@ -308,7 +315,7 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
       ) in exec_cmd res
     )
     | ZCorrect (qubit, signals) -> (
-      let op = (pauli_z qubit_num qubit) in
+      let op = (pauli_z qubit_num (getPos qubit)) in
       let res = (
         if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
           apply_operator op densmat
@@ -343,6 +350,10 @@ let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) : Mat.t = (
     ) in
     let exec_cmd' = simulate_cmd_exec (Hashtbl.create qubit_num) qtbl in
     let densemat = exec_cmd' init_densmat cmds in
+    let qubit_num = (Hashtbl.length qtbl) in
+    let _ = (
+      unpack_qtbl qtbl
+    ) in
     let densemat' = (
       match change_base with
       | None -> densemat

@@ -8,7 +8,7 @@ open Programs;;
 
 let () = (
   let func = simulate in
-  let total = 10 in
+  let total = 1 in
   let rec run n vec = (
     if (n > 0) then (
       let res = List.map (fun p -> (

@@ -57,8 +57,8 @@ module DensityMatrix : sig
 
   module Measurement : sig
     val collapse : ?normalize:bool -> Mat.t -> Mat.t -> Mat.t
-    val collapse_single : ?normalize:bool -> int -> int -> Mat.t -> Mat.t -> Mat.t
-    val measure : (Mat.t * Mat.t) -> int -> int -> Mat.t -> (Mat.t * Mat.t)
+    val collapse_single : ?proj_down:bool -> ?normalize:bool -> int -> int -> Mat.t -> Mat.t -> Mat.t
+    val measure : ?proj_down:bool -> (Mat.t * Mat.t) -> int -> int -> Mat.t -> (Mat.t * Mat.t)
   end
 end
 
