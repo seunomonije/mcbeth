@@ -319,6 +319,16 @@ let rec parse_pattern pattern = (
         CNOT(q1, q8, q9, q10)
       ]
     )
+    | CP2 (angle, q1, q2, q3, q4, qx) -> (
+      let angle' = Float.div angle 2. in parse_pattern [
+        J(angle', q2, qx);
+        CZ(q1, qx);
+        H(q3, qx);
+        J(-.angle', q4, qx);
+        CZ(q1, qx);
+        H(q4, qx)
+      ]
+    )
     | CMD (cmd) -> [cmd]
   ) in
   List.fold_left (fun ls p -> ls @ (helper p)) [] pattern
