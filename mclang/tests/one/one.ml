@@ -7,6 +7,27 @@ open Backend.Run;;
 open Lacamlext;;
 open Lacaml.Z;;
 
+
+open Algos.Create;;
+
+
+let foobar() = (
+  let b = Some(Qlib.Bases.z_basis) in
+  let p = (
+    (*parse_pattern 
+    [CMD(InputList([(0, Minus); (1, One)])); CMD(PrepList([2; 3; 4; 5]));
+                    CP2(Float.div Float.pi 2., 1, 2, 3, 4, 5, 0);]*)
+    [InputList([(0, One); (1, One);])] @ (qft [0; 1] 2);
+  ) in (
+    if well_formed p then print_endline "yay";
+    let p' = standardize p in (
+      print_prog p';
+      Mat.print (rand_eval ~shots:0 ~change_base:b p');
+    )
+  )
+)
+
+(*
 let foobar() = (
   let b = Some(Qlib.Bases.y_basis) in
   let p = (
@@ -25,7 +46,7 @@ let foobar() = (
     )
   )
 );;
-
+*)
 let _ = foobar();;
 
 

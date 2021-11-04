@@ -32,6 +32,7 @@ type pattern_part =
   | CP of float * qubit * qubit * qubit * qubit
                 * qubit * qubit * qubit * qubit
                 * qubit * qubit (* Controlled Phase gate *)
+  | CP2 of float * qubit * qubit * qubit * qubit * qubit * qubit
   | CMD of cmd
 
 type pattern = pattern_part list

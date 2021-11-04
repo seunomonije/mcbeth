@@ -319,14 +319,14 @@ let rec parse_pattern pattern = (
         CNOT(q1, q8, q9, q10)
       ]
     )
-    | CP2 (angle, q1, q2, q3, q4, qx) -> (
+    | CP2 (angle, q1, q2, q3, q4, q5, qx) -> (
       let angle' = Float.div angle 2. in parse_pattern [
         J(angle', q2, qx);
         CZ(q1, qx);
         H(q3, qx);
         J(-.angle', q4, qx);
         CZ(q1, qx);
-        H(q4, qx)
+        H(q5, qx)
       ]
     )
     | CMD (cmd) -> [cmd]
@@ -365,6 +365,9 @@ let print_pattern pattern = (
     )
     | CP (angle, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) -> (
       "^P(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3; q4; q5; q6; q7; q8; q9; q10]))) ^ ")"
+    )
+    | CP2 (angle, q1, q2, q3, q4, q5, qx) -> (
+      "^P(" ^ (String.concat ", " ((ftos angle)::(List.map itos [q1; q2; q3; q4; q5; qx]))) ^ ")"
     )
     | CMD(cmd) -> (
       "CMD(" ^ (cmd_to_string cmd) ^ ")"
