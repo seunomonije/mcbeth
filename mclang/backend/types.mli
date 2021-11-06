@@ -38,9 +38,13 @@ type pattern_part =
 type pattern = pattern_part list
 
 type qtbl = (qubit, int) Hashtbl.t
+
+(* Types used for distributed computation *)
 type dist_map = (int, qtbl) Hashtbl.t
 
 type dist_struct = (int, qtbl * prog) Hashtbl.t
 type dist_prog = prog * dist_struct
 
 type dist_approx = dist_struct
+
+type node_locations = (int, addr * port) Hashtbl.t

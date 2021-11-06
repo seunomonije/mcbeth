@@ -7,6 +7,14 @@ open Lacamlext;;
 open Lacaml.Z;;
 *)
 
+
+(**********************************************************************************
+  *                                                                               *
+  *                              Utility Functions                                *
+  *                                                                               *
+  *********************************************************************************)
+
+
 let print_dist dist = (
   let groups = List.of_seq (Hashtbl.to_seq_values dist) in
   List.iter (fun group -> (
@@ -21,6 +29,23 @@ let print_dist dist = (
     )
   )) groups
 );;
+
+let print_dist_struct dist_struct = (
+  List.iter (fun g -> (
+    let (_, cmds) = Hashtbl.find dist_struct g in (
+      print_endline ("\nNode " ^ (Int.to_string g) ^ ":");
+      print_prog cmds;
+    )
+  )) (List.init (Hashtbl.length dist_struct) (fun x -> x));
+);;
+
+let print_dist_prog (non_dist_cmds, dist_struct) = (
+  print_endline "Initial Setup:";
+  print_prog non_dist_cmds;
+  print_dist_struct dist_struct;
+);;
+
+let print_dist_approx = print_dist_struct;;
 
 (**
   * Constructs the map of the distributed network by processing
@@ -91,6 +116,14 @@ let split_program dist cmds = (
   (non_dist_cmds, dist_cmds_tbl)
 );;
 
+
+(**********************************************************************************
+  *                                                                               *
+  *                              Build Distributed Programs                       *
+  *                                                                               *
+  *********************************************************************************)
+
+
 let build_dist_prog dist cmds = (
   let (non_dist_cmds, dist_cmds_tbl) = split_program dist (standardize cmds) in
   let dist_struct = Hashtbl.create (Hashtbl.length dist) in (
@@ -101,23 +134,6 @@ let build_dist_prog dist cmds = (
     (non_dist_cmds, dist_struct)
   )
 )
-
-let print_dist_struct dist_struct = (
-  List.iter (fun g -> (
-    let (_, cmds) = Hashtbl.find dist_struct g in (
-      print_endline ("\nNode " ^ (Int.to_string g) ^ ":");
-      print_prog cmds;
-    )
-  )) (List.init (Hashtbl.length dist_struct) (fun x -> x));
-);;
-
-let print_dist_prog (non_dist_cmds, dist_struct) = (
-  print_endline "Initial Setup:";
-  print_prog non_dist_cmds;
-  print_dist_struct dist_struct;
-);;
-
-let print_dist_approx = print_dist_struct;;
 
 let approx_subsystems (non_dist_cmds, dist_struct) = (
   let dist_struct' = Hashtbl.copy dist_struct in
@@ -159,4 +175,69 @@ let build_dist_approx ((non_dist_cmds, dist_struct) : dist_prog) : dist_approx =
   let non_dist_cmds = expand_and_order_prep non_dist_cmds in
   let approx_dist_struct = approx_subsystems (non_dist_cmds, dist_struct) in
   approx_dist_struct
+);;
+
+
+(**********************************************************************************
+  *                                                                               *
+  *                              Run Distributed Programs                         *
+  *                                                                               *
+  *********************************************************************************)
+
+let cmd_exec mtbl qtbl statevec cmd = (
+  let getPos x = Hashtbl.find qtbl x in
+  let qubit_num = (Hashtbl.length qtbl) in
+  let exec () = (
+    rand_eval_cmd_exec mtbl qtbl statevec cmd
+  ) in
+  let obtainDep signals = (
+    (* Waits for mtbl to contain needed signals before returning *)
+    (* TODO *)
+  ) in
+  match cmd with
+  | Measure(_, _, signals_s, signals_t) -> (
+    obtainDep signals_s;
+    obtainDep signals_t;
+    exec ();
+  )
+  | XCorrect(_, signals) -> (
+    obtainDep signals;
+    exec ();
+  ) 
+  | ZCorrect(_, signals) -> (
+    obtainDep signals;
+    exec ();
+  )
+  | _ -> exec ();
+)
+
+let run_subsystem (addr, port) (qtbl, cmds) group group_map node_locations = (
+  let qubit_num = calc_qubit_num cmds in
+  let mtbl = Hashtbl.create qubit_num in (
+    (* Step 1: start the server that waits for new measurement info from other nodes *)
+    (* TODO *)
+
+    (* Step 2: execute each command in the program *)
+    let init_statevec = Mat.make 1 1 Complex.one in
+    let cmd_exec' = cmd_exec mtbl qtbl in
+    let statevec = Mat.cleanup (
+      List.fold_left (fun sv c -> (cmd_exec' sv c)) init_statevec cmds
+    )
+
+    (* Step 3: print information *)
+    (* TODO *)
+  )
+
+);;
+
+let run_dist_approx dist_approx node_locations = (
+  let group_map = build_group_map' dist_approx in
+  Hashtbl.iter (fun group (addr, port) -> (
+    let sub_prog = Hashtbl.find dist_approx group in
+    let local = (String.equal addr "localhost") || (String.equal addr "127.0.0.1") in
+    if local then (
+      (* Remember to pass copies of hashtables into run_subsystem *)
+      (* TODO: spawn threads that run each subsystem *)
+    )
+  )) node_locations
 );;
