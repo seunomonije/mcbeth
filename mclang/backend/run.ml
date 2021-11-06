@@ -26,8 +26,8 @@ open Qlib.Gates;;
   *)
 let insert_qubit ?(densmat=false) matrix input = (
   let open Cenv in
-  let zero = c 0. 0. in
-  let one = c 1. 0. in
+  let zero = Complex.zero in
+  let one = Complex.one in
   let r2o2 = Float.div 1.0 (sqrt 2.) in
   let a, b = (
     match input with
@@ -206,7 +206,7 @@ let rand_eval_cmd_exec mtbl qtbl statevec c = (
   * on the vector collapsing each qubit to |+> or |->, and a probability distribution of the
   * results is returned.
   *)
-let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
+let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) (cmds : prog) : Mat.t = (
   Random.self_init();
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
@@ -214,9 +214,15 @@ let rand_eval ?(shots=0) ?(change_base=None) (cmds : prog) : Mat.t = (
     let vec_size = Int.shift_left 1 qubit_num in
     let run_once () = (
       let init_statevec = Mat.make 1 1 Complex.one in
-      let qtbl = Hashtbl.create qubit_num in
-      let _ = (
-        List.iter (fun q -> Hashtbl.add qtbl q q) (List.init qubit_num (fun x -> x))
+      let qtbl = (
+        match qtbl with
+        | None -> (
+          let tbl = Hashtbl.create qubit_num in
+          let _ = (
+            List.iter (fun q -> Hashtbl.add tbl q q) (List.init qubit_num (fun x -> x))
+          ) in tbl
+        )
+        | Some(qtbl) -> qtbl
       ) in
       let exec_cmd' = rand_eval_cmd_exec (Hashtbl.create qubit_num) qtbl in
       let statevec = List.fold_left (fun sv p -> (

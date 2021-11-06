@@ -36,3 +36,11 @@ type pattern_part =
   | CMD of cmd
 
 type pattern = pattern_part list
+
+type qtbl = (qubit, int) Hashtbl.t
+type dist_map = (int, qtbl) Hashtbl.t
+
+type dist_struct = (int, qtbl * prog) Hashtbl.t
+type dist_prog = prog * dist_struct
+
+type dist_approx = dist_struct
