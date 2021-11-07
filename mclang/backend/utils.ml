@@ -572,6 +572,13 @@ let performance func p = (
 
 let unpack_qtbl qtbl = (
   let ls = List.of_seq (Hashtbl.to_seq qtbl) in
-  let compare (_, p1) (_, p2) = p2 - p1 in
-  List.sort compare ls
+  let compare (_, p1) (_, p2) = p1 - p2 in
+  let sorted = List.sort compare ls in
+  let (qs, _) = (
+    List.fold_right (fun (q, p) (qs, ps) -> (q::qs, p::ps)) sorted ([], [])
+  ) in qs
+);;
+
+let print_qubits qs = (
+  print_endline (String.concat ", " (List.map Int.to_string qs))
 );;

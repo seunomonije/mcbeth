@@ -18,4 +18,5 @@ val expand_and_order_prep : prog -> prog
 
 val performance : ('a -> 'b) -> 'a -> float
 
-val unpack_qtbl : (qubit, int) Hashtbl.t -> (qubit * int) list
+val unpack_qtbl : (qubit, int) Hashtbl.t -> qubit list
+val print_qubits : qubit list -> unit

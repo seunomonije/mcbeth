@@ -221,7 +221,7 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
   * on the vector collapsing each qubit to |+> or |->, and a probability distribution of the
   * results is returned.
   *)
-let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) (cmds : prog) : Mat.t = (
+let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
   Random.self_init();
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
@@ -237,7 +237,7 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) (cmds : prog) : Mat.t 
             List.iter (fun q -> Hashtbl.add tbl q q) (List.init qubit_num (fun x -> x))
           ) in tbl
         )
-        | Some(qtbl) -> qtbl
+        | Some(qtbl) -> Hashtbl.copy qtbl
       ) in
       let exec_cmd' = rand_eval_cmd_exec (Hashtbl.create qubit_num) qtbl in
       let statevec = List.fold_left (fun sv p -> (
@@ -246,22 +246,24 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) (cmds : prog) : Mat.t 
         (*Mat.print sv;*)
         exec_cmd' sv p;
       )) init_statevec cmds in
-      (Mat.cleanup statevec, qtbl)
+      (qtbl, Mat.cleanup statevec)
     ) in
     if shots == 0 then (
       (* Run weak simulation once; don't perform a read-out measurements. *)
-      let (res, qtbl) = run_once () in
+      let (qtbl, res) = run_once () in
       let qubit_num = (Hashtbl.length qtbl) in
       match change_base with
-      | None -> res
-      | Some(new_base) -> Qlib.StateVector.change_base Qlib.Bases.z_basis new_base res qubit_num
+      | None -> (unpack_qtbl qtbl, res)
+      | Some(new_base) -> (
+        (unpack_qtbl qtbl, Qlib.StateVector.change_base Qlib.Bases.z_basis new_base res qubit_num)
+      )
     ) else (
       (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
-      let rec helper n sum = (
+      let rec helper n qtbl sum = (
         if n > 0 then (
           (* Runs and applies read-out measurements to output qubits. *)
           let out_qubits = get_output_qubits cmds in
-          let (res, qtbl) = run_once () in
+          let (qtbl, res) = run_once () in
           let qubit_num = (Hashtbl.length qtbl) in
           (*let _ = Hashtbl.iter (fun q pos -> (
             print_endline ((Int.to_string q) ^ " " ^ (Int.to_string pos))
@@ -273,14 +275,14 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) (cmds : prog) : Mat.t 
             | Some(new_base) -> Qlib.StateVector.change_base Qlib.Bases.z_basis new_base res qubit_num
           ) in
           let res'' = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (res') in
-          helper (n-1) (Mat.add (Qlib.DensityMatrix.from_state_vector res'') sum)
-        ) else sum
+          helper (n-1) qtbl (Mat.add (Qlib.DensityMatrix.from_state_vector res'') sum)
+        ) else (qtbl, sum)
       ) in
-      let total = helper shots (Mat.make vec_size vec_size Complex.zero) in
+      let (qtbl, total) = helper shots (Hashtbl.create 0) (Mat.make vec_size vec_size Complex.zero) in
       let densemat = Mat.scal_mul (Cenv.(Complex.one / (c (Int.to_float shots) 0.))) total in
-      Mat.cleanup (Mat.from_col_vec (Mat.copy_diag densemat))
+      (unpack_qtbl qtbl, Mat.cleanup (Mat.from_col_vec (Mat.copy_diag densemat)))
     )
-  ) else Mat.empty
+  ) else ([], Mat.empty)
 );;
 
 

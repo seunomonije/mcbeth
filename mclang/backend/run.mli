@@ -8,7 +8,7 @@ open Lacaml.Z;;
 val rand_eval : ?shots:int -> 
                 ?change_base:(Mat.t * Mat.t) option -> 
                 ?qtbl:qtbl option -> 
-                prog -> Mat.t
+                prog -> (qubit list * Mat.t)
 
 val simulate : ?just_prob:bool -> 
               ?change_base:(Mat.t * Mat.t) option -> 

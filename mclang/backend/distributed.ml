@@ -262,12 +262,9 @@ let run_dist_approx dist_approx = (
     Hashtbl.iter (fun group (qtbl, statevec) -> (
       print_endline ("\nNode " ^ (Int.to_string group) ^ ":");
       let qs = unpack_qtbl qtbl in
-      List.iter (fun (x, y) -> (
-        print_endline ((Int.to_string x) ^ " " ^ (Int.to_string y))
-      )) qs;
+      print_qubits qs;
       print_endline "";
       Mat.print statevec
     )) out
   )
-
 );;
