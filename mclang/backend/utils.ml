@@ -569,3 +569,9 @@ let performance func p = (
   let _ = func p in
   Float.sub (Sys.time()) t
 );;
+
+let unpack_qtbl qtbl = (
+  let ls = List.of_seq (Hashtbl.to_seq qtbl) in
+  let compare (_, p1) (_, p2) = p2 - p1 in
+  List.sort compare ls
+);;

@@ -227,50 +227,47 @@ let cmd_exec mtbl mtbl_lock qtbl statevec cmd = (
   | _ -> exec ();
 );;
 
-let run_subsystem out out_lock mtbl mtbl_lock (qtbl, cmds) group group_map node_locations = (
-  let self_id = Thread.id (Thread.self ()) in
-  Mutex.lock out_lock;
-  Hashtbl.add out self_id ("yay " ^ (Int.to_string group));
-  Mutex.unlock out_lock;
-  Thread.exit ();
-  (
-    let _ = print_endline ("yay " ^ (Int.to_string group)) in
-    let _ = (group_map, node_locations, qtbl, cmds) in 
-    (* Step 1: execute each command in the program *)
-    let init_statevec = Mat.make 1 1 Complex.one in
-    let cmd_exec' = cmd_exec mtbl mtbl_lock qtbl in
-    let statevec = Mat.cleanup (
-      List.fold_left (fun sv c -> (cmd_exec' sv c)) init_statevec cmds
-    ) in
+let run_subsystem out out_lock mtbl mtbl_lock (qtbl, cmds) group = (
 
-    (* Step 2: add information to "out" *)
-    (* TODO *)
-    Mat.print statevec
+  (* Step 1: execute each command in the program *)
+  let qtbl' = Hashtbl.copy qtbl in
+  let init_statevec = Mat.make 1 1 Complex.one in
+  let cmd_exec' = cmd_exec mtbl mtbl_lock qtbl' in
+  let statevec = Mat.cleanup (
+    List.fold_left (fun sv c -> (cmd_exec' sv c)) init_statevec cmds
+  ) in
+  
+  (* Step 2: add information to "out" *)
+  let final_subsystem = (qtbl', statevec) in (
+    Mutex.lock out_lock;
+    Hashtbl.add out group final_subsystem;
+    Mutex.unlock out_lock;
   )
 
 );;
 
-let run_dist_approx dist_approx node_locations = (
-  let group_map = build_group_map' dist_approx in
-  let out = Hashtbl.create (Hashtbl.length node_locations) in
+let run_dist_approx dist_approx = (
+  let out = Hashtbl.create (Hashtbl.length dist_approx) in
   let out_lock = Mutex.create () in
   let mtbl = Hashtbl.create 1 in
   let mtbl_lock = Mutex.create () in
   let threads = ref [] in (
-    Hashtbl.iter (fun group (addr, _) -> (
-      let sub_prog = Hashtbl.find dist_approx group in
-      let local = (String.equal addr "localhost") || (String.equal addr "127.0.0.1") in
-      if local then (
-        print_endline "HERE";
-        (* spawns threads that run each subsystem *)
-        let thread_func () = run_subsystem out out_lock mtbl mtbl_lock sub_prog group group_map node_locations in
-        let x = Thread.create thread_func () in
-        threads := x::(!threads) 
-      )
-    )) node_locations;
-    List.iter (fun h -> print_endline (Int.to_string (Thread.id h))) !threads;
+    Hashtbl.iter (fun group sub_prog -> (
+      (* spawns threads that run each subsystem *)
+      let thread_func () = run_subsystem out out_lock mtbl mtbl_lock sub_prog group in
+      let x = Thread.create thread_func () in
+      threads := x::(!threads) 
+    )) dist_approx;
     List.iter (fun h -> Thread.join h) !threads;
-    List.iter (fun h -> print_endline (Hashtbl.find out (Thread.id h))) !threads;
+    Hashtbl.iter (fun group (qtbl, statevec) -> (
+      print_endline ("\nNode " ^ (Int.to_string group) ^ ":");
+      let qs = unpack_qtbl qtbl in
+      List.iter (fun (x, y) -> (
+        print_endline ((Int.to_string x) ^ " " ^ (Int.to_string y))
+      )) qs;
+      print_endline "";
+      Mat.print statevec
+    )) out
   )
 
 );;

@@ -17,15 +17,11 @@ let foobar() = (
     [0;2];
     [1];
   ] in
-  let nl = build_node_loc [
-    ("localhost", 9000);
-    ("localhost", 9001);
-  ] in
   let dp = build_dist_prog d p in
   let da = build_dist_approx dp in (
     print_dist_prog dp;
     print_dist_approx da;
-    run_dist_approx da nl
+    run_dist_approx da
   )
 );;
 

@@ -148,10 +148,6 @@ let update_qtbl qtbl to_remove = (
   Hashtbl.remove qtbl to_remove
 );;
 
-let unpack_qtbl qtbl = (
-  List.of_seq (Hashtbl.to_seq_keys qtbl)
-);;
-
 
 (**********************************************************************************
   *                                                                               *
@@ -376,9 +372,6 @@ let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) : Mat.t = (
     let exec_cmd' = simulate_cmd_exec (Hashtbl.create qubit_num) qtbl in
     let densemat = exec_cmd' init_densmat cmds in
     let qubit_num = (Hashtbl.length qtbl) in
-    let _ = (
-      unpack_qtbl qtbl
-    ) in
     let densemat' = (
       match change_base with
       | None -> densemat

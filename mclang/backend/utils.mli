@@ -17,3 +17,5 @@ val standardize : prog -> prog
 val expand_and_order_prep : prog -> prog
 
 val performance : ('a -> 'b) -> 'a -> float
+
+val unpack_qtbl : (qubit, int) Hashtbl.t -> (qubit * int) list
