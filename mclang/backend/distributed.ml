@@ -189,6 +189,14 @@ let build_dist_approx ((non_dist_cmds, dist_struct) : dist_prog) : dist_approx =
   *                                                                               *
   *********************************************************************************)
 
+let check_mtbl mtbl mtbl_lock q = (
+  Mutex.lock mtbl_lock;
+  if Hashtbl.mem mtbl q then true else (
+    Mutex.unlock mtbl_lock;
+    false
+  )
+)
+
 let cmd_exec mtbl mtbl_lock qtbl statevec cmd = (
   (*let getPos x = Hashtbl.find qtbl x in
   let qubit_num = (Hashtbl.length qtbl) in*)
@@ -196,9 +204,11 @@ let cmd_exec mtbl mtbl_lock qtbl statevec cmd = (
     rand_eval_cmd_exec ~mtbl_lock:(Some(mtbl_lock)) mtbl qtbl statevec cmd
   ) in
   let obtainDep signals = (
-    (* Waits for mtbl to contain needed signals before returning *)
-    (* TODO *)
-    let _ = signals in ()
+    List.iter (fun q -> (
+      let check () = not (check_mtbl mtbl mtbl_lock q) in
+      while check () do Thread.yield () done;
+      Mutex.unlock mtbl_lock;
+    )) signals
   ) in
   match cmd with
   | Measure(_, _, signals_s, signals_t) -> (
