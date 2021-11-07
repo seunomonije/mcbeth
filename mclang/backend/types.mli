@@ -47,4 +47,4 @@ type dist_prog = prog * dist_struct
 
 type dist_approx = dist_struct
 
-type node_locations = (int, addr * port) Hashtbl.t
+type node_locations = (int, string * int) Hashtbl.t

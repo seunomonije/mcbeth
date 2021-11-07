@@ -3,5 +3,5 @@
   (name backend)
   (modules_without_implementation types)
   (modules types utils run distributed)
-  (libraries linalg quantum)
+  (libraries linalg quantum threads)
 )
