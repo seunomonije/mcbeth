@@ -189,11 +189,11 @@ let build_dist_approx ((non_dist_cmds, dist_struct) : dist_prog) : dist_approx =
   *                                                                               *
   *********************************************************************************)
 
-let cmd_exec mtbl qtbl statevec cmd = (
+let cmd_exec mtbl mtbl_lock qtbl statevec cmd = (
   (*let getPos x = Hashtbl.find qtbl x in
   let qubit_num = (Hashtbl.length qtbl) in*)
   let exec () = (
-    rand_eval_cmd_exec mtbl qtbl statevec cmd
+    rand_eval_cmd_exec ~mtbl_lock:(Some(mtbl_lock)) mtbl qtbl statevec cmd
   ) in
   let obtainDep signals = (
     (* Waits for mtbl to contain needed signals before returning *)
@@ -217,21 +217,20 @@ let cmd_exec mtbl qtbl statevec cmd = (
   | _ -> exec ();
 );;
 
-let run_subsystem out_lock out (addr, port) (qtbl, cmds) group group_map node_locations = (
+let run_subsystem out out_lock mtbl mtbl_lock (qtbl, cmds) group group_map node_locations = (
   let self_id = Thread.id (Thread.self ()) in
   Mutex.lock out_lock;
-  Hashtbl.add !out self_id ("yay " ^ (Int.to_string group));
+  Hashtbl.add out self_id ("yay " ^ (Int.to_string group));
   Mutex.unlock out_lock;
   Thread.exit ();
-  let qubit_num = calc_qubit_num cmds in
-  let mtbl = Hashtbl.create qubit_num in (
+  (
     (* Step 1: start the server that waits for new measurement info from other nodes *)
     (* TODO *)
     let _ = print_endline ("yay " ^ (Int.to_string group)) in
-    let _ = (group_map, node_locations, addr, port, qtbl, cmds) in 
+    let _ = (group_map, node_locations, qtbl, cmds) in 
     (* Step 2: execute each command in the program *)
     let init_statevec = Mat.make 1 1 Complex.one in
-    let cmd_exec' = cmd_exec mtbl qtbl in
+    let cmd_exec' = cmd_exec mtbl mtbl_lock qtbl in
     let statevec = Mat.cleanup (
       List.fold_left (fun sv c -> (cmd_exec' sv c)) init_statevec cmds
     ) in
@@ -245,24 +244,26 @@ let run_subsystem out_lock out (addr, port) (qtbl, cmds) group group_map node_lo
 
 let run_dist_approx dist_approx node_locations = (
   let group_map = build_group_map' dist_approx in
-  let out = ref (Hashtbl.create (Hashtbl.length node_locations)) in
+  let out = Hashtbl.create (Hashtbl.length node_locations) in
   let out_lock = Mutex.create () in
+  let mtbl = Hashtbl.create 1 in
+  let mtbl_lock = Mutex.create () in
   let threads = ref [] in (
-    Hashtbl.iter (fun group (addr, port) -> (
+    Hashtbl.iter (fun group (addr, _) -> (
       let sub_prog = Hashtbl.find dist_approx group in
       let local = (String.equal addr "localhost") || (String.equal addr "127.0.0.1") in
       if local then (
         print_endline "HERE";
         (* Remember to pass copies of hashtables into run_subsystem *)
         (* TODO: spawn threads that run each subsystem *)
-        let thread_func () = run_subsystem out_lock out (addr, port) sub_prog group group_map node_locations in
+        let thread_func () = run_subsystem out out_lock mtbl mtbl_lock sub_prog group group_map node_locations in
         let x = Thread.create thread_func () in
         threads := x::(!threads) 
       )
     )) node_locations;
     List.iter (fun h -> print_endline (Int.to_string (Thread.id h))) !threads;
     List.iter (fun h -> Thread.join h) !threads;
-    List.iter (fun h -> print_endline (Hashtbl.find !out (Thread.id h))) !threads;
+    List.iter (fun h -> print_endline (Hashtbl.find out (Thread.id h))) !threads;
   )
 
 );;

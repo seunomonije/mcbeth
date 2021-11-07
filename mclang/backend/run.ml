@@ -85,8 +85,17 @@ let get_outcome mtbl q = (
   * Output:
   *   Returns the signal, 0 or 1.
   *)
-let calc_signal mtbl (qs : qubit list) = (
-  (List.fold_left (fun s q -> s + get_outcome mtbl q) 0 qs) mod 2
+let calc_signal ?(mtbl_lock=None) mtbl (qs : qubit list) = (
+  let exec_cmd () = (List.fold_left (fun s q -> s + get_outcome mtbl q) 0 qs) mod 2 in
+  match mtbl_lock with
+  | None -> exec_cmd ()
+  | Some(lock) -> (
+    Mutex.lock lock;
+    let res = exec_cmd () in (
+      Mutex.unlock lock;
+      res
+    )
+  )
 );;
 
 
@@ -103,17 +112,17 @@ let calc_signal mtbl (qs : qubit list) = (
   * Output:
   *   Returns the new angle, of type float.
   *)
-let new_angle mtbl angle signals_s signals_t = (
-  let signal qs = float_of_int (calc_signal mtbl qs) in
+let new_angle ?(mtbl_lock=None) mtbl angle signals_s signals_t = (
+  let signal qs = float_of_int (calc_signal mtbl qs ~mtbl_lock:mtbl_lock) in
   let ( + ) = Float.add in
   let ( * ) = Float.mul in
   (-1.)**(signal signals_s) * angle + (signal signals_t) * Float.pi
 );;
 
 
-let calc_measurement_states mtbl angle signals_s signals_t = (
+let calc_measurement_states ?(mtbl_lock=None) mtbl angle signals_s signals_t = (
   (* Calculates the angle of measurement *)
-  let angle' = new_angle mtbl angle signals_s signals_t in
+  let angle' = new_angle mtbl angle signals_s signals_t ~mtbl_lock:mtbl_lock in
   let angle'' = Cenv.float_to_complex angle' in
 
   (* Calculates the projectors *)
@@ -153,7 +162,7 @@ let unpack_qtbl qtbl = (
 (**
   * Performs appropriate operations to execute command.
   *)
-let rand_eval_cmd_exec mtbl qtbl statevec c = (
+let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
   let result = (
     let getPos x = Hashtbl.find qtbl x in
     let qubit_num = (Hashtbl.length qtbl) in
@@ -167,25 +176,35 @@ let rand_eval_cmd_exec mtbl qtbl statevec c = (
       let open Qlib.StateVector.Measurement in
 
       (* Calculates the bases *)
-      let bases = calc_measurement_states mtbl angle signals_s signals_t in
+      let bases = calc_measurement_states mtbl angle signals_s signals_t ~mtbl_lock:mtbl_lock in
 
       (*let _ = Mat.print statevec in*)
       let (statevec', outcome) = measure bases qubit_num (getPos qubit) statevec in (
         (*print_endline (Int.to_string outcome);*)
         update_qtbl qtbl qubit; (* updates qubit positions in vector mapping *)
+        
+        (match mtbl_lock with
+        | None -> ()
+        | Some(lock) -> Mutex.lock lock);
+        
         Hashtbl.add mtbl qubit outcome; (* keeps track of the outcome *)
+
+        (match mtbl_lock with
+        | None -> ()
+        | Some(lock) -> Mutex.unlock lock);
+        
         statevec'
       )
     )
     | XCorrect (qubit, signals) -> (
       (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
-      if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
+      if (List.length signals == 0) || (calc_signal mtbl signals ~mtbl_lock:mtbl_lock > 0) then (
         gemm (pauli_x qubit_num (getPos qubit)) statevec
       ) else statevec
     )
     | ZCorrect (qubit, signals) -> (
       (* Perform correction if not dependent (`signals == []`) or the signal is 1 *)
-      if (List.length signals == 0) || (calc_signal mtbl signals > 0) then (
+      if (List.length signals == 0) || (calc_signal mtbl signals ~mtbl_lock:mtbl_lock > 0) then (
         gemm (pauli_z qubit_num (getPos qubit)) statevec
       ) else statevec
     )

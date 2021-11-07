@@ -14,5 +14,5 @@ val simulate : ?just_prob:bool ->
               ?change_base:(Mat.t * Mat.t) option -> 
               prog -> Mat.t
 
-val rand_eval_cmd_exec : (qubit, int) Hashtbl.t -> qtbl -> Mat.t -> cmd -> Mat.t
+val rand_eval_cmd_exec : ?mtbl_lock:Mutex.t option -> (qubit, int) Hashtbl.t -> qtbl -> Mat.t -> cmd -> Mat.t
 
