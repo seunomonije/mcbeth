@@ -224,18 +224,16 @@ let run_subsystem out out_lock mtbl mtbl_lock (qtbl, cmds) group group_map node_
   Mutex.unlock out_lock;
   Thread.exit ();
   (
-    (* Step 1: start the server that waits for new measurement info from other nodes *)
-    (* TODO *)
     let _ = print_endline ("yay " ^ (Int.to_string group)) in
     let _ = (group_map, node_locations, qtbl, cmds) in 
-    (* Step 2: execute each command in the program *)
+    (* Step 1: execute each command in the program *)
     let init_statevec = Mat.make 1 1 Complex.one in
     let cmd_exec' = cmd_exec mtbl mtbl_lock qtbl in
     let statevec = Mat.cleanup (
       List.fold_left (fun sv c -> (cmd_exec' sv c)) init_statevec cmds
     ) in
 
-    (* Step 3: print information *)
+    (* Step 2: add information to "out" *)
     (* TODO *)
     Mat.print statevec
   )
@@ -254,8 +252,7 @@ let run_dist_approx dist_approx node_locations = (
       let local = (String.equal addr "localhost") || (String.equal addr "127.0.0.1") in
       if local then (
         print_endline "HERE";
-        (* Remember to pass copies of hashtables into run_subsystem *)
-        (* TODO: spawn threads that run each subsystem *)
+        (* spawns threads that run each subsystem *)
         let thread_func () = run_subsystem out out_lock mtbl mtbl_lock sub_prog group group_map node_locations in
         let x = Thread.create thread_func () in
         threads := x::(!threads) 
