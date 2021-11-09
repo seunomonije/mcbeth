@@ -22,6 +22,8 @@ module Bases : sig
   val x_basis : Mat.t * Mat.t
   val y_basis : Mat.t * Mat.t
   val z_basis : Mat.t * Mat.t
+
+  val from_alpha : float -> Mat.t * Mat.t
 end
 
 module Gates : sig

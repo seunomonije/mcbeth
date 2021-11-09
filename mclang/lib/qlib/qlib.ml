@@ -78,6 +78,19 @@ module Bases = struct
   let y_basis = (States.i_state, States.negi_state)
   let z_basis = (States.zero_state, States.one_state)
 
+  let from_alpha angle = (
+    let angle = Cenv.float_to_complex angle in
+
+    let exp_const = Complex.exp (Cenv.(Complex.i * angle)) in
+    let r202 = Cenv.float_to_complex (Float.div 1.0 (sqrt 2.)) in
+    let zero_state = States.zero_state in
+    let one_state = States.one_state in
+    let one_state_e = Mat.scal_mul exp_const one_state in
+    let plus_state = Mat.scal_mul r202 (Mat.add zero_state one_state_e) in
+    let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in
+    (Mat.cleanup plus_state, Mat.cleanup minus_state)
+  )
+
 end;;
 
 
