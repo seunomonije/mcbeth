@@ -12,7 +12,6 @@ open Algos.Create;;
 *)
 
 let foobar() = (
-  let _ = Some(Qlib.Bases.x_basis) in
   let p = (
     (*
     parse_pattern 
@@ -29,14 +28,15 @@ let foobar() = (
       Measure(3, -0.0, [], []);
     ]
     *)
-    [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (1, 1));
+    [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
     
   ) in (
     print_prog p; print_endline "";
+    let b = Some(Qlib.Bases.from_alpha Float.pi) in
     if well_formed p then print_endline "yay";
     let p' = standardize p in (
       print_prog p';
-      let qs, res = rand_eval ~shots:0 ~change_base:None p' in (
+      let qs, res = rand_eval ~shots:0 ~change_base:b p' in (
         print_qubits qs;
         Mat.print res
       )

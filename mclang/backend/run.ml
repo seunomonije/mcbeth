@@ -123,17 +123,9 @@ let new_angle ?(mtbl_lock=None) mtbl angle signals_s signals_t = (
 let calc_measurement_states ?(mtbl_lock=None) mtbl angle signals_s signals_t = (
   (* Calculates the angle of measurement *)
   let angle' = new_angle mtbl angle signals_s signals_t ~mtbl_lock:mtbl_lock in
-  let angle'' = Cenv.float_to_complex angle' in
 
   (* Calculates the projectors *)
-  let exp_const = Complex.exp (Cenv.(Complex.i * angle'')) in
-  let r202 = Cenv.float_to_complex (Float.div 1.0 (sqrt 2.)) in
-  let zero_state = Qlib.States.zero_state in
-  let one_state = Qlib.States.one_state in
-  let one_state_e = Mat.scal_mul exp_const one_state in
-  let plus_state = Mat.scal_mul r202 (Mat.add zero_state one_state_e) in
-  let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in
-  (Mat.cleanup plus_state, Mat.cleanup minus_state)
+  Qlib.Bases.from_alpha angle'
 );;
 
 let update_qtbl qtbl to_remove = (
