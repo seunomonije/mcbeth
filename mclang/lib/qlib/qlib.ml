@@ -314,7 +314,6 @@ module StateVector = struct
       let proj = if proj_down then (
         Mat.cleanup (gemm ~transa:`C proj (Mat.identity 2))
       ) else proj in
-      let _ = Mat.print proj in
       let proj' = Gates.gate proj n q in
       (*let _ = Mat.print proj' in*)
       collapse statevec proj'
