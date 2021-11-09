@@ -301,7 +301,8 @@ module StateVector = struct
       let result = gemm proj statevec in
       (* Renormalizes the result. *)
       let mag = Mat.cleanup (gemm ~transa:`C result result) in
-      let one_over_mag = Cenv.(Complex.one / (Mat.to_array mag).(0).(0)) in
+      let mag' = (Mat.to_array mag).(0).(0) in
+      let one_over_mag = Cenv.(Complex.one / (Complex.sqrt mag')) in
       Mat.cleanup (Mat.scal_mul one_over_mag result)
     )
 
@@ -310,10 +311,10 @@ module StateVector = struct
       * as a state vector `statevec` using the single qubit projector `proj`.
       *)
     let collapse_single ?(proj_down=true) n q (statevec : Mat.t) (proj : Mat.t) = (
-      
       let proj = if proj_down then (
         Mat.cleanup (gemm ~transa:`C proj (Mat.identity 2))
       ) else proj in
+      let _ = Mat.print proj in
       let proj' = Gates.gate proj n q in
       (*let _ = Mat.print proj' in*)
       collapse statevec proj'

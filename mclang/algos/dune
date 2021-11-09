@@ -1,6 +1,6 @@
 
 (library
   (name algos)
-  (modules create qft teleport)
+  (modules create qft teleport grovers)
   (libraries backend)
 )

@@ -223,6 +223,7 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
   *)
 let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
   Random.self_init();
+  let default_basis = Qlib.Bases.z_basis in
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
     let qubit_num = calc_qubit_num cmds in
@@ -255,7 +256,7 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
       match change_base with
       | None -> (unpack_qtbl qtbl, res)
       | Some(new_base) -> (
-        (unpack_qtbl qtbl, Qlib.StateVector.change_base Qlib.Bases.z_basis new_base res qubit_num)
+        (unpack_qtbl qtbl, Qlib.StateVector.change_base default_basis new_base res qubit_num)
       )
     ) else (
       (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
@@ -268,11 +269,11 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
           (*let _ = Hashtbl.iter (fun q pos -> (
             print_endline ((Int.to_string q) ^ " " ^ (Int.to_string pos))
           )) qtbl in*)
-          let measure = Qlib.StateVector.Measurement.measure ~proj_down:false (Qlib.Bases.z_basis) qubit_num in
+          let measure = Qlib.StateVector.Measurement.measure ~proj_down:false (default_basis) qubit_num in
           let res' = (
             match change_base with
             | None -> res
-            | Some(new_base) -> Qlib.StateVector.change_base Qlib.Bases.z_basis new_base res qubit_num
+            | Some(new_base) -> Qlib.StateVector.change_base default_basis new_base res qubit_num
           ) in
           let res'' = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (res') in
           helper (n-1) qtbl (Mat.add (Qlib.DensityMatrix.from_state_vector res'') sum)
@@ -362,7 +363,7 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
   * If `just_prob == true`, then just the probability distribution is returned.
   * The entire density matrix is returned otherwise.
   *)
-let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) : Mat.t = (
+let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) = (
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
     let qubit_num = calc_qubit_num cmds in
@@ -380,9 +381,9 @@ let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) : Mat.t = (
       | Some(new_base) -> Qlib.DensityMatrix.change_base Qlib.Bases.z_basis new_base densemat qubit_num
     ) in
     if just_prob then (
-      Mat.from_col_vec (Mat.copy_diag densemat')
-    ) else densemat'
-  ) else Mat.empty
+      (unpack_qtbl qtbl, Mat.from_col_vec (Mat.copy_diag densemat'))
+    ) else (unpack_qtbl qtbl, densemat')
+  ) else ([], Mat.empty)
 );;
 
 

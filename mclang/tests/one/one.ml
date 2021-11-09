@@ -6,21 +6,33 @@ open Backend.Run;;
 
 open Lacamlext;;
 open Lacaml.Z;;
-(*
 
-*)
 open Algos.Create;;
+(*
+*)
 
 let foobar() = (
-  let _ = Some(Qlib.Bases.y_basis) in
+  let _ = Some(Qlib.Bases.x_basis) in
   let p = (
     (*
     parse_pattern 
     [CMD(InputList([(0, Plus); (1, One)])); CMD(PrepList([2; 3; 4; 5]));
                     CP2(Float.div Float.pi 2., 1, 2, 3, 4, 5, 0);]
-    *)
     [InputList([(0, One); (1, One);])] @ (qft [0; 1] 2);
+    [
+      InputList([(0, Plus); (1, Plus)]);
+      PrepList([2; 3]);
+      Entangle(0, 1);
+      Entangle(2, 0);
+      Entangle(3, 1);
+      Measure(2, -0.0, [], []);
+      Measure(3, -0.0, [], []);
+    ]
+    *)
+    [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (1, 1));
+    
   ) in (
+    print_prog p; print_endline "";
     if well_formed p then print_endline "yay";
     let p' = standardize p in (
       print_prog p';
@@ -28,6 +40,8 @@ let foobar() = (
         print_qubits qs;
         Mat.print res
       )
+    (*
+    *)
     )
   )
 )
