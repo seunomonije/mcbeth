@@ -8,6 +8,9 @@ open Lacaml.Io;;  (* for testing/debugging *)
 
 (* open Qlib.States;; *)
 
+open Lacamlext;;
+open Lacaml.Z;;
+
 module H = Hashtbl;;
 
 
@@ -28,17 +31,29 @@ let float_to_string x = Printf.sprintf "%.5f" x;;
   *  Converts a command to a friendly, human-readable string.
   *)
 let cmd_to_string c = (
+  let state_to_str (c0, c1) = (
+    "((" 
+      ^ (Float.to_string c0.Complex.re) ^ ", " 
+      ^ (Float.to_string c0.im) ^ "i), (" 
+      ^ (Float.to_string c1.Complex.re) ^ ", " 
+      ^ (Float.to_string c1.im) ^ "i))"
+  ) in
   let parse_input input = (
     match input with
     | Zero            -> "Zero"
     | One             -> "One"
     | Plus            -> "Plus"
     | Minus           -> "Minus"
-    | State(c0, c1)   -> "((" 
-                          ^ (Float.to_string c0.re) ^ ", " 
-                          ^ (Float.to_string c0.im) ^ "i), (" 
-                          ^ (Float.to_string c1.re) ^ ", " 
-                          ^ (Float.to_string c1.im) ^ "i))"
+    | State(c0, c1)   -> state_to_str (c0, c1)
+  ) in
+  let parse_basis basis = (
+    match basis with
+    | X -> "+/-"
+    | Y -> "i/-i"
+    | Z -> "0/1"
+    | Comp -> "0/1"
+    | FromTuples(a, b) -> (state_to_str a) ^ "/" ^ (state_to_str b)
+    | FromAngle(a) -> "Angle(" ^ (Float.to_string a) ^ ")"
   ) in
   match c with 
   | Prep (qubit)          -> (
@@ -69,6 +84,9 @@ let cmd_to_string c = (
   )
   | ZCorrect (qubit, signals) -> (
     "Z(" ^ to_string qubit ^ ", [" ^ String.concat ", " (List.map to_string signals) ^ "])"
+  )
+  | ReadOut (qubit, basis) -> (
+    "ReadOut(" ^ to_string qubit ^ ", " ^ parse_basis basis ^ ")"
   )
 );;
 
@@ -116,6 +134,7 @@ let calc_qubit_num p = (
     | Measure (qubit, _, _, _)  -> insert qubit
     | XCorrect (qubit, _)       -> insert qubit
     | ZCorrect (qubit, _)       -> insert qubit
+    | ReadOut (qubit, _)        -> insert qubit
   ) in (
     List.iter helper p;
     H.length qubit_tbl
@@ -130,6 +149,8 @@ let calc_qubit_num p = (
   * `comp_space_tbl` contains all qubits, prepared or input; `in_tbl` contains all
   * input qubits; thus, an error has occured if a command acts on a qubit not in 
   * `input_or_prepared_tbl`.
+  *
+  * Also checks that the ReadOut bases are orthogonal.
   *
   * Returns nothing. May have side-effects on `err`.
   *)
@@ -156,12 +177,25 @@ let check_D2 (err, prep_tbl, in_tbl) c = (
       H.add prep_tbl q ()
     )
   ) in
-  let check q = (
+  let check_qubit q = (
     if not (H.mem prep_tbl q || H.mem in_tbl q) then (
       err := true;
       print_err (Some c, "Invalid use of an unprepared, non-input qubit " ^ to_string q)
     )
-  ) 
+  ) in
+  let check_basis b = (
+    match b with
+    | FromTuples(t1, t2) -> (
+      let (b1, b2) = Qlib.Bases.from_tuples t1 t2 in
+      let res = gemm ~transa:`C b1 b2 in
+      let res = (Mat.to_array res).(0).(0) in
+      if res.re != 0.0 || res.im != 0.0 then (
+        err := true;
+        print_err (Some c, "Invalid read-out basis vectors must be orthogonal.")
+      )
+    )
+    | _ -> ()
+  )
   in (
     match c with 
     | Prep (qubit)        -> insert_prepared qubit
@@ -172,10 +206,11 @@ let check_D2 (err, prep_tbl, in_tbl) c = (
     | InputList (qubits)  -> (
       List.iter (fun (q, _) -> (insert_input q)) qubits
     )
-    | Entangle (left, right)    -> (check left; check right)
-    | Measure (qubit, _, _, _)  -> check qubit
-    | XCorrect (qubit, _)       -> check qubit
-    | ZCorrect (qubit, _)       -> check qubit
+    | Entangle (left, right)    -> (check_qubit left; check_qubit right)
+    | Measure (qubit, _, _, _)  -> check_qubit qubit
+    | XCorrect (qubit, _)       -> check_qubit qubit
+    | ZCorrect (qubit, _)       -> check_qubit qubit
+    | ReadOut (qubit, basis)    -> (check_qubit qubit; check_basis basis)
   )
 );;
 
@@ -208,9 +243,10 @@ let check_D1 (err, meas_tbl) c = (
       List.iter (fun (q, _) -> (check q)) qubits
     )
     | Entangle (left, right)    -> (check left; check right)
-    | Measure (qubit, _, _, _)  -> (insert qubit)
-    | XCorrect (qubit, _)       -> (check qubit)
-    | ZCorrect (qubit, _)       -> (check qubit)
+    | Measure (qubit, _, _, _)  -> insert qubit
+    | XCorrect (qubit, _)       -> check qubit
+    | ZCorrect (qubit, _)       -> check qubit
+    | ReadOut (qubit, _)        -> check qubit
   )
 );;
 
@@ -445,7 +481,14 @@ let standardize prog = (
     | InputList (_) -> helper cmd
     | _ -> (prep_cmds, cmd::main_cmds)
   ) in
-  let prep_cmds, main_cmds = List.fold_right extract_prep prog ([], [])  in
+  let extract_readout cmd (readout_cmds, main_cmds) = (
+    let helper c = (c::readout_cmds, main_cmds) in
+    match cmd with
+    | ReadOut (_)      -> helper cmd
+    | _ -> (readout_cmds, cmd::main_cmds)
+  ) in
+  let prep_cmds, temp_cmds = List.fold_right extract_prep prog ([], [])  in
+  let readout_cmds, main_cmds = List.fold_right extract_readout temp_cmds ([], [])  in
 
   (* Performs rewriting rules on the main commands until unable to do so. *)
   let rec rewrite stable p = (
@@ -513,7 +556,7 @@ let standardize prog = (
   let main_cmds' = helper main_cmds in
 
   (* Returns the full program. *)
-  prep_cmds @ main_cmds'
+  prep_cmds @ main_cmds' @ readout_cmds
 );;
 
 (** Extracts the prep and input commands from the front of a

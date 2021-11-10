@@ -78,7 +78,12 @@ module Bases = struct
   let y_basis = (States.i_state, States.negi_state)
   let z_basis = (States.zero_state, States.one_state)
 
-  let from_alpha angle = (
+  let from_tuples (a1, a2) (b1, b2) = (
+    Mat.of_array [|[|a1|]; [|a2|]|],
+    Mat.of_array [|[|b1|]; [|b2|]|]
+  )
+
+  let from_angle angle = (
     let angle = Cenv.float_to_complex angle in
 
     let exp_const = Complex.exp (Cenv.(Complex.i * angle)) in

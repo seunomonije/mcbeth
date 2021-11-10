@@ -8,6 +8,14 @@ type input =
   | Minus
   | State of Complex.t * Complex.t
 
+type basis =
+  | X
+  | Y
+  | Z
+  | Comp
+  | FromTuples of (Complex.t * Complex.t) * (Complex.t * Complex.t)
+  | FromAngle of float
+
 type cmd =
   | Prep of qubit
   | Input of qubit * input
@@ -17,6 +25,7 @@ type cmd =
   | Measure of qubit * float * qubit list * qubit list
   | XCorrect of qubit * qubit list
   | ZCorrect of qubit * qubit list
+  | ReadOut of qubit * basis
 
 type prog = cmd list
 

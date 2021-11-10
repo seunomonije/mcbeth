@@ -12,14 +12,20 @@ let g2 q1 q2 next_qubit (a, b) = (
     | (1, 1) -> (0.0, 0.0)
     | _ -> (0.0, 0.0) (* assumed not to reach *)
   ) in parse_pattern [
-    CMD(PrepList([n; n+1;]));
+    CMD(PrepList([n; n+1; n+2; n+3]));
     
     CZ(n, n+1);
-    J(alpha, n, q1);
-    J(beta, n+1, q2);
+    J(alpha, n, n+2);
+    J(beta, n+1, n+3);
 
-    CZ(q1, q2);
+    CZ(n+2, n+3);
+    J(Float.pi, n+2, q1);
+    J(Float.pi, n+3, q2);
     
+    (*
+    CMD(ReadOut(q1, FromAngle(-.Float.pi)));
+    CMD(ReadOut(q2, FromAngle(-.Float.pi)))
+    *)
   ]
 );;
 

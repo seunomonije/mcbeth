@@ -32,11 +32,11 @@ let foobar() = (
     
   ) in (
     print_prog p; print_endline "";
-    let b = Some(Qlib.Bases.from_alpha Float.pi) in
+    let _ = Some(Qlib.Bases.from_angle Float.pi) in
     if well_formed p then print_endline "yay";
     let p' = standardize p in (
       print_prog p';
-      let qs, res = rand_eval ~shots:0 ~change_base:b p' in (
+      let qs, res = rand_eval ~shots:0 ~change_base:None p' in (
         print_qubits qs;
         Mat.print res
       )

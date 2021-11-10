@@ -110,6 +110,7 @@ let split_program dist cmds = (
     | Measure (qubit, _, _, _)  -> dist_helper cmd qubit
     | XCorrect (qubit, _)       -> dist_helper cmd qubit
     | ZCorrect (qubit, _)       -> dist_helper cmd qubit
+    | ReadOut (qubit, _)        -> dist_helper cmd qubit
   ) in
   let non_dist_cmds = List.fold_right split_helper cmds []  in
   (non_dist_cmds, dist_cmds_tbl)

@@ -23,7 +23,9 @@ module Bases : sig
   val y_basis : Mat.t * Mat.t
   val z_basis : Mat.t * Mat.t
 
-  val from_alpha : float -> Mat.t * Mat.t
+  val from_tuples : (Complex.t * Complex.t) -> (Complex.t * Complex.t) -> Mat.t * Mat.t
+
+  val from_angle : float -> Mat.t * Mat.t
 end
 
 module Gates : sig

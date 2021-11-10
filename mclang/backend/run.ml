@@ -125,7 +125,7 @@ let calc_measurement_states ?(mtbl_lock=None) mtbl angle signals_s signals_t = (
   let angle' = new_angle mtbl angle signals_s signals_t ~mtbl_lock:mtbl_lock in
 
   (* Calculates the projectors *)
-  Qlib.Bases.from_alpha angle'
+  Qlib.Bases.from_angle angle'
 );;
 
 let update_qtbl qtbl to_remove = (
@@ -195,6 +195,45 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
       if (List.length signals == 0) || (calc_signal mtbl signals ~mtbl_lock:mtbl_lock > 0) then (
         gemm (pauli_z qubit_num (getPos qubit)) statevec
       ) else statevec
+    )
+    | ReadOut (qubit, basis) -> (
+      let open Qlib.StateVector.Measurement in
+
+      (* Calculates the bases *)
+      let bases = (
+        match basis with
+        | X -> Qlib.Bases.x_basis
+        | Y -> Qlib.Bases.y_basis
+        | Z -> Qlib.Bases.z_basis
+        | Comp -> Qlib.Bases.z_basis
+        | FromTuples(a, b) -> Qlib.Bases.from_tuples a b
+        | FromAngle(a) -> Qlib.Bases.from_angle a
+      ) in
+      let _ = (
+        let (a, b) = bases in (
+          Mat.print a;
+          Mat.print b;
+          Mat.print statevec
+        )
+      ) in
+
+      (*let _ = Mat.print statevec in*)
+      let (statevec', outcome) = measure bases qubit_num (getPos qubit) statevec ~proj_down:false in (
+        (*print_endline (Int.to_string outcome);*)
+        
+        (match mtbl_lock with
+        | None -> ()
+        | Some(lock) -> Mutex.lock lock);
+        
+        Hashtbl.add mtbl qubit outcome; (* keeps track of the outcome *)
+
+        (match mtbl_lock with
+        | None -> ()
+        | Some(lock) -> Mutex.unlock lock);
+
+        Mat.print statevec'; 
+        statevec'
+      )
     )
     | prep -> handle_prep statevec prep
   ) in
@@ -337,6 +376,29 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
           apply_operator op densmat
         ) else densmat
       ) in exec_cmd res
+    )
+    | ReadOut (qubit, basis) -> (
+      let open Qlib.DensityMatrix.Measurement in
+
+      (* Calculates the measurement basis *)
+      let bases = (
+        match basis with
+        | X -> Qlib.Bases.x_basis
+        | Y -> Qlib.Bases.y_basis
+        | Z -> Qlib.Bases.z_basis
+        | Comp -> Qlib.Bases.z_basis
+        | FromTuples(a, b) -> Qlib.Bases.from_tuples a b
+        | FromAngle(a) -> Qlib.Bases.from_angle a
+      ) in
+      let (case_1, case_2) = measure bases qubit_num (getPos qubit) densmat ~proj_down:false in
+
+      let mtbl' = Hashtbl.copy mtbl in
+      let qtbl' = Hashtbl.copy qtbl in
+      let exec_cmd' x = simulate_cmd_exec mtbl' qtbl' x cmds in (
+        Hashtbl.add mtbl qubit 0;
+        Hashtbl.add mtbl' qubit 1;
+        Mat.add (exec_cmd case_1) (exec_cmd' case_2)
+      )
     )
     | prep -> (
       let res = handle_prep ~densmat:true densmat prep in
