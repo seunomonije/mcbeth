@@ -27,6 +27,13 @@ let foobar() = (
       Measure(2, -0.0, [], []);
       Measure(3, -0.0, [], []);
     ]
+    
+    [InputList([(0, Plus); (1, Plus)]); Entangle(0, 1);]
+    [InputList([(0, One); (1, Zero)]); PrepList([2; 3; 4; 5; 6; 7; 8; 9;]); 
+    
+    ] @ parse_pattern [
+      CP(Float.pi, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+    ] 
     *)
     [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
     
@@ -36,8 +43,9 @@ let foobar() = (
     if well_formed p then print_endline "yay";
     let p' = standardize p in (
       print_prog p';
-      let qs, res = rand_eval ~shots:0 ~change_base:None p' in (
+      let qs, readout, res = rand_eval ~shots:0 ~change_base:None p' in (
         print_qubits qs;
+        print_readout readout;
         Mat.print res
       )
     (*

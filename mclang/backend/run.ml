@@ -140,6 +140,17 @@ let update_qtbl qtbl to_remove = (
   Hashtbl.remove qtbl to_remove
 );;
 
+let get_readout mtbl = (
+  let readout = Hashtbl.create 0 in (
+    Hashtbl.iter (fun q o -> (
+      if q < 0 then (
+        Hashtbl.add readout (-q - 1) o
+      )
+    )) mtbl;
+    readout
+  )
+);;
+
 
 (**********************************************************************************
   *                                                                               *
@@ -218,14 +229,15 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
       ) in
 
       (*let _ = Mat.print statevec in*)
-      let (statevec', outcome) = measure bases qubit_num (getPos qubit) statevec ~proj_down:false in (
+      let (statevec', outcome) = measure bases qubit_num (getPos qubit) statevec in (
         (*print_endline (Int.to_string outcome);*)
+        update_qtbl qtbl qubit; (* updates qubit positions in vector mapping *)
         
         (match mtbl_lock with
         | None -> ()
         | Some(lock) -> Mutex.lock lock);
         
-        Hashtbl.add mtbl qubit outcome; (* keeps track of the outcome *)
+        Hashtbl.add mtbl (-qubit - 1) outcome; (* keeps track of the outcome *)
 
         (match mtbl_lock with
         | None -> ()
@@ -271,31 +283,32 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
         )
         | Some(qtbl) -> Hashtbl.copy qtbl
       ) in
-      let exec_cmd' = rand_eval_cmd_exec (Hashtbl.create qubit_num) qtbl in
+      let mtbl = Hashtbl.create qubit_num in
+      let exec_cmd' = rand_eval_cmd_exec mtbl qtbl in
       let statevec = List.fold_left (fun sv p -> (
         (*let _ = print_endline "HERE" in
         print_endline (cmd_to_string p);*)
         (*Mat.print sv;*)
         exec_cmd' sv p;
       )) init_statevec cmds in
-      (qtbl, Mat.cleanup statevec)
+      (qtbl, mtbl, Mat.cleanup statevec)
     ) in
     if shots == 0 then (
       (* Run weak simulation once; don't perform a read-out measurements. *)
-      let (qtbl, res) = run_once () in
+      let (qtbl, mtbl, res) = run_once () in
       let qubit_num = (Hashtbl.length qtbl) in
       match change_base with
-      | None -> (unpack_qtbl qtbl, res)
+      | None -> (unpack_qtbl qtbl, get_readout mtbl, res)
       | Some(new_base) -> (
-        (unpack_qtbl qtbl, Qlib.StateVector.change_base default_basis new_base res qubit_num)
+        (unpack_qtbl qtbl, get_readout mtbl, Qlib.StateVector.change_base default_basis new_base res qubit_num)
       )
     ) else (
       (* Run weak simulation `shots` times, performing a read-out measurement each time and averaging the results. *)
-      let rec helper n qtbl sum = (
+      let rec helper n qtbl mtbl sum = (
         if n > 0 then (
           (* Runs and applies read-out measurements to output qubits. *)
           let out_qubits = get_output_qubits cmds in
-          let (qtbl, res) = run_once () in
+          let (qtbl, mtbl, res) = run_once () in
           let qubit_num = (Hashtbl.length qtbl) in
           (*let _ = Hashtbl.iter (fun q pos -> (
             print_endline ((Int.to_string q) ^ " " ^ (Int.to_string pos))
@@ -307,14 +320,14 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
             | Some(new_base) -> Qlib.StateVector.change_base default_basis new_base res qubit_num
           ) in
           let res'' = Hashtbl.fold (fun q _ vec -> (let (r, _) = measure q vec in r)) out_qubits (res') in
-          helper (n-1) qtbl (Mat.add (Qlib.DensityMatrix.from_state_vector res'') sum)
-        ) else (qtbl, sum)
+          helper (n-1) qtbl mtbl (Mat.add (Qlib.DensityMatrix.from_state_vector res'') sum)
+        ) else (qtbl, mtbl, sum)
       ) in
-      let (qtbl, total) = helper shots (Hashtbl.create 0) (Mat.make vec_size vec_size Complex.zero) in
+      let (qtbl, mtbl, total) = helper shots (Hashtbl.create 0) (Hashtbl.create 0) (Mat.make vec_size vec_size Complex.zero) in
       let densemat = Mat.scal_mul (Cenv.(Complex.one / (c (Int.to_float shots) 0.))) total in
-      (unpack_qtbl qtbl, Mat.cleanup (Mat.from_col_vec (Mat.copy_diag densemat)))
+      (unpack_qtbl qtbl, get_readout mtbl, Mat.cleanup (Mat.from_col_vec (Mat.copy_diag densemat)))
     )
-  ) else ([], Mat.empty)
+  ) else ([], Hashtbl.create 0, Mat.empty)
 );;
 
 
@@ -390,13 +403,15 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
         | FromTuples(a, b) -> Qlib.Bases.from_tuples a b
         | FromAngle(a) -> Qlib.Bases.from_angle a
       ) in
-      let (case_1, case_2) = measure bases qubit_num (getPos qubit) densmat ~proj_down:false in
+      let (case_1, case_2) = measure bases qubit_num (getPos qubit) densmat in
+
+      let _ = update_qtbl qtbl qubit in
 
       let mtbl' = Hashtbl.copy mtbl in
       let qtbl' = Hashtbl.copy qtbl in
       let exec_cmd' x = simulate_cmd_exec mtbl' qtbl' x cmds in (
-        Hashtbl.add mtbl qubit 0;
-        Hashtbl.add mtbl' qubit 1;
+        Hashtbl.add mtbl (-qubit - 1) 0;
+        Hashtbl.add mtbl' (-qubit - 1) 1;
         Mat.add (exec_cmd case_1) (exec_cmd' case_2)
       )
     )
@@ -426,7 +441,8 @@ let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) = (
     let _ = (
       List.iter (fun q -> Hashtbl.add qtbl q q) (List.init qubit_num (fun x -> x))
     ) in
-    let exec_cmd' = simulate_cmd_exec (Hashtbl.create qubit_num) qtbl in
+    let mtbl = Hashtbl.create qubit_num in
+    let exec_cmd' = simulate_cmd_exec mtbl qtbl in
     let densemat = exec_cmd' init_densmat cmds in
     let qubit_num = (Hashtbl.length qtbl) in
     let densemat' = (
@@ -435,9 +451,9 @@ let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) = (
       | Some(new_base) -> Qlib.DensityMatrix.change_base Qlib.Bases.z_basis new_base densemat qubit_num
     ) in
     if just_prob then (
-      (unpack_qtbl qtbl, Mat.from_col_vec (Mat.copy_diag densemat'))
-    ) else (unpack_qtbl qtbl, densemat')
-  ) else ([], Mat.empty)
+      (unpack_qtbl qtbl, get_readout mtbl, Mat.from_col_vec (Mat.copy_diag densemat'))
+    ) else (unpack_qtbl qtbl, get_readout mtbl, densemat')
+  ) else ([], Hashtbl.create 0, Mat.empty)
 );;
 
 

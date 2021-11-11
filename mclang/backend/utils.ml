@@ -342,26 +342,27 @@ let rec parse_pattern pattern = (
       Entangle(q1, q2);
     ]
     | H (q1, q2) -> parse_pattern [J(0.0, q1, q2)]
-    | CX (q1, q2, q3, q4) -> parse_pattern [H(q2, q3); CZ(q1, q3); H(q3, q4)]
+    | CX (q1, q2, q3, q4) -> parse_pattern [H(q2, q3); CZ(q1, q3); H(q3, q4)] (* I = [1, 2]; O = [1, 4] *)
     | CNOT (q1, q2, q3, q4) -> parse_pattern [CX(q1, q2, q3, q4)]
-    | RX (angle, q1, q2, q3) -> parse_pattern [H(q1, q2); J(angle, q2, q3)]
-    | RZ (angle, q1, q2, q3) -> parse_pattern [J(angle, q1, q2); H(q2, q3)]
+    | RX (angle, q1, q2, q3) -> parse_pattern [H(q1, q2); J(angle, q2, q3)] (* I=[1]; O=[3] *)
+    | RZ (angle, q1, q2, q3) -> parse_pattern [J(angle, q1, q2); H(q2, q3)] (* I=[1]; O=[3] *)
     | P (angle, q1, q2, q3) -> parse_pattern [RZ(angle, q1, q2, q3)]
     | CP (angle, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) -> (
+      (* I = [1, 2]; O = [1, 10] *)
       let angle' = Float.div angle 2. in parse_pattern [
-        P(angle', q2, q3, q10);
-        CNOT(q1, q4, q5, q10);
-        P(-.angle', q6, q7, q10);
+        P(angle', q2, q3, q4);
+        CNOT(q1, q4, q5, q6);
+        P(-.angle', q6, q7, q8);
         CNOT(q1, q8, q9, q10)
       ]
     )
     | CP2 (angle, q1, q2, q3, q4, q5, qx) -> (
       let angle' = Float.div angle 2. in parse_pattern [
-        J(angle', q2, qx);
-        CZ(q1, qx);
-        H(q3, qx);
-        J(-.angle', q4, qx);
-        CZ(q1, qx);
+        J(angle', q2, q3);
+        CZ(q1, q3);
+        H(q3, q4);
+        J(-.angle', q4, q5);
+        CZ(q1, q5);
         H(q5, qx)
       ]
     )
@@ -623,5 +624,18 @@ let unpack_qtbl qtbl = (
 );;
 
 let print_qubits qs = (
+  if List.length qs == 0 then print_endline "No Qubits" else
   print_endline (String.concat ", " (List.map Int.to_string qs))
+);;
+
+let print_readout readout = (
+  if Hashtbl.length readout == 0 then print_endline "No Readout" else (
+    print_endline "Qubit\tOutcome";
+    let ls = List.of_seq (Hashtbl.to_seq readout) in
+    let compare (q1, _) (q2, _) = q1 - q2 in
+    let sorted = List.sort compare ls in
+    List.iter (fun (q, o) -> (
+      print_endline (Int.to_string q ^ "\t" ^ Int.to_string o)
+    )) sorted
+  )
 );;
