@@ -318,10 +318,13 @@ module StateVector = struct
     let collapse (statevec : Mat.t) (proj : Mat.t) = (
       let result = gemm proj statevec in
       (* Renormalizes the result. *)
+      let _ = Mat.print (Mat.of_array [|[|Complex.zero|]|]) in
+      let _ = Mat.print result in
       let mag = Mat.cleanup (gemm ~transa:`C result result) in
       let mag' = (Mat.to_array mag).(0).(0) in
       let one_over_mag = Cenv.(Complex.one / (Complex.sqrt mag')) in
-      Mat.cleanup (Mat.scal_mul one_over_mag result)
+      let x = Mat.cleanup (Mat.scal_mul one_over_mag result) in
+      let _ = Mat.print x in x
     )
 
     (**

@@ -145,7 +145,7 @@ let get_readout mtbl = (
     Hashtbl.iter (fun q o -> (
       if q < 0 then (
         Hashtbl.add readout (-q - 1) o
-      )
+      ) else Hashtbl.add readout q o
     )) mtbl;
     readout
   )

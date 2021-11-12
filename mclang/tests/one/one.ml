@@ -7,8 +7,8 @@ open Backend.Run;;
 open Lacamlext;;
 open Lacaml.Z;;
 
-open Algos.Create;;
 (*
+open Algos.Create;;
 *)
 
 let foobar() = (
@@ -34,8 +34,13 @@ let foobar() = (
     ] @ parse_pattern [
       CP(Float.pi, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     ] 
-    *)
     [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
+    *)
+    [InputList([(0, Plus); (3, Plus)]); PrepList([1; 2;4;5]);]
+    @ parse_pattern [
+      RZ(Float.div Float.pi 4., 0, 1, 2);
+      RZ(Float.div Float.pi 4., 2, 4, 5);
+    ]
     
   ) in (
     print_prog p; print_endline "";
