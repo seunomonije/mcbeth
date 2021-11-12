@@ -625,7 +625,7 @@ let unpack_qtbl qtbl = (
 
 let print_qubits qs = (
   if List.length qs == 0 then print_endline "No Qubits" else
-  print_endline ("Qubits in System: " ^ (String.concat ", " (List.map Int.to_string qs)))
+  print_endline ("In System: " ^ (String.concat ", " (List.map Int.to_string qs)))
 );;
 
 let print_readout readout = (

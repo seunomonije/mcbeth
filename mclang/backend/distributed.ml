@@ -247,7 +247,7 @@ let run_subsystem out out_lock mtbl mtbl_lock (qtbl, cmds) group = (
 
 );;
 
-let run_dist_approx dist_approx = (
+let run_dist_approx ?(print=false) dist_approx = (
   let out = Hashtbl.create (Hashtbl.length dist_approx) in
   let out_lock = Mutex.create () in
   let mtbl = Hashtbl.create 1 in
@@ -260,12 +260,15 @@ let run_dist_approx dist_approx = (
       threads := x::(!threads) 
     )) dist_approx;
     List.iter (fun h -> Thread.join h) !threads;
-    Hashtbl.iter (fun group (qtbl, statevec) -> (
-      print_endline ("\nNode " ^ (Int.to_string group) ^ ":");
-      let qs = unpack_qtbl qtbl in
-      print_qubits qs;
-      print_endline "";
-      Mat.print statevec
-    )) out
+    if print then (
+      Hashtbl.iter (fun group (qtbl, statevec) -> (
+        print_endline ("\nNode " ^ (Int.to_string group) ^ ":");
+        let qs = unpack_qtbl qtbl in
+        print_qubits qs;
+        print_endline "";
+        Mat.print statevec
+      )) out
+    );
+    (mtbl, out)
   )
 );;
