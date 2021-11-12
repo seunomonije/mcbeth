@@ -1,15 +1,17 @@
 
-open Backend.Types;;
 open Backend.Utils;;
 
 open Backend.Run;;
+(*
+open Backend.Types;;
+open Algos.Create;;
 
+*)
 open Lacamlext;;
 open Lacaml.Z;;
 
-open Algos.Create;;
-(*
-*)
+
+open Programs;;
 
 let foobar() = (
   let p = (
@@ -34,11 +36,12 @@ let foobar() = (
     ] @ parse_pattern [
       CP(Float.pi, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     ] 
-    *)
     [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
+    *)
+    parallel 2 3
     
   ) in (
-    print_prog p; print_endline "";
+    print_endline "";
     let _ = Some(Qlib.Bases.from_angle Float.pi) in
     if well_formed p then print_endline "yay";
     let p' = standardize p in (

@@ -2,5 +2,5 @@
 
 (tests
   (names two)
-  (libraries mcl linalg)
+  (libraries mcl linalg programs)
 )

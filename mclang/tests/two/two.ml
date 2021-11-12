@@ -2,13 +2,25 @@
 (*
 open Lacaml.D;;
 open Backend.Utils;;
+open Algos.Create;;
+open Backend.Types;;
 *)
 
 open Backend.Distributed;;
-open Backend.Types;;
 
-open Algos.Create;;
+open Programs;;
 
+let foobar() = (
+  let dp = distributed 2 3 in
+  let da = distributed_approx 2 3 in (
+    print_dist_prog dp;
+    print_endline "--------";
+    print_dist_approx da;
+    print_endline "--------";
+    run_dist_approx da
+  )
+);;
+(*
 let foobar() = (
   let p = (
     [Input(0, One); Input(1, Zero); Prep(2)] @ (teleport 0 1 2);
@@ -24,7 +36,7 @@ let foobar() = (
     run_dist_approx da
   )
 );;
-
+*)
 (*
 let foobar() = (
   let k = 15 in

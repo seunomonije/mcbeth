@@ -1,0 +1,6 @@
+;; Tests for functions in the backend
+
+(tests
+  (names runtime)
+  (libraries mcl linalg programs)
+)

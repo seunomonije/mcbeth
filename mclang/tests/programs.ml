@@ -1,6 +1,7 @@
 
 open Backend.Types;;
 open Backend.Utils;;
+open Backend.Distributed;;
 
 open Algos.Create;;
 
@@ -41,3 +42,37 @@ let programs = [
   [InputList([(0, One); (1, One);])] @ (qft [0; 1] 2);
   
 ];;
+
+(**
+  * Generates a random qubit by performing n random rotations,
+  * uses n+1 qubits
+  *)
+let linear ?(offset=0) n = (
+  Random.self_init();
+  let next () = Random.float (Float.mul 2. Float.pi) in
+  let prep = PrepList(List.init (n+1) (fun x -> x + offset)) in
+  let cmds = List.fold_left (fun ls i -> (
+    ls @ (parse_pattern [J(next(), i, i+1)])
+  )) [] (List.init n (fun x -> x + offset)) in
+  standardize (prep::cmds)
+);;
+
+let parallel ?(entangle=false) n m = (
+  let _ = entangle in
+  let cmds = List.fold_left (fun ls o -> (
+    ls @ (linear n ~offset:o)
+  )) [] (List.init m (fun x -> x*(n+1))) in
+  standardize cmds
+);;
+
+let distributed ?(entangle=false) n m = (
+  let prog = parallel n m ~entangle:entangle in
+  let dist = build_dist_map (List.fold_left (fun ls o -> (
+    (List.init (n+1) (fun x -> x + o)) :: ls
+  )) [] (List.init m (fun x -> x*(n+1)))) in
+  build_dist_prog dist prog
+);;
+
+let distributed_approx ?(entangle=false) n m = (
+  build_dist_approx (distributed n m ~entangle:entangle)
+);;
