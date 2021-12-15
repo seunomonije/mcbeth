@@ -1,4 +1,3 @@
-(Section 3 outdated.)
 
 # Project Documentation
 
