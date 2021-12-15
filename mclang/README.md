@@ -1,3 +1,5 @@
+(Section 3 outdated.)
+
 # Project Documentation
 
 ## Table of Contents
