@@ -6,45 +6,59 @@ open Lacamlext;;
 open Lacaml.Z;;
 
 (* General Constants and Utils *)
-let c0 = Cenv.c 0. 0.;;
-let c1 = Cenv.c 1. 0.;;
-let ci = Cenv.c 0. 1.;;
+let c0 = Complex.zero;;
+let c1 = Complex.one;;
+let ci = Complex.i;;
 
 let r2o2 = Float.div 1.0 (sqrt 2.);;
+let cr2o2 = Cenv.c r2o2 0.;;
 
 let log2 x = Float.div (Float.log10 x) (Float.log10 2.);;
 
 module States = struct
 
   let zero_state_vec = (
-    let open Cenv in
     Vec.of_array [|
-      c 1. 0.;
-      c 0. 0.;
+      c1;
+      c0;
     |]
   )
 
   let one_state_vec = (
-    let open Cenv in 
     Vec.of_array [|
-      c 0. 0.;
-      c 1. 0.;
+      c0;
+      c1;
     |]
   )
 
   let plus_state_vec = (
-    let open Cenv in 
     Vec.of_array [|
-      c r2o2 0.;
-      c r2o2 0.;
+      cr2o2;
+      cr2o2;
     |]
   )
 
   let minus_state_vec = (
-    let open Cenv in 
+    let open Cenv in
     Vec.of_array [|
-      c r2o2 0.;
-      c (-.r2o2) 0.;
+      cr2o2;
+      -cr2o2;
+    |]
+  )
+
+  let i_state_vec = (
+    let open Cenv in
+    Vec.of_array [|
+      cr2o2;
+      cr2o2 * ci;
+    |]
+  )
+  
+  let negi_state_vec = (
+    let open Cenv in
+    Vec.of_array [|
+      cr2o2;
+      -(cr2o2 * ci);
     |]
   )
 
@@ -52,14 +66,35 @@ module States = struct
   let one_state = Mat.from_col_vec one_state_vec
   let plus_state = Mat.from_col_vec plus_state_vec
   let minus_state = Mat.from_col_vec minus_state_vec
+  let i_state = Mat.from_col_vec i_state_vec
+  let negi_state = Mat.from_col_vec negi_state_vec
 
 end;;
 
 
 module Bases = struct
   
-  let x_bases = (States.plus_state, States.minus_state)
-  let z_bases = (States.zero_state, States.one_state)
+  let x_basis = (States.plus_state, States.minus_state)
+  let y_basis = (States.i_state, States.negi_state)
+  let z_basis = (States.zero_state, States.one_state)
+
+  let from_tuples (a1, a2) (b1, b2) = (
+    Mat.of_array [|[|a1|]; [|a2|]|],
+    Mat.of_array [|[|b1|]; [|b2|]|]
+  )
+
+  let from_angle angle = (
+    let angle = Cenv.float_to_complex angle in
+
+    let exp_const = Complex.exp (Cenv.(Complex.i * angle)) in
+    let r202 = Cenv.float_to_complex (Float.div 1.0 (sqrt 2.)) in
+    let zero_state = States.zero_state in
+    let one_state = States.one_state in
+    let one_state_e = Mat.scal_mul exp_const one_state in
+    let plus_state = Mat.scal_mul r202 (Mat.add zero_state one_state_e) in
+    let minus_state = Mat.scal_mul r202 (Mat.sub zero_state one_state_e) in
+    (Mat.cleanup plus_state, Mat.cleanup minus_state)
+  )
 
 end;;
 
@@ -221,18 +256,33 @@ module DensityMatrix = struct
 
   module Measurement = struct
 
-    let measure ?(normalize=true) densmat op = (
+    let collapse ?(normalize=true) densmat op = (
       let result = apply_operator op densmat in
       if normalize then (
+        (* Normalizes the result *)
         let trace = Mat.trace result in
-        let one_over_trace = Cenv.((c 1. 0.) / trace) in
+        let one_over_trace = Cenv.(Complex.one / trace) in
         Mat.scal_mul one_over_trace result
       ) else result
     )
 
-    let measure_single ?(normalize=true) n q densmat op = (
+    let collapse_single ?(proj_down=true) ?(normalize=true) n q densmat op = (
+      let op = if proj_down then (
+        Mat.cleanup (gemm ~transa:`C op (Mat.identity 2))
+      ) else op in
       let op' = Gates.gate op n q in
-      measure ~normalize:normalize densmat op'
+      collapse ~normalize:normalize densmat op'
+    )
+
+    let measure ?(proj_down=true) (base_a, base_b) n q densmat = (
+      let base_a_op = if proj_down then base_a else from_state_vector base_a in
+      let base_b_op = if proj_down then base_b else from_state_vector base_b in
+
+      (* Creates the new measured density matrix *)
+      let collapse_single' = collapse_single n q densmat ~normalize:false ~proj_down:proj_down in
+      let base_a_measurement = collapse_single' base_a_op in
+      let base_b_measurement = collapse_single' base_b_op in
+      (base_a_measurement, base_b_measurement)
     )
 
   end
@@ -265,20 +315,26 @@ module StateVector = struct
     (**
       * Collapses a state vector `statevec` using the projector `proj`
       *)
-    let measure (statevec : Mat.t) (proj : Mat.t) = (
+    let collapse (statevec : Mat.t) (proj : Mat.t) = (
       let result = gemm proj statevec in
-      let mag = Vec.mag (Mat.as_vec result) in
-      let one_over_mag = Cenv.((c 1. 0.) / mag) in
-      Mat.scal_mul one_over_mag result
+      (* Renormalizes the result. *)
+      let mag = Mat.cleanup (gemm ~transa:`C result result) in
+      let mag' = (Mat.to_array mag).(0).(0) in
+      let one_over_mag = Cenv.(Complex.one / (Complex.sqrt mag')) in
+      Mat.cleanup (Mat.scal_mul one_over_mag result)
     )
 
     (**
       * Collapses a single qubit `q` of an `n` qubit system represented
       * as a state vector `statevec` using the single qubit projector `proj`.
       *)
-    let measure_single n q (statevec : Mat.t) (proj : Mat.t) = (
+    let collapse_single ?(proj_down=true) n q (statevec : Mat.t) (proj : Mat.t) = (
+      let proj = if proj_down then (
+        Mat.cleanup (gemm ~transa:`C proj (Mat.identity 2))
+      ) else proj in
       let proj' = Gates.gate proj n q in
-      measure statevec proj'
+      (*let _ = Mat.print proj' in*)
+      collapse statevec proj'
     )
 
     (**
@@ -300,9 +356,34 @@ module StateVector = struct
       * `n` qubit system represented as a statevector `statevec` to the state
       * associated with the single qubit projector `proj`.
       *)
-    let prob_single n q (statevec : Mat.t) (proj : Mat.t) = (
+    let prob_single ?(proj_down=true) n q (statevec : Mat.t) (proj : Mat.t) = (
+      let proj = if proj_down then project proj else proj in
       let proj' = Gates.gate proj n q in
       prob statevec proj'
+    )
+
+    let measure ?(proj_down=true) (base_a, base_b) n q statevec = (
+      (* Calculates the probabilities given the projectors and statevector *)
+      let base_a_projector = if proj_down then base_a else project base_a in
+      let base_a_probability = prob_single n q statevec base_a_projector  ~proj_down:proj_down in
+      (* Using the Random module, determines which state to collapse to *)
+      let rand_val = Random.float 1. in
+      let outcome = ref 0 in
+      let projector = (
+        if rand_val <= base_a_probability then (
+          outcome := 0; (* for keeping track of the outcome *)
+          base_a_projector
+        ) else (
+          outcome := 1;
+          if proj_down then (
+            base_b
+          ) else project base_b (* base_b_projector *)
+        )
+      ) in
+      let projector = Mat.cleanup projector in
+      let statevec' = collapse_single n q statevec projector ~proj_down:proj_down in
+      (*let _ = Mat.print statevec' in*)
+      (statevec', !outcome)
     )
 
   end

@@ -2,54 +2,78 @@
 open Backend.Types;;
 open Backend.Utils;;
 
-(*
 open Backend.Run;;
 
 open Lacamlext;;
 open Lacaml.Z;;
 
-open Qlib.StateVector;;
-open Qlib.States;;
+open Algos.Create;;
+(*
 *)
 
 let foobar() = (
   let p = (
-    [Input(0, Plus); PrepList([1; 2])] @
-    parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];
+    (*
+    parse_pattern 
+    [CMD(InputList([(0, Plus); (1, One)])); CMD(PrepList([2; 3; 4; 5]));
+                    CP2(Float.div Float.pi 2., 1, 2, 3, 4, 5, 0);]
+    [InputList([(0, One); (1, One);])] @ (qft [0; 1] 2);
+    [
+      InputList([(0, Plus); (1, Plus)]);
+      PrepList([2; 3]);
+      Entangle(0, 1);
+      Entangle(2, 0);
+      Entangle(3, 1);
+      Measure(2, -0.0, [], []);
+      Measure(3, -0.0, [], []);
+    ]
+    
+    [InputList([(0, Plus); (1, Plus)]); Entangle(0, 1);]
+    [InputList([(0, One); (1, Zero)]); PrepList([2; 3; 4; 5; 6; 7; 8; 9;]); 
+    
+    ] @ parse_pattern [
+      CP(Float.pi, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+    ] 
+    *)
+    [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
+    
   ) in (
-    let _ = print_prog p in
-    let _ = print_endline "-----" in
-    let p' = standardize p in print_prog p'
+    print_prog p; print_endline "";
+    let _ = Some(Qlib.Bases.from_angle Float.pi) in
+    if well_formed p then print_endline "yay";
+    let p' = standardize p in (
+      print_prog p';
+      let qs, readout, res = rand_eval ~shots:0 ~change_base:None p' in (
+        print_qubits qs;
+        print_readout readout;
+        Mat.print res
+      )
+    (*
+    *)
+    )
   )
-);;
+)
 
 (*
 let foobar() = (
-  print_endline("-- teleport test --");
+  let b = Some(Qlib.Bases.y_basis) in
   let p = (
-    [Input(0, Plus); PrepList([1; 2])] @
-    parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];
+    (*[Input(0, Zero); PrepList([1; 2])] @
+    parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];*)
+    (*[Input(0, Zero); Prep(1); Measure(0, 0.0, [], []); ZCorrect(1, [])]*)
+    (*[PrepList([0; 1]); Entangle(0, 1);  Measure(0, 0.0, [], []); XCorrect(1, [0])]*)
+    parse_pattern [CMD(InputList([(0, Minus);])); CMD(PrepList([1; 2]));
+                    P(Float.div Float.pi 2., 1, 2, 0);]
   ) in (
-    let _ = print_prog p in
-    let qubit_num = calc_qubit_num p in
-    let change = true in
-    let r = rand_eval p in (
-      if change then (
-        let old_base = (plus_state, minus_state) in
-        let new_base = (zero_state, one_state) in
-        let new_mat = change_base old_base new_base r qubit_num in (
-          Mat.print new_mat;
-          extract_info ~print:true new_mat
-        )
-      ) else (
-        Mat.print r;
-        extract_info ~print:true r
-      )
+    let p' = standardize p in (
+      print_prog (expand_and_order_prep p');
+      Mat.print (rand_eval ~shots:10 ~change_base:b p');
+      print_endline "huh";
+      Mat.print (simulate ~just_prob:true ~change_base:b p');
     )
   )
 );;
 *)
-
 let _ = foobar();;
 
 

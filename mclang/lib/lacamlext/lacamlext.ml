@@ -44,10 +44,17 @@ module Lacaml = struct
         * Calculates the magnitude of a vector
         *)
       let mag v = (
+        let zero_out i = (
+            if (Float.abs i) < 10e-9 then 0. else i
+        ) in
         let zero = Complex.zero in
         let two = { Complex.re = 2.; Complex.im = 0.; } in
-        let temp = (Vec.fold (fun sum e -> Complex.add sum (if e = zero then zero else (Complex.pow e two))) zero v) in
-        Complex.sqrt temp
+        let temp = (Vec.fold (fun sum e -> Complex.add sum (if e == zero then zero else (Complex.pow e two))) zero v) in
+        let temp = Complex.sqrt temp in
+        let { Complex.re = re; im = im; } = temp in
+        let re = zero_out re in
+        let im = zero_out im in
+        { Complex.re = re; im = im; }
       )
 
     end
@@ -62,7 +69,7 @@ module Lacaml = struct
       let cleanup m = (
         let helper e = (
           let zero_out i = (
-            if (Float.abs i) < 10e-17 then 0. else i
+            if (Float.abs i) < 10e-15 then 0. else i
           ) in
           let { Complex.re = re; im = im; } = e in
           let re = zero_out re in
@@ -83,17 +90,21 @@ module Lacaml = struct
         * Calculates the tensor product of two matrices
         *)
       let tensor_prod m1 m2 = (
-        let m1_arr = Array.concat (Array.to_list (to_array m1)) in
-        let m2_arr = Array.concat (Array.to_list (to_array m2)) in
         let m1_rows = dim1 m1 in
         let m1_cols = dim2 m1 in
         let m2_rows = dim1 m2 in
         let m2_cols = dim2 m2 in
+        let m1_arr = Array.concat (Array.to_list (to_array m1)) in
+        let m2_arr = Array.concat (Array.to_list (to_array m2)) in
         let rows = m1_rows * m2_rows in
         let cols = m1_cols * m2_cols in
         let calc_m1_index = fun r c -> ((c-1) / m2_cols) + m1_cols * ((r-1) / m2_rows) in
-        let calc_m2_index = fun r c -> ((c-1) mod m2_cols) + m2_rows * ((r-1) mod m2_rows) in
-        init_rows rows cols (fun row col -> Complex.mul (m1_arr.(calc_m1_index row col)) (m2_arr.(calc_m2_index row col)))
+        let calc_m2_index = fun r c -> ((c-1) mod m2_cols) + m2_cols * ((r-1) mod m2_rows) in
+        init_rows rows cols (
+          fun row col -> (
+            Complex.mul (m1_arr.(calc_m1_index row col)) (m2_arr.(calc_m2_index row col))
+          )
+        )
         (* init_rows rows cols (fun row col -> { Complex.re = (Int.to_float (calc_m1_index row col)); im = (Int.to_float (calc_m2_index row col)); }) (* for debugging *) *)
       );;
 
