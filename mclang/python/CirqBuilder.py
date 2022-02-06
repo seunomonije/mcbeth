@@ -273,7 +273,7 @@ def main():
   valid_circuit.append_final_measurements()
   
   print(valid_circuit.to_circuit())
-  #print(valid_circuit.to_qasm())
+  print(valid_circuit.to_qasm())
 
 
   simulator = cirq.Simulator()
