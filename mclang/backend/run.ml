@@ -267,6 +267,7 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
 let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
   Random.self_init();
   let default_basis = Qlib.Bases.z_basis in
+  let cmds = standardize cmds in
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
     let qubit_num = calc_qubit_num cmds in
@@ -433,6 +434,7 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
   * The entire density matrix is returned otherwise.
   *)
 let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) = (
+  let cmds = standardize cmds in
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
     let qubit_num = calc_qubit_num cmds in
