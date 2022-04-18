@@ -1,4 +1,2 @@
-
-
 print_endline("hi");;
 

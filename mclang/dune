@@ -18,6 +18,15 @@
 )
 
 (library
+  (name pythonreqs)
+  (modules)
+  (libraries
+    (re_export pyml)
+    (re_export pythonlib)
+  )
+)
+
+(library
   (name mcl)
   (modules)
   (libraries 
