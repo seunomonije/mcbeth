@@ -43,7 +43,7 @@ let foobar() = (
     if well_formed p then print_endline "yay";
     let p' = standardize p in (
       print_prog p';
-      let qs, readout, res = rand_eval ~shots:0 ~change_base:None p' in (
+      let qs, readout, res = run (Weak(0, None, None)) p' in (
         print_qubits qs;
         print_readout readout;
         Mat.print res

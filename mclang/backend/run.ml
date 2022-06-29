@@ -459,3 +459,16 @@ let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) = (
 );;
 
 
+type sim_type = 
+  | Weak of int * (Mat.t * Mat.t) option * qtbl option
+  | Strong of bool * (Mat.t * Mat.t) option
+
+let run simulation_type cmds = (
+  match simulation_type with
+  | Weak(a, b, c) -> (
+    rand_eval ~shots:a ~change_base:b ~qtbl:c cmds
+  )
+  | Strong(a, b) -> (
+    simulate ~just_prob:a ~change_base:b cmds
+  )
+)
