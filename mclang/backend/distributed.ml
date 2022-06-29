@@ -102,9 +102,9 @@ let split_program dist cmds = (
     ) in
     match cmd with
     | Prep (_)      -> nondist_helper cmd
-    | Input (_)     -> nondist_helper cmd
+    | CInput(_)     -> nondist_helper cmd
     | PrepList (_)  -> nondist_helper cmd
-    | InputList (_) -> nondist_helper cmd
+    | CInputList(_) -> nondist_helper cmd
     | Entangle (_)  -> nondist_helper cmd
 
     | Measure (qubit, _, _, _)  -> dist_helper cmd qubit
@@ -152,7 +152,7 @@ let approx_subsystems (non_dist_cmds, dist_struct) = (
         let (qtbl, prog) = Hashtbl.find dist_struct' group in
         Hashtbl.replace dist_struct' group (qtbl, cmd::prog)
       )
-      | Input (q, _) -> (
+      | CInput(q, _) -> (
         let group = getGroup q in
         let (qtbl, prog) = Hashtbl.find dist_struct' group in
         Hashtbl.replace dist_struct' group (qtbl, cmd::prog)

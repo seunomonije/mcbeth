@@ -15,11 +15,11 @@ let foobar() = (
   let p = (
     (*
     parse_pattern 
-    [CMD(InputList([(0, Plus); (1, One)])); CMD(PrepList([2; 3; 4; 5]));
+    [CMD(CInputList([(0, Plus); (1, One)])); CMD(PrepList([2; 3; 4; 5]));
                     CP2(Float.div Float.pi 2., 1, 2, 3, 4, 5, 0);]
-    [InputList([(0, One); (1, One);])] @ (qft [0; 1] 2);
+    [CInputList([(0, One); (1, One);])] @ (qft [0; 1] 2);
     [
-      InputList([(0, Plus); (1, Plus)]);
+      CInputList([(0, Plus); (1, Plus)]);
       PrepList([2; 3]);
       Entangle(0, 1);
       Entangle(2, 0);
@@ -28,14 +28,14 @@ let foobar() = (
       Measure(3, -0.0, [], []);
     ]
     
-    [InputList([(0, Plus); (1, Plus)]); Entangle(0, 1);]
-    [InputList([(0, One); (1, Zero)]); PrepList([2; 3; 4; 5; 6; 7; 8; 9;]); 
+    [CInputList([(0, Plus); (1, Plus)]); Entangle(0, 1);]
+    [CInputList([(0, One); (1, Zero)]); PrepList([2; 3; 4; 5; 6; 7; 8; 9;]); 
     
     ] @ parse_pattern [
       CP(Float.pi, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     ] 
     *)
-    [InputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
+    [CInputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
     
   ) in (
     print_prog p; print_endline "";
@@ -58,11 +58,11 @@ let foobar() = (
 let foobar() = (
   let b = Some(Qlib.Bases.y_basis) in
   let p = (
-    (*[Input(0, Zero); PrepList([1; 2])] @
+    (*[CInput(0, Zero); PrepList([1; 2])] @
     parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];*)
-    (*[Input(0, Zero); Prep(1); Measure(0, 0.0, [], []); ZCorrect(1, [])]*)
+    (*[CInput(0, Zero); Prep(1); Measure(0, 0.0, [], []); ZCorrect(1, [])]*)
     (*[PrepList([0; 1]); Entangle(0, 1);  Measure(0, 0.0, [], []); XCorrect(1, [0])]*)
-    parse_pattern [CMD(InputList([(0, Minus);])); CMD(PrepList([1; 2]));
+    parse_pattern [CMD(CInputList([(0, Minus);])); CMD(PrepList([1; 2]));
                     P(Float.div Float.pi 2., 1, 2, 0);]
   ) in (
     let p' = standardize p in (

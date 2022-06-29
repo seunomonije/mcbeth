@@ -4,7 +4,7 @@ open Backend.Run;;
 
 let foobar() = (
   print_endline("-- foobar test --");
-  let p = ([Input(0, Minus); Input(1, Plus);
+  let p = ([CInput(0, Minus); CInput(1, Plus);
             (*Entangle(0, 1); Measure(0, 0.0, [], [])*)]) 
   in (
     let r_res = rand_eval ~shots:1 p in

@@ -59,16 +59,16 @@ let cmd_to_string c = (
   | Prep (qubit)          -> (
     "Prep(" ^ (to_string qubit) ^ ")"
   )
-  | Input (qubit, input)  -> (
+  | CInput(qubit, input)  -> (
     let value = parse_input input in
-    "Input(" ^ (to_string qubit) ^ ", " ^ value ^ ")"
+    "CInput(" ^ (to_string qubit) ^ ", " ^ value ^ ")"
   )
   | PrepList (qubits)     -> (
     "PrepList(" ^ (String.concat ", " (List.map to_string qubits)) ^ ")"
   )
-  | InputList (args)    -> (
+  | CInputList(args)    -> (
     let helper (q, i) = "(" ^ (to_string q) ^ ", " ^ (parse_input i) ^ ")" in
-    "InputList(" ^ (String.concat ", " (List.map helper args)) ^ ")"
+    "CInputList(" ^ (String.concat ", " (List.map helper args)) ^ ")"
   )
   | Entangle (left, right)  -> (
     "E(" ^ to_string left ^ ", " ^ to_string right ^ ")"
@@ -123,12 +123,12 @@ let calc_qubit_num p = (
   let rec helper c = (
     match c with 
     | Prep (qubit)        -> insert qubit
-    | Input (qubit, _)    -> insert qubit
+    | CInput(qubit, _)    -> insert qubit
     | PrepList (qubits)   -> (
       List.iter (fun x -> (helper (Prep(x)))) qubits
     )
-    | InputList (qubits)  -> (
-      List.iter (fun (q, i) -> (helper (Input(q, i)))) qubits
+    | CInputList(qubits)  -> (
+      List.iter (fun (q, i) -> (helper (CInput(q, i)))) qubits
     )
     | Entangle (left, right)    -> (insert left; insert right)
     | Measure (qubit, _, _, _)  -> insert qubit
@@ -199,11 +199,11 @@ let check_D2 (err, prep_tbl, in_tbl) c = (
   in (
     match c with 
     | Prep (qubit)        -> insert_prepared qubit
-    | Input (qubit, _)    -> insert_input qubit
+    | CInput(qubit, _)    -> insert_input qubit
     | PrepList (qubits)   -> (
       List.iter (fun x -> (insert_prepared x)) qubits
     )
-    | InputList (qubits)  -> (
+    | CInputList(qubits)  -> (
       List.iter (fun (q, _) -> (insert_input q)) qubits
     )
     | Entangle (left, right)    -> (check_qubit left; check_qubit right)
@@ -235,11 +235,11 @@ let check_D1 (err, meas_tbl) c = (
   in (
     match c with 
     | Prep (qubit)        -> check qubit
-    | Input (qubit, _)    -> check qubit
+    | CInput(qubit, _)    -> check qubit
     | PrepList (qubits)   -> (
       List.iter (fun x -> (check x)) qubits
     )
-    | InputList (qubits)  -> (
+    | CInputList(qubits)  -> (
       List.iter (fun (q, _) -> (check q)) qubits
     )
     | Entangle (left, right)    -> (check left; check right)
@@ -438,11 +438,11 @@ let get_output_qubits cmds = (
   let out_helper c = (
     match c with
     | Prep (qubit)        -> insert_out qubit
-    | Input (qubit, _)    -> insert_out qubit
+    | CInput(qubit, _)    -> insert_out qubit
     | PrepList (qubits)   -> (
       List.iter (fun q -> insert_out q) qubits
     )
-    | InputList (qubits)  -> (
+    | CInputList(qubits)  -> (
       List.iter (fun (q, _) -> insert_out q) qubits
     )
     | _ -> ()
@@ -477,9 +477,9 @@ let standardize prog = (
     let helper c = (c::prep_cmds, main_cmds) in
     match cmd with
     | Prep (_)      -> helper cmd
-    | Input (_)     -> helper cmd
+    | CInput(_)     -> helper cmd
     | PrepList (_)  -> helper cmd
-    | InputList (_) -> helper cmd
+    | CInputList(_) -> helper cmd
     | _ -> (prep_cmds, cmd::main_cmds)
   ) in
   let extract_readout cmd (readout_cmds, main_cmds) = (
@@ -574,9 +574,9 @@ let expand_and_order_prep prog = (
     | c::cmds' -> (
       match c with
       | Prep (_)      -> helper c cmds'
-      | Input (_)     -> helper c cmds'
+      | CInput(_)     -> helper c cmds'
       | PrepList (_)  -> helper c cmds'
-      | InputList (_) -> helper c cmds'
+      | CInputList(_) -> helper c cmds'
       | _ -> ([], c::cmds')
     )
     | [] -> ([], [])
@@ -586,9 +586,9 @@ let expand_and_order_prep prog = (
   let expand_prep c cmds = (
     match c with
       | Prep (_)        -> c::cmds 
-      | Input (_)       -> c::cmds
+      | CInput(_)       -> c::cmds
       | PrepList (qs)   -> (List.map (fun q -> Prep(q)) qs) @ cmds
-      | InputList (qs)  -> (List.map (fun (q, i) -> Input(q, i)) qs) @ cmds 
+      | CInputList(qs)  -> (List.map (fun (q, i) -> CInput(q, i)) qs) @ cmds 
       | _ -> cmds
   ) in
   let expanded_prep_cmds = List.fold_right expand_prep prep_cmds [] in
@@ -598,7 +598,7 @@ let expand_and_order_prep prog = (
       let get_q c = (
         match c with
         | Prep(q)     -> q
-        | Input(q, _) -> q
+        | CInput(q, _) -> q
         | _ -> -1
       ) in
       if (get_q x) < (get_q y) then -1 else 1

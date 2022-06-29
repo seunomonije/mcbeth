@@ -10,7 +10,7 @@ open Qlib.Bases;;
 
 let foobar() = (
   print_endline("-- foobar test --");
-  let p = ([Input(0, Minus); Input(1, Plus);
+  let p = ([CInput(0, Minus); CInput(1, Plus);
             (*Entangle(0, 1); Measure(0, 0.0, [], [])*)]) 
   in (
     let foo = true in
@@ -30,7 +30,7 @@ let () = foobar();;
 let foobar() = (
   print_endline("-- teleport test --");
   let p = (
-    [Input(0, Plus); PrepList([1; 2])] @
+    [CInput(0, Plus); PrepList([1; 2])] @
     parse_pattern [J(0.0, 0, 1); J(0.0, 1, 2)];
   ) in (
     let _ = print_prog p in

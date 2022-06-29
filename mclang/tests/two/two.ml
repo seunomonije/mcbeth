@@ -11,7 +11,7 @@ open Algos.Create;;
 
 let foobar() = (
   let p = (
-    [Input(0, One); Input(1, Zero); Prep(2)] @ (teleport 0 1 2);
+    [CInput(0, One); CInput(1, Zero); Prep(2)] @ (teleport 0 1 2);
   ) in
   let d = build_dist_map [
     [0;2];

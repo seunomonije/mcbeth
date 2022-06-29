@@ -49,7 +49,7 @@ let handle_prep ?(densmat=false) matrix prep = (
   | Prep (_) -> (
     insert_qubit matrix Plus 
   )
-  | Input (_, input) -> (
+  | CInput(_, input) -> (
     insert_qubit matrix input
   )
   | _ -> matrix

@@ -8,21 +8,21 @@ print_prog p;;
 print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;
 print_endline("---------");;
 
-let p = ([Input(0, Plus); Input(1, One); PrepList([2; 3]);
+let p = ([CInput(0, Plus); CInput(1, One); PrepList([2; 3]);
         Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [])]);;
 
 print_prog p;;
 print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;
 print_endline("---------");;
 
-let p = ([Input(0, Plus); Input(1, Plus); PrepList([2; 3]);
+let p = ([CInput(0, Plus); CInput(1, Plus); PrepList([2; 3]);
         Entangle(1, 0); Measure(1, 0.0, [], []); XCorrect(0, [1])]);;
 
 print_prog p;;
 print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;
 print_endline("---------");;
 
-let p = ([Input(0, Plus)]);;
+let p = ([CInput(0, Plus)]);;
 
 print_prog p;;
 print_endline(Int.to_string (if well_formed p then calc_qubit_num p else 0));;

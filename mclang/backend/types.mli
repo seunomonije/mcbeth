@@ -18,9 +18,11 @@ type basis =
 
 type cmd =
   | Prep of qubit
-  | Input of qubit * input
+  (*| Input of qubit*)
+  | CInput of qubit * input
   | PrepList of qubit list
-  | InputList of (qubit * input) list
+  (*| InputList of qubit list*)
+  | CInputList of (qubit * input) list
   | Entangle of qubit * qubit
   | Measure of qubit * float * qubit list * qubit list
   | XCorrect of qubit * qubit list
