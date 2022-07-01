@@ -8,6 +8,8 @@ type input =
   | Minus
   | State of Complex.t * Complex.t
 
+type input_map = (qubit * input) list
+
 type basis =
   | X
   | Y
@@ -18,10 +20,10 @@ type basis =
 
 type cmd =
   | Prep of qubit
-  (*| Input of qubit*)
+  | Input of qubit
   | CInput of qubit * input
   | PrepList of qubit list
-  (*| InputList of qubit list*)
+  | InputList of qubit list
   | CInputList of (qubit * input) list
   | Entangle of qubit * qubit
   | Measure of qubit * float * qubit list * qubit list

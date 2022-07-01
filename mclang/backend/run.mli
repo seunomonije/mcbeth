@@ -11,13 +11,13 @@ type sim_type =
 val rand_eval : ?shots:int -> 
                 ?change_base:(Mat.t * Mat.t) option -> 
                 ?qtbl:qtbl option -> 
-                prog -> (qubit list * (qubit, int) Hashtbl.t * Mat.t)
+                prog -> input_map -> (qubit list * (qubit, int) Hashtbl.t * Mat.t)
 
 val simulate : ?just_prob:bool -> 
               ?change_base:(Mat.t * Mat.t) option -> 
-              prog -> (qubit list * (qubit, int) Hashtbl.t * Mat.t)
+              prog -> input_map -> (qubit list * (qubit, int) Hashtbl.t * Mat.t)
 
-val run : sim_type -> prog -> (qubit list * (qubit, int) Hashtbl.t * Mat.t)
+val run : sim_type -> prog -> input_map -> (qubit list * (qubit, int) Hashtbl.t * Mat.t)
 
 val rand_eval_cmd_exec : ?mtbl_lock:Mutex.t option -> (qubit, int) Hashtbl.t -> qtbl -> Mat.t -> cmd -> Mat.t
 

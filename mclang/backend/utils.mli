@@ -21,3 +21,5 @@ val performance : ('a -> 'b) -> 'a -> float
 val unpack_qtbl : (qubit, int) Hashtbl.t -> qubit list
 val print_qubits : qubit list -> unit
 val print_readout : (qubit, int) Hashtbl.t -> unit
+
+val add_inputs : prog -> input_map -> prog

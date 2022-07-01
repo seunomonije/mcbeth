@@ -103,7 +103,9 @@ let split_program dist cmds = (
     match cmd with
     | Prep (_)      -> nondist_helper cmd
     | CInput(_)     -> nondist_helper cmd
+    | Input(_)      -> nondist_helper cmd
     | PrepList (_)  -> nondist_helper cmd
+    | InputList (_)  -> nondist_helper cmd
     | CInputList(_) -> nondist_helper cmd
     | Entangle (_)  -> nondist_helper cmd
 

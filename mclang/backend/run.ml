@@ -264,9 +264,10 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
   * on the vector collapsing each qubit to |+> or |->, and a probability distribution of the
   * results is returned.
   *)
-let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds = (
+let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds inputs = (
   Random.self_init();
   let default_basis = Qlib.Bases.z_basis in
+  let cmds = add_inputs cmds inputs in
   let cmds = standardize cmds in
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
@@ -433,7 +434,8 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
   * If `just_prob == true`, then just the probability distribution is returned.
   * The entire density matrix is returned otherwise.
   *)
-let simulate ?(just_prob=false) ?(change_base=None) (cmds : prog) = (
+let simulate ?(just_prob=false) ?(change_base=None) cmds inputs = (
+  let cmds = add_inputs cmds inputs in
   let cmds = standardize cmds in
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
@@ -463,12 +465,12 @@ type sim_type =
   | Weak of int * (Mat.t * Mat.t) option * qtbl option
   | Strong of bool * (Mat.t * Mat.t) option
 
-let run simulation_type cmds = (
+let run simulation_type cmds inputs = (
   match simulation_type with
   | Weak(a, b, c) -> (
-    rand_eval ~shots:a ~change_base:b ~qtbl:c cmds
+    rand_eval ~shots:a ~change_base:b ~qtbl:c cmds inputs
   )
   | Strong(a, b) -> (
-    simulate ~just_prob:a ~change_base:b cmds
+    simulate ~just_prob:a ~change_base:b cmds inputs
   )
 )

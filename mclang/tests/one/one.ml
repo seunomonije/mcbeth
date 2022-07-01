@@ -35,15 +35,16 @@ let foobar() = (
       CP(Float.pi, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
     ] 
     *)
-    [CInputList([(0, Plus); (1, Plus);])] @ (grover2 0 1 2 (0, 1));
+    [InputList([0; 1;])] @ (grover2 0 1 2 (0, 1));
     
   ) in (
+    let inputs = [(0, Plus); (1, Plus);] in
     print_prog p; print_endline "";
     let _ = Some(Qlib.Bases.from_angle Float.pi) in
     if well_formed p then print_endline "yay";
     let p' = standardize p in (
       print_prog p';
-      let qs, readout, res = run (Weak(0, None, None)) p' in (
+      let qs, readout, res = run (Weak(0, None, None)) p' inputs in (
         print_qubits qs;
         print_readout readout;
         Mat.print res

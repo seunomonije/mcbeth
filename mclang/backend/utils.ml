@@ -59,12 +59,18 @@ let cmd_to_string c = (
   | Prep (qubit)          -> (
     "Prep(" ^ (to_string qubit) ^ ")"
   )
+  | Input (qubit)          -> (
+    "Input(" ^ (to_string qubit) ^ ")"
+  )
   | CInput(qubit, input)  -> (
     let value = parse_input input in
     "CInput(" ^ (to_string qubit) ^ ", " ^ value ^ ")"
   )
   | PrepList (qubits)     -> (
     "PrepList(" ^ (String.concat ", " (List.map to_string qubits)) ^ ")"
+  )
+  | InputList (qubits)     -> (
+    "InputList(" ^ (String.concat ", " (List.map to_string qubits)) ^ ")"
   )
   | CInputList(args)    -> (
     let helper (q, i) = "(" ^ (to_string q) ^ ", " ^ (parse_input i) ^ ")" in
@@ -123,9 +129,13 @@ let calc_qubit_num p = (
   let rec helper c = (
     match c with 
     | Prep (qubit)        -> insert qubit
+    | Input (qubit)        -> insert qubit
     | CInput(qubit, _)    -> insert qubit
     | PrepList (qubits)   -> (
       List.iter (fun x -> (helper (Prep(x)))) qubits
+    )
+    | InputList (qubits)   -> (
+      List.iter (fun x -> (helper (Input(x)))) qubits
     )
     | CInputList(qubits)  -> (
       List.iter (fun (q, i) -> (helper (CInput(q, i)))) qubits
@@ -199,9 +209,13 @@ let check_D2 (err, prep_tbl, in_tbl) c = (
   in (
     match c with 
     | Prep (qubit)        -> insert_prepared qubit
+    | Input(qubit)        -> insert_input qubit
     | CInput(qubit, _)    -> insert_input qubit
     | PrepList (qubits)   -> (
       List.iter (fun x -> (insert_prepared x)) qubits
+    )
+    | InputList(qubits)  -> (
+      List.iter (fun (q) -> (insert_input q)) qubits
     )
     | CInputList(qubits)  -> (
       List.iter (fun (q, _) -> (insert_input q)) qubits
@@ -235,8 +249,12 @@ let check_D1 (err, meas_tbl) c = (
   in (
     match c with 
     | Prep (qubit)        -> check qubit
+    | Input (qubit)        -> check qubit
     | CInput(qubit, _)    -> check qubit
     | PrepList (qubits)   -> (
+      List.iter (fun x -> (check x)) qubits
+    )
+    | InputList (qubits)   -> (
       List.iter (fun x -> (check x)) qubits
     )
     | CInputList(qubits)  -> (
@@ -639,3 +657,25 @@ let print_readout readout = (
     )) sorted
   )
 );;
+
+let add_inputs cmds inputs = (
+  (* creates hashtable of from inputs which is of form (a, b) *)
+  let input_hash = Hashtbl.create (List.length inputs) in
+  List.iter (fun (q, i) -> (
+    Hashtbl.add input_hash q i
+  )) inputs;
+  (* replace Input(a) in cmds with CInput(a, b) *)
+  let rec helper cmds = (
+    match cmds with
+    | Input(q)::cmds -> (
+      let i = Hashtbl.find input_hash q in
+      [CInput(q, i)] @ helper cmds
+    )
+    | InputList(qs)::cmds -> (
+      [CInputList(List.map (fun q -> (q, Hashtbl.find input_hash q)) qs)] @ helper cmds
+    )
+    | c::cmds -> (c::(helper cmds))
+    | [] -> []
+  ) in
+  helper cmds
+)
