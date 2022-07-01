@@ -31,6 +31,8 @@ let float_to_string x = Printf.sprintf "%.5f" x;;
   *  Converts a command to a friendly, human-readable string.
   *)
 let cmd_to_string c = (
+  let itos = Int.to_string in
+  let ftos = Float.to_string in
   let state_to_str (c0, c1) = (
     "((" 
       ^ (Float.to_string c0.Complex.re) ^ ", " 
@@ -94,6 +96,12 @@ let cmd_to_string c = (
   | ReadOut (qubit, basis) -> (
     "ReadOut(" ^ to_string qubit ^ ", " ^ parse_basis basis ^ ")"
   )
+  | J (angle, q1, q2) -> (
+    "J(" ^ (String.concat ", " [ftos angle; itos q1; itos q2]) ^ ")"
+  )
+  | CZ (q1, q2) -> (
+    "CZ(" ^ (String.concat ", " [itos q1; itos q2]) ^ ")"
+  )
 );;
 
 
@@ -116,10 +124,32 @@ let print_err (cmd, msg) = (
   )
 );;
 
+
+
+let to_primitive cmds = (
+  let helper c = (
+    match c with
+    | J (angle, q1, q2) -> [
+      Entangle(q1, q2);
+      Measure(q1, -.angle, [], []);
+      XCorrect(q2, [q1]);
+    ]
+    | CZ (q1, q2) -> [
+      Entangle(q1, q2);
+    ]
+    | _ -> [c]
+  ) in
+  List.fold_left (fun ls p -> ls @ (helper p)) [] cmds
+);;
+
+
+
+
 (**
   * Parses a program to determine the number of qubits being used.
   *)
 let calc_qubit_num p = (
+  let p = to_primitive p in
   let qubit_tbl = H.create 4 in
   let insert q = (
     if H.find_opt qubit_tbl q == None then (
@@ -145,6 +175,7 @@ let calc_qubit_num p = (
     | XCorrect (qubit, _)       -> insert qubit
     | ZCorrect (qubit, _)       -> insert qubit
     | ReadOut (qubit, _)        -> insert qubit
+    | _ -> ()
   ) in (
     List.iter helper p;
     H.length qubit_tbl
@@ -225,6 +256,7 @@ let check_D2 (err, prep_tbl, in_tbl) c = (
     | XCorrect (qubit, _)       -> check_qubit qubit
     | ZCorrect (qubit, _)       -> check_qubit qubit
     | ReadOut (qubit, basis)    -> (check_qubit qubit; check_basis basis)
+    | _ -> ()
   )
 );;
 
@@ -265,6 +297,7 @@ let check_D1 (err, meas_tbl) c = (
     | XCorrect (qubit, _)       -> check qubit
     | ZCorrect (qubit, _)       -> check qubit
     | ReadOut (qubit, _)        -> check qubit
+    | _                         -> ()
   )
 );;
 
@@ -332,6 +365,7 @@ let check_D4 (err, prep_tbl, in_tbl) = (
   *  Returns true if the program is valid, false otherwise.
   *)
 let well_formed (cmds : prog) : bool = (
+  let cmds = to_primitive cmds in
   let err = ref false in
   let prep_tbl = H.create 12 in
   let in_tbl = H.create 12 in
@@ -347,7 +381,7 @@ let well_formed (cmds : prog) : bool = (
   if !err then false else true
 );;
 
-
+(*
 let rec parse_pattern pattern = (
   let helper p = (
     match p with
@@ -430,7 +464,7 @@ let print_pattern pattern = (
   ) in
   List.iter (fun p -> print_endline (helper p)) pattern
 );;
-
+*)
 
 (**
   *  Constructs a table containing the output qubits by appealing to D3 above.
@@ -678,4 +712,5 @@ let add_inputs cmds inputs = (
     | [] -> []
   ) in
   helper cmds
-)
+);;
+

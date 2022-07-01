@@ -1,6 +1,6 @@
 ;; Testing Algos
 
 (tests
-  (names qft)
+  (names dj)
   (libraries mcl)
 )

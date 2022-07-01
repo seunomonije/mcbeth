@@ -19,6 +19,7 @@ type basis =
   | FromAngle of float
 
 type cmd =
+  (* low-level, primitives *)
   | Prep of qubit
   | Input of qubit
   | CInput of qubit * input
@@ -30,9 +31,13 @@ type cmd =
   | XCorrect of qubit * qubit list
   | ZCorrect of qubit * qubit list
   | ReadOut of qubit * basis
+  (* high-level *)
+  | J of float * qubit * qubit  (* J generator *)
+  | CZ of qubit * qubit         (* Controlled-Z gate *)
 
 type prog = cmd list
 
+(*
 type pattern_part = 
   | J of float * qubit * qubit  (* J generator *)
   | CZ of qubit * qubit         (* Controlled-Z gate *)
@@ -49,6 +54,7 @@ type pattern_part =
   | CMD of cmd
 
 type pattern = pattern_part list
+*)
 
 type qtbl = (qubit, int) Hashtbl.t
 

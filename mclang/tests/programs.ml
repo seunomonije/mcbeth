@@ -1,6 +1,5 @@
 
 open Backend.Types;;
-open Backend.Utils;;
 
 open Algos.Create;;
 
@@ -14,9 +13,11 @@ let programs = [
   [Prep(0); Prep(1);
   Entangle(0, 1); Measure(0, 0.0, [], []); Measure(1, 0.0, [], [])];
 
+  (*
   parse_pattern 
   [CMD(CInputList([(0, Plus);])); CMD(PrepList([1; 2]));
   P(Float.div Float.pi 2., 1, 2, 0);];
+  *)
 
   [PrepList([0; 1; 2; 3; 4]);
   Entangle(0, 1); Entangle(1, 2); Entangle(2, 3);
@@ -35,9 +36,9 @@ let programs = [
   ZCorrect(9, [5; 6; 2])];
 
   (* Teleport *)
-  [CInput(0, One); CInput(1, Plus); Prep(2)] @ (teleport 0 1 2);
+  teleport 0 1 2;
   
-  (* QFT on 2 qubits *)
-  [CInputList([(0, One); (1, One);])] @ (qft [0; 1] 2);
+  (* QFT on 2 qubits 
+  [CInputList([(0, One); (1, One);])] @ (qft [0; 1] 2);*)
   
 ];;

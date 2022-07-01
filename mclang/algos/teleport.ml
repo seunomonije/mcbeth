@@ -1,7 +1,6 @@
 
 open Backend.Types;;
-open Backend.Utils;;
 
-let teleport qubit1 qubit2 ancillary = (
-  parse_pattern [J(0.0, qubit1, ancillary); J(0.0, ancillary, qubit2)]
+let teleport qubit1 qubit2 qubit3 = (
+  [Input(qubit1); PrepList([qubit2; qubit3]); J(0.0, qubit1, qubit2); J(0.0, qubit2, qubit3)]
 );;

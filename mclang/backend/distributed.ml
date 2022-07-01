@@ -113,6 +113,7 @@ let split_program dist cmds = (
     | XCorrect (qubit, _)       -> dist_helper cmd qubit
     | ZCorrect (qubit, _)       -> dist_helper cmd qubit
     | ReadOut (qubit, _)        -> dist_helper cmd qubit
+    | _ -> nondist_helper cmd (* not used; inputs assumes only primitives *)
   ) in
   let non_dist_cmds = List.fold_right split_helper cmds []  in
   (non_dist_cmds, dist_cmds_tbl)
@@ -133,6 +134,7 @@ let build_node_loc node_list = (
 
 
 let build_dist_prog dist cmds = (
+  let cmds = to_primitive cmds in
   let (non_dist_cmds, dist_cmds_tbl) = split_program dist (standardize cmds) in
   let dist_struct = Hashtbl.create (Hashtbl.length dist) in (
     Hashtbl.iter (fun g qtbl -> (
@@ -150,6 +152,11 @@ let approx_subsystems (non_dist_cmds, dist_struct) = (
     List.iter (fun cmd -> (
       match cmd with
       | Prep (q) -> (
+        let group = getGroup q in
+        let (qtbl, prog) = Hashtbl.find dist_struct' group in
+        Hashtbl.replace dist_struct' group (qtbl, cmd::prog)
+      )
+      | Input(q) -> (
         let group = getGroup q in
         let (qtbl, prog) = Hashtbl.find dist_struct' group in
         Hashtbl.replace dist_struct' group (qtbl, cmd::prog)
