@@ -1,4 +1,3 @@
-
 # Project Documentation
 
 ## Table of Contents
@@ -280,62 +279,43 @@ The MCL Backend library is responsible for processing and running MCL programs; 
 
 - [types.mli](/mclang/backend/types.mli): contains the data type definitions used to write MCL programs
 - [run.ml](/mclang/backend/run.ml): contains the functions used to process MCL programs
-- [presets.ml](/mclang/backend/presets.ml): contains functions which can be used to help write common quantun algorithms
+- [utils.ml](/mclang/backend/presets.ml): contains utility functions
 
 ##### Modules
 
-###### Types
-
-- `type qubit = int`<br>
-  Qubits are currently represented as integers.
-- `type prep = Init of qubit * float | Init0 of qubit | Init1 of qubit | InitPlus of qubit | InitMinus of qubit | InitNonInput of qubit list`<br>
-  Type `prep` defines the instructions used to prepare qubits. <br> Details on these instructions are provided in the [Writing Programs](#writing-programs) section below.
-- `type cmd = Entangle of qubit * qubit | Measure of qubit * float * qubit list * qubit list | XCorrect of qubit * qubit list | ZCorrect of qubit * qubit list`<br>
-  Type `cmd` defines the instructions used to perform specific actions an the qubits. <br> Details on these instructions are provided in the [Writing Programs](#writing-programs) section below.
-- `type prog = prep list * cmd list`<br>
-  Type `prog` defines what an entire program consists of. A program is defined as a pair of lists of instructions: one of prepare instructions and one of command instructions.
-
 ###### Run
+
+- TODO
+
+###### Utils
 
 - `val print_prog : prog -> unit`<br>
   This function takes a program as input and prints to standard output the a more readable version of it.
 - `val well_formed : prog -> int`<br>
-  This function ensures that the program is valid. A program is valid if it does not violates the constraints described in the [Program Constraints](#program-constraints) section below. If valid, then the function returns the number of qubits used; if not valid, then the function returns 0.
-- `val eval : prog -> bool list`<br>
-  This function runs a program by executing each instruction while keeping track of the resulting qubit states. It returns a list of booleans corresponding to the final measured states of each qubit; `true` for 1 and `false` for 0.
-
-###### Presets
-
-TODO
+  This function ensures that the program is valid. A program is valid if it does not violates the constraints described in the Program Constraints section below. If valid, then the function returns the number of qubits used; if not valid, then the function returns 0.
 
 ### Writing Programs
 
 #### Overview
 
+TODO: for now please refer to the preprint.
+
+#### Input and Preparations
+
 TODO
 
-#### Preparations
-
-- `InitNonInput([q1; q2; ...])`: Sets all qubits which are not used for inputto the state `|+>`.
-
-All other instructions act on input qubits to set them to some input state as follows:
-
-- `Init(q, f)`: Sets the state of qubit `q` to the state `f`.
-- `Init0(q)`: Sets `q` to `|0>`.
-- `Init1(q)`: Sets `q` to `|1>`.
-- `InitPlus(q)`: Sets `q` to `|+>`.
-- `InitMinus(q)`: Sets `q` to `|->`.
-
-If a qubit is used for both input and output, **do not** include it in `InitNonInput`.
-
-#### Commands
+#### Low-Level Primitive Commands
 
 - `Entangle(q1, q2)`: Entangles qubits `q1` and `q2`.
 - `Measure(q, angle, signals1, signals2)`: Measures qubit `q` at an angle based on the value of `angle`and on the outcomes of the qubits specified in `signals1` and `signals2`.
 - `XCorrect(q, signals)`: Performs Pauli X correction based on the outcomes of the qubits specified in `signals`.
 - `ZCorrect(q, signals)`: Performs Pauli Z correction based on the outcomes of the qubits specified in `signals`.
 
-TODO: explain signals
+`signals` is simply a list of qubits.
+
+#### High-Level Commands
+
+- `J(angle, q1, q2)`: Compiles down to an entanglement between `q1` and `q2`, a measurement on `q1` and then a correction on `q2` dependent on the measurement outcome of `q1`.
 
 #### Program Constraints
 
