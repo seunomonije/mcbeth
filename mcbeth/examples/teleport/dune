@@ -1,0 +1,6 @@
+;; A Single Test for Quick Testing
+
+(tests
+  (names one)
+  (libraries mcl linalg programs)
+)

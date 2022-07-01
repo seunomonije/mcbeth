@@ -219,14 +219,14 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
         | Comp -> Qlib.Bases.z_basis
         | FromTuples(a, b) -> Qlib.Bases.from_tuples a b
         | FromAngle(a) -> Qlib.Bases.from_angle a
-      ) in
+      ) in(*
       let _ = (
         let (a, b) = bases in (
           Mat.print a;
           Mat.print b;
           Mat.print statevec
         )
-      ) in
+      ) in*)
 
       (*let _ = Mat.print statevec in*)
       let (statevec', outcome) = measure bases qubit_num (getPos qubit) statevec in (
@@ -243,7 +243,6 @@ let rand_eval_cmd_exec ?(mtbl_lock=None) mtbl qtbl statevec c = (
         | None -> ()
         | Some(lock) -> Mutex.unlock lock);
 
-        Mat.print statevec'; 
         statevec'
       )
     )
