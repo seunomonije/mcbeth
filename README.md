@@ -2,7 +2,6 @@
 
 ## About
 
-A programming language for quantum computation based off of the measurement calculus:
+MCBeth is a programming language for measurement-based quantum computation based off of [the measurement calculus](https://dl.acm.org/doi/10.1145/1219092.1219096).
 
-- ACM Article: https://dl.acm.org/doi/10.1145/1219092.1219096
-- arXiv Article: https://arxiv.org/abs/quant-ph/0412135
+A preprint describing the language is available [here](https://arxiv.org/abs/2204.10784) and documentation regarding the codebase is within the [mcbeth](/mcbeth/) subdirectory.
