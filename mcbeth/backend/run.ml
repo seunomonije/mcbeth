@@ -268,6 +268,7 @@ let rand_eval ?(shots=0) ?(change_base=None) ?(qtbl=None) cmds inputs = (
   Random.self_init();
   let default_basis = Qlib.Bases.z_basis in
   let cmds = add_inputs cmds inputs in
+  let cmds = to_primitive cmds in
   let cmds = standardize cmds in
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
@@ -436,6 +437,7 @@ let rec simulate_cmd_exec mtbl qtbl densmat cmds = (
   *)
 let simulate ?(just_prob=false) ?(change_base=None) cmds inputs = (
   let cmds = add_inputs cmds inputs in
+  let cmds = to_primitive cmds in
   let cmds = standardize cmds in
   if well_formed cmds then (
     let cmds = expand_and_order_prep cmds in
