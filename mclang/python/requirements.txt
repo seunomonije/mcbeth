@@ -1,5 +1,0 @@
-numpy
-pyzx
-matplotlib
-cirq
-ply

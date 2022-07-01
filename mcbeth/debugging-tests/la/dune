@@ -1,0 +1,13 @@
+;; Linear Algebra Tests
+
+(tests
+  (names 
+    basic 
+    complex 
+    cenv1 
+    scal_mul 
+    tensor_prod 
+    tensor_prod_list
+  )
+  (libraries mcl linalg)
+)

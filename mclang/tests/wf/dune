@@ -1,6 +1,0 @@
-;; Well-Formed Tests
-
-(tests
-  (names test errors qnumbers)
-  (libraries mcl linalg)
-)

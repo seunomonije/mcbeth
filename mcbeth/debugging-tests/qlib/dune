@@ -1,0 +1,10 @@
+;; Quantum Library Tests
+
+(tests
+  (names
+    pauli
+    controlled
+    project
+  )
+  (libraries mcl linalg quantum)
+)

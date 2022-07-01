@@ -1,6 +1,0 @@
-;; Tests for functions in the backend
-
-(tests
-  (names performance)
-  (libraries mcl linalg programs)
-)

@@ -1,6 +1,0 @@
-;; Testing Algos
-
-(tests
-  (names dj)
-  (libraries mcl)
-)

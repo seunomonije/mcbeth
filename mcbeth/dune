@@ -1,0 +1,42 @@
+
+(library
+  (name linalg)
+  (modules)
+  (libraries 
+    (re_export lacamlext)
+    (re_export lacaml)
+    (re_export cenv)
+  )
+)
+
+(library
+  (name quantum)
+  (modules)
+  (libraries
+    (re_export qlib)
+  )
+)
+
+(library
+  (name pythonreqs)
+  (modules)
+  (libraries
+    (re_export pyml)
+    (re_export pythonlib)
+  )
+)
+
+(library
+  (name mcl)
+  (modules)
+  (libraries 
+    (re_export backend)
+    (re_export algos)
+  )
+)
+
+(executable 
+  (name main)
+  (modules main)
+  (libraries mcl)
+)
