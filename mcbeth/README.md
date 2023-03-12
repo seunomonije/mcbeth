@@ -1,3 +1,6 @@
+
+See [the wiki](https://github.com/seunomonije/mcbeth/wiki) for the most updated.
+
 # Project Documentation
 
 ## Table of Contents
